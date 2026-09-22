@@ -1,140 +1,291 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useImperativeHandle, forwardRef } from "react";
 import { renderMarkdown } from "@/lib/markdown";
 import { ThemeConfig } from "@/lib/types";
+import { ZoomIn, ZoomOut, RotateCcw, AlertTriangle, Eye, Printer } from "lucide-react";
+
+export interface LivePreviewHandle {
+  scrollToPercentage: (percentage: number) => void;
+  scrollToHeading: (headingText: string) => void;
+}
 
 interface LivePreviewProps {
   content: string;
   theme?: ThemeConfig;
   title?: string;
+  documentNumber?: string;
+  version?: string;
 }
 
-export default function LivePreview({ content, theme, title }: LivePreviewProps) {
-  const [renderedHtml, setRenderedHtml] = useState("");
-  const [mermaidError, setMermaidError] = useState<string | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+const LivePreview = forwardRef<LivePreviewHandle, LivePreviewProps>(
+  ({ content, theme, title, documentNumber, version }, ref) => {
+    const [renderedHtml, setRenderedHtml] = useState("");
+    const [mermaidError, setMermaidError] = useState<string | null>(null);
+    const [zoomLevel, setZoomLevel] = useState<number>(100);
+    const [isA4PageMode, setIsA4PageMode] = useState<boolean>(true);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const sheetRef = useRef<HTMLDivElement>(null);
 
-  // Render markdown to HTML
-  useEffect(() => {
-    try {
-      const html = renderMarkdown(content || "");
-      setRenderedHtml(html);
-    } catch (err: any) {
-      console.error("Markdown rendering error:", err);
-    }
-  }, [content]);
+    // Expose scrolling methods to parent
+    useImperativeHandle(ref, () => ({
+      scrollToPercentage: (percentage: number) => {
+        const container = containerRef.current;
+        if (!container) return;
+        const maxScroll = container.scrollHeight - container.clientHeight;
+        if (maxScroll > 0) {
+          container.scrollTop = percentage * maxScroll;
+        }
+      },
+      scrollToHeading: (headingText: string) => {
+        const sheet = sheetRef.current;
+        if (!sheet || !containerRef.current) return;
 
-  // Client-side Mermaid rendering with debounce
-  useEffect(() => {
-    if (!renderedHtml || typeof window === "undefined") return;
+        const cleanTarget = headingText.toLowerCase().trim();
+        const headings = sheet.querySelectorAll("h1, h2, h3, h4");
+        for (let i = 0; i < headings.length; i++) {
+          const h = headings[i] as HTMLElement;
+          const text = h.textContent?.toLowerCase().trim() || "";
+          if (text.includes(cleanTarget) || cleanTarget.includes(text)) {
+            h.scrollIntoView({ behavior: "smooth", block: "start" });
+            // Subtle flash highlight
+            h.classList.add("bg-blue-100", "transition-colors");
+            setTimeout(() => h.classList.remove("bg-blue-100"), 1500);
+            break;
+          }
+        }
+      },
+    }));
 
-    let timeoutId: NodeJS.Timeout;
+    // Render markdown to HTML
+    useEffect(() => {
+      try {
+        let html = renderMarkdown(content || "");
+        // Enhance page break visualization in live preview
+        html = html.replace(
+          /<div class="page-break"><\/div>/gi,
+          `<div class="preview-page-break my-10 relative flex items-center justify-center select-none print:hidden">
+            <div class="absolute inset-0 flex items-center"><div class="w-full border-t-2 border-dashed border-blue-300"></div></div>
+            <span class="relative bg-white px-3 py-1 text-[11px] font-mono font-semibold text-blue-600 border border-blue-200 rounded-full shadow-sm flex items-center gap-1.5">
+              ✂️ A4 Page Break (ขึ้นหน้าใหม่ใน PDF)
+            </span>
+          </div>`
+        );
+        setRenderedHtml(html);
+      } catch (err: any) {
+        console.error("Markdown rendering error:", err);
+      }
+    }, [content]);
 
-    const runMermaid = async () => {
-      // @ts-expect-error - injected by CDN or script
-      if (!window.mermaid) {
-        // Dynamically load mermaid script if not present
-        const existingScript = document.getElementById("mermaid-cdn-script");
-        if (!existingScript) {
-          const script = document.createElement("script");
-          script.id = "mermaid-cdn-script";
-          script.src = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js";
-          script.onload = () => {
-            // @ts-expect-error
-            if (window.mermaid) {
+    // Client-side Mermaid rendering with debounce
+    useEffect(() => {
+      if (!renderedHtml || typeof window === "undefined") return;
+
+      let timeoutId: NodeJS.Timeout;
+
+      const runMermaid = async () => {
+        // @ts-expect-error - injected by CDN or script
+        if (!window.mermaid) {
+          const existingScript = document.getElementById("mermaid-cdn-script");
+          if (!existingScript) {
+            const script = document.createElement("script");
+            script.id = "mermaid-cdn-script";
+            script.src = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js";
+            script.onload = () => {
               // @ts-expect-error
-              window.mermaid.initialize({
-                startOnLoad: false,
-                theme: "neutral",
-                securityLevel: "loose",
-                fontFamily:
-                  '-apple-system, BlinkMacSystemFont, "Sarabun", "Prompt", "Segoe UI", Roboto, sans-serif',
-              });
-              triggerRender();
-            }
-          };
-          document.head.appendChild(script);
+              if (window.mermaid) {
+                // @ts-expect-error
+                window.mermaid.initialize({
+                  startOnLoad: false,
+                  theme: "neutral",
+                  securityLevel: "loose",
+                  fontFamily:
+                    '-apple-system, BlinkMacSystemFont, "Sarabun", "Prompt", "Segoe UI", Roboto, sans-serif',
+                });
+                triggerRender();
+              }
+            };
+            document.head.appendChild(script);
+            return;
+          }
+        }
+
+        triggerRender();
+      };
+
+      const triggerRender = async () => {
+        if (!sheetRef.current) return;
+        const mermaidNodes = sheetRef.current.querySelectorAll(".mermaid");
+        if (mermaidNodes.length === 0) {
+          setMermaidError(null);
           return;
         }
-      }
 
-      triggerRender();
-    };
-
-    const triggerRender = async () => {
-      if (!containerRef.current) return;
-      const mermaidNodes = containerRef.current.querySelectorAll(".mermaid");
-      if (mermaidNodes.length === 0) {
-        setMermaidError(null);
-        return;
-      }
-
-      try {
-        // @ts-expect-error
-        if (window.mermaid) {
+        try {
           // @ts-expect-error
-          await window.mermaid.run({ nodes: mermaidNodes });
-          setMermaidError(null);
+          if (window.mermaid) {
+            // @ts-expect-error
+            await window.mermaid.run({ nodes: mermaidNodes });
+            setMermaidError(null);
+          }
+        } catch (err: any) {
+          console.warn("Mermaid parsing warning:", err);
+          setMermaidError(
+            "Mermaid Syntax Note: ตรวจพบไวยากรณ์ Diagram ที่ยังไม่สมบูรณ์ กำลังรอการพิมพ์เสร็จ..."
+          );
         }
-      } catch (err: any) {
-        console.warn("Mermaid syntax parsing preview warning:", err);
-        setMermaidError(
-          "Mermaid Syntax Warning: ตรวจพบไวยากรณ์ Diagram ที่ยังเขียนไม่เสร็จสมบูรณ์ กำลังรออัปเดต..."
-        );
-      }
-    };
+      };
 
-    timeoutId = setTimeout(runMermaid, 300);
+      timeoutId = setTimeout(runMermaid, 300);
 
-    return () => {
-      clearTimeout(timeoutId);
-    };
-  }, [renderedHtml]);
+      return () => {
+        clearTimeout(timeoutId);
+      };
+    }, [renderedHtml]);
 
-  const primaryColor = theme?.primaryColor || "#0f172a";
-  const accentColor = theme?.accentColor || "#2563eb";
+    const primaryColor = theme?.primaryColor || "#0f3b6c";
+    const accentColor = theme?.accentColor || "#1d4ed8";
 
-  return (
-    <div
-      className="h-full flex flex-col bg-white overflow-y-auto"
-      style={
-        {
-          "--primary-color": primaryColor,
-          "--accent-color": accentColor,
-        } as React.CSSProperties
-      }
-    >
-      {/* Document Header Preview */}
-      <div className="border-b border-slate-200 bg-slate-50/70 px-8 py-4 flex items-center justify-between sticky top-0 z-10 backdrop-blur-sm">
-        <div>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-            LIVE DOCUMENT PREVIEW
-          </span>
-          <h3 className="text-sm font-semibold text-slate-800">
-            {title || "Untitled Document"}
-          </h3>
+    return (
+      <div
+        className="h-full flex flex-col bg-slate-200/70 overflow-hidden"
+        style={
+          {
+            "--primary-color": primaryColor,
+            "--accent-color": accentColor,
+          } as React.CSSProperties
+        }
+      >
+        {/* Preview Control Header */}
+        <div className="border-b border-slate-300/80 bg-white/95 px-5 py-2.5 flex items-center justify-between sticky top-0 z-20 backdrop-blur-sm shadow-xs">
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center gap-1.5">
+              <Eye className="w-3.5 h-3.5 text-blue-600" />
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                Document Preview
+              </span>
+            </div>
+            {documentNumber && (
+              <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
+                {documentNumber} {version ? `v${version}` : ""}
+              </span>
+            )}
+          </div>
+
+          {/* Zoom and Page View Controls */}
+          <div className="flex items-center space-x-2 text-xs">
+            {/* Page View Mode Toggle */}
+            <button
+              type="button"
+              onClick={() => setIsA4PageMode(!isA4PageMode)}
+              className={`px-2 py-1 rounded-md text-[11px] font-medium flex items-center gap-1 transition-colors ${
+                isA4PageMode
+                  ? "bg-blue-50 text-blue-700 border border-blue-200"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
+              title="Toggle A4 Document Sheet View"
+            >
+              <Printer className="w-3 h-3" />
+              <span>A4 Sheet</span>
+            </button>
+
+            <div className="h-3.5 w-px bg-slate-200" />
+
+            {/* Zoom Buttons */}
+            <div className="flex items-center bg-slate-100 border border-slate-200 rounded-md p-0.5">
+              <button
+                type="button"
+                onClick={() => setZoomLevel((z) => Math.max(50, z - 10))}
+                className="p-1 hover:bg-white rounded text-slate-600 hover:text-slate-900"
+                title="Zoom Out"
+              >
+                <ZoomOut className="w-3 h-3" />
+              </button>
+              <span className="px-1.5 font-mono text-[10px] text-slate-600 font-semibold min-w-[36px] text-center">
+                {zoomLevel}%
+              </span>
+              <button
+                type="button"
+                onClick={() => setZoomLevel((z) => Math.min(150, z + 10))}
+                className="p-1 hover:bg-white rounded text-slate-600 hover:text-slate-900"
+                title="Zoom In"
+              >
+                <ZoomIn className="w-3 h-3" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setZoomLevel(100)}
+                className="p-1 hover:bg-white rounded text-slate-500 hover:text-slate-900"
+                title="Reset Zoom"
+              >
+                <RotateCcw className="w-2.5 h-2.5" />
+              </button>
+            </div>
+          </div>
         </div>
-        <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
-          Real-time Sync
-        </span>
-      </div>
 
-      {mermaidError && (
-        <div className="mx-8 mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-center gap-2">
-          <span className="font-semibold">⚠️</span>
-          <span>{mermaidError}</span>
-        </div>
-      )}
+        {mermaidError && (
+          <div className="mx-6 mt-3 p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-center gap-2 shadow-xs">
+            <AlertTriangle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+            <span>{mermaidError}</span>
+          </div>
+        )}
 
-      {/* Main Rendered Content */}
-      <div className="flex-1 p-8 sm:p-12 max-w-4xl mx-auto w-full">
+        {/* Scrollable Container with Sheet */}
         <div
           ref={containerRef}
-          className="prose prose-slate max-w-none doc-content markdown-rendered-body"
-          dangerouslySetInnerHTML={{ __html: renderedHtml }}
-        />
+          className="flex-1 overflow-y-auto p-4 sm:p-8 flex justify-center"
+        >
+          <div
+            style={{
+              transform: `scale(${zoomLevel / 100})`,
+              transformOrigin: "top center",
+              transition: "transform 0.15s ease-out",
+            }}
+            className="w-full flex justify-center"
+          >
+            <div
+              ref={sheetRef}
+              className={`w-full bg-white transition-all ${
+                isA4PageMode
+                  ? "max-w-[210mm] min-h-[297mm] p-10 sm:p-14 shadow-lg border border-slate-200/90 rounded-xl my-2"
+                  : "max-w-4xl p-8 rounded-lg shadow-sm"
+              }`}
+            >
+              {/* Document Banner */}
+              <div
+                className="border-b-2 pb-4 mb-6"
+                style={{ borderColor: accentColor }}
+              >
+                <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1">
+                  <span className="font-semibold uppercase tracking-wider">
+                    DOCUMENT SPECIFICATION
+                  </span>
+                  <span className="font-mono">
+                    {documentNumber || "DOC-001"}
+                  </span>
+                </div>
+                <h1
+                  className="text-2xl font-extrabold tracking-tight leading-tight"
+                  style={{ color: primaryColor }}
+                >
+                  {title || "Untitled Document"}
+                </h1>
+              </div>
+
+              {/* Rendered Markdown Body */}
+              <div
+                className="prose prose-slate max-w-none doc-content markdown-rendered-body"
+                dangerouslySetInnerHTML={{ __html: renderedHtml }}
+              />
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
+);
+
+LivePreview.displayName = "LivePreview";
+
+export default LivePreview;
