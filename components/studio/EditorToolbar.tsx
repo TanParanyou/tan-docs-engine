@@ -192,7 +192,7 @@ export default function EditorToolbar({
             title="Requirement Confirmation Block"
             onClick={() =>
               onInsertText(
-                "\n#### **4.X REQ-POS-XXX — [ชื่อฟังก์ชัน]**\n\n**Requirement จากการประชุม**  \nรายละเอียด...\n\n**พฤติกรรมที่คาดหวัง**\n1. เงื่อนไขแรก...\n\n**ผลการพิจารณา:**\n- [ ] ยืนยันตามข้อเสนอ\n- [ ] ขอแก้ไข\n- [ ] ไม่อยู่ในขอบเขต\n**หมายเหตุลูกค้า:** -\n\n---\n"
+                "\n### 4.X REQ-POS-XXX — [ชื่อฟังก์ชัน]\n\n**Requirement จากการประชุม**  \nรายละเอียด...\n\n**พฤติกรรมที่คาดหวัง**\n1. เงื่อนไขแรก...\n\n**ผลการพิจารณา:**\n- [ ] ยืนยันตามข้อเสนอ\n- [ ] ขอแก้ไข\n- [ ] ไม่อยู่ในขอบเขต\n**หมายเหตุลูกค้า:** -\n\n---\n"
               )
             }
             className="px-2 py-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 rounded transition-colors flex items-center gap-1 font-medium text-[11px]"

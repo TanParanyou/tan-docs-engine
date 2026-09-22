@@ -148,7 +148,7 @@ const LivePreview = forwardRef<LivePreviewHandle, LivePreviewProps>(
 
     return (
       <div
-        className="h-full flex flex-col bg-slate-200/70 overflow-hidden"
+        className="h-full flex flex-col bg-slate-200 overflow-hidden"
         style={
           {
             "--primary-color": primaryColor,
@@ -157,7 +157,7 @@ const LivePreview = forwardRef<LivePreviewHandle, LivePreviewProps>(
         }
       >
         {/* Preview Control Header */}
-        <div className="border-b border-slate-300/80 bg-white/95 px-5 py-2.5 flex items-center justify-between sticky top-0 z-20 backdrop-blur-sm shadow-xs">
+        <div className="border-b border-slate-300 bg-white px-5 py-2.5 flex items-center justify-between sticky top-0 z-20 shadow-xs flex-shrink-0">
           <div className="flex items-center space-x-3">
             <div className="flex items-center gap-1.5">
               <Eye className="w-3.5 h-3.5 text-blue-600" />
@@ -180,8 +180,8 @@ const LivePreview = forwardRef<LivePreviewHandle, LivePreviewProps>(
               onClick={() => setIsA4PageMode(!isA4PageMode)}
               className={`px-2 py-1 rounded-md text-[11px] font-medium flex items-center gap-1 transition-colors ${
                 isA4PageMode
-                  ? "bg-blue-50 text-blue-700 border border-blue-200"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  ? "bg-blue-50 text-blue-700 border border-blue-200 font-semibold"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200"
               }`}
               title="Toggle A4 Document Sheet View"
             >
@@ -225,38 +225,41 @@ const LivePreview = forwardRef<LivePreviewHandle, LivePreviewProps>(
         </div>
 
         {mermaidError && (
-          <div className="mx-6 mt-3 p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-center gap-2 shadow-xs">
+          <div className="mx-6 mt-3 p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-center gap-2 shadow-xs flex-shrink-0">
             <AlertTriangle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
             <span>{mermaidError}</span>
           </div>
         )}
 
-        {/* Scrollable Container with Sheet */}
+        {/* Scrollable Document Canvas Viewport */}
         <div
           ref={containerRef}
-          className="flex-1 overflow-y-auto p-4 sm:p-8 flex justify-center"
+          className="flex-1 overflow-auto bg-slate-200 relative select-text"
         >
-          <div
-            style={{
-              transform: `scale(${zoomLevel / 100})`,
-              transformOrigin: "top center",
-              transition: "transform 0.15s ease-out",
-            }}
-            className="w-full flex justify-center"
-          >
+          {/* Canvas Wrapper ensuring solid background across all scroll dimensions */}
+          <div className="min-w-full min-h-full py-8 px-4 sm:px-8 flex flex-col items-center justify-start bg-slate-200">
             <div
-              ref={sheetRef}
-              className={`w-full bg-white transition-all ${
-                isA4PageMode
-                  ? "max-w-[210mm] min-h-[297mm] p-10 sm:p-14 shadow-lg border border-slate-200/90 rounded-xl my-2"
-                  : "max-w-4xl p-8 rounded-lg shadow-sm"
-              }`}
+              style={{
+                transform: `scale(${zoomLevel / 100})`,
+                transformOrigin: "top center",
+                transition: "transform 0.15s ease-out",
+              }}
+              className="w-full flex justify-center pb-24"
             >
-              {/* Real Document Content matching print and reader view */}
               <div
-                className="doc-content"
-                dangerouslySetInnerHTML={{ __html: renderedHtml }}
-              />
+                ref={sheetRef}
+                className={`w-full bg-white transition-all shadow-xl border border-slate-300 rounded-xl overflow-x-auto ${
+                  isA4PageMode
+                    ? "max-w-[210mm] min-h-[297mm] p-8 sm:p-14"
+                    : "max-w-4xl p-8"
+                }`}
+              >
+                {/* Real Document Content matching print and reader view */}
+                <div
+                  className="doc-content"
+                  dangerouslySetInnerHTML={{ __html: renderedHtml }}
+                />
+              </div>
             </div>
           </div>
         </div>

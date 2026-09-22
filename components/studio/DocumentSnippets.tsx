@@ -35,7 +35,7 @@ export default function DocumentSnippets({
       description: "บล็อกสเปกแยกข้อ พร้อมพฤติกรรมที่คาดหวังและผลการพิจารณา",
       category: "Requirement",
       icon: <FileCheck2 className="w-4 h-4 text-blue-600" />,
-      content: `\n#### **4.X REQ-POS-XXX — [ชื่อฟังก์ชัน / Feature Name]**
+      content: `\n### 4.X REQ-POS-XXX — [ชื่อฟังก์ชัน / Feature Name]
 
 **Requirement จากการประชุม**  
 [อธิบายรายละเอียดความต้องการของผู้ว่าจ้าง...]
@@ -69,7 +69,7 @@ export default function DocumentSnippets({
       description: "ตารางสรุปภาพรวม Requirement ทุกข้อ",
       category: "Table",
       icon: <Table className="w-4 h-4 text-emerald-600" />,
-      content: `\n### **ส่วนที่ 3: ตารางสรุปภาพรวม Requirement (Requirement Summary Matrix)**
+      content: `\n## ส่วนที่ 3: ตารางสรุปภาพรวม Requirement (Requirement Summary Matrix)
 
 | REQ ID | ชื่อฟังก์ชัน (Feature) | สรุปขอบเขตงาน (Scope Summary) | สถานะ |
 | :--- | :--- | :--- | :--- |
@@ -101,7 +101,7 @@ graph TD
       description: "ตารางนิยามคำศัพท์ที่ใช้ร่วมกัน",
       category: "Table",
       icon: <Boxes className="w-4 h-4 text-amber-600" />,
-      content: `\n### **ส่วนที่ 2: นิยามคำศัพท์ที่ใช้ร่วมกัน (Glossary & Definitions)**
+      content: `\n## ส่วนที่ 2: นิยามคำศัพท์ที่ใช้ร่วมกัน (Glossary & Definitions)
 * **Order / Invoice**: รายการสั่งซื้อบริการหรือสินค้าหน้าร้านของลูกค้า
 * **Consult Sheet / Color Formula**: บันทึกสูตรผสมสี ปริมาณ หน่วย Lot และหมายเหตุเคมี
 * **Show / Hide on Receipt**: การเลือกกำหนดให้รายการวัตถุดิบแสดงหรือซ่อนจากใบเสร็จลูกค้า
@@ -134,7 +134,7 @@ graph TD
       icon: <PenTool className="w-4 h-4 text-blue-600" />,
       content: `\n<!-- pagebreak -->
 
-### **ส่วนที่ 5: การลงนามยืนยันขอบเขตความต้องการ (Sign-off & Confirmation)**
+## ส่วนที่ 5: การลงนามยืนยันขอบเขตความต้องการ (Sign-off & Confirmation)
 เอกสารฉบับนี้จัดทำขึ้นเพื่อยืนยันข้อตกลงร่วมกันระหว่างทั้งสองฝ่าย
 
 **ฝั่งผู้ว่าจ้าง (Client Confirmation)**
