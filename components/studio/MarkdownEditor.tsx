@@ -3,6 +3,9 @@
 import React, { useRef, useState, useCallback, useImperativeHandle, forwardRef } from "react";
 import EditorToolbar from "./EditorToolbar";
 import EditorSearch from "./EditorSearch";
+import VisualEditor, { VisualEditorHandle } from "./VisualEditor";
+import { useStudioStore } from "@/lib/store/useStudioStore";
+import { Eye, Code } from "lucide-react";
 
 export interface MarkdownEditorHandle {
   jumpToLine: (lineNumber: number) => void;
@@ -24,7 +27,9 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
     { content, onChange, onSave, slug, filename, onScroll, syncScroll },
     ref
   ) => {
+    const { inputMode, setInputMode } = useStudioStore();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const visualEditorRef = useRef<VisualEditorHandle>(null);
     const [editorTheme, setEditorTheme] = useState<"light" | "dark">("light");
     const [isUploading, setIsUploading] = useState(false);
     const [uploadStatus, setUploadStatus] = useState<string | null>(null);
@@ -40,28 +45,34 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
     // Expose jumpToLine and insertSnippet to parent components
     useImperativeHandle(ref, () => ({
       jumpToLine: (lineNumber: number) => {
-        const textarea = textareaRef.current;
-        if (!textarea) return;
+        if (inputMode === "markdown") {
+          const textarea = textareaRef.current;
+          if (!textarea) return;
 
-        const lines = textarea.value.split("\n");
-        let charIndex = 0;
-        for (let i = 0; i < Math.min(lineNumber - 1, lines.length); i++) {
-          charIndex += lines[i].length + 1; // +1 for \n
+          const lines = textarea.value.split("\n");
+          let charIndex = 0;
+          for (let i = 0; i < Math.min(lineNumber - 1, lines.length); i++) {
+            charIndex += lines[i].length + 1; // +1 for \n
+          }
+
+          textarea.focus();
+          textarea.setSelectionRange(charIndex, charIndex);
+
+          // Approximate scroll to line smoothly
+          const totalLines = Math.max(1, lines.length);
+          const percentage = Math.max(0, (lineNumber - 2) / totalLines);
+          textarea.scrollTop = percentage * (textarea.scrollHeight - textarea.clientHeight);
+
+          // Update cursor
+          setCursorPos({ line: lineNumber, col: 1 });
         }
-
-        textarea.focus();
-        textarea.setSelectionRange(charIndex, charIndex);
-
-        // Approximate scroll to line smoothly
-        const totalLines = Math.max(1, lines.length);
-        const percentage = Math.max(0, (lineNumber - 2) / totalLines);
-        textarea.scrollTop = percentage * (textarea.scrollHeight - textarea.clientHeight);
-
-        // Update cursor
-        setCursorPos({ line: lineNumber, col: 1 });
       },
       insertSnippet: (snippet: string) => {
-        insertTextAtCursor(snippet);
+        if (inputMode === "visual") {
+          visualEditorRef.current?.insertSnippet(snippet);
+        } else {
+          insertTextAtCursor(snippet);
+        }
       },
     }));
 
@@ -353,54 +364,119 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
 
     return (
       <div className={`flex flex-col h-full ${editorBg} border-r border-slate-200 dark:border-slate-800 relative transition-colors`}>
-        {/* Formatting Toolbar */}
-        <EditorToolbar
-          onInsertText={insertTextAtCursor}
-          onUploadImage={handleUploadImage}
-          isUploading={isUploading}
-          onOpenSearch={() => setIsSearchOpen(true)}
-          editorTheme={editorTheme}
-          onToggleTheme={() =>
-            setEditorTheme(editorTheme === "light" ? "dark" : "light")
-          }
-        />
+        {/* Editor Mode Header */}
+        <div className="h-10 bg-white border-b border-slate-200 px-4 flex items-center justify-between flex-shrink-0 z-10 shadow-2xs">
+          <div className="flex items-center space-x-2.5">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">โหมดแก้ไข:</span>
+            {/* Mode Switcher Segmented Control */}
+            <div className="flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5">
+              <button
+                type="button"
+                onClick={() => setInputMode("visual")}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-semibold transition-all ${
+                  inputMode === "visual"
+                    ? "bg-white text-blue-600 shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+                title="โหมดพิมพ์เสมือนจริง (เหมือน Word / Notion ไม่เห็นเครื่องหมาย # หรือ **)"
+              >
+                <Eye className="w-3.5 h-3.5" />
+                <span>Visual (พิมพ์จริง)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setInputMode("markdown")}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-semibold transition-all ${
+                  inputMode === "markdown"
+                    ? "bg-white text-blue-600 shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+                title="โหมดโค้ดดิบ Markdown (แสดงสัญลักษณ์ syntax สำหรับใส่โค้ด ไดอะแกรม)"
+              >
+                <Code className="w-3.5 h-3.5" />
+                <span>Markdown (โค้ดดิบ)</span>
+              </button>
+            </div>
+          </div>
 
-        {/* In-Editor Search Overlay */}
-        <EditorSearch
-          isOpen={isSearchOpen}
-          onClose={() => setIsSearchOpen(false)}
-          content={content}
-          onFindNext={handleFindNext}
-          onFindPrev={handleFindPrev}
-          onReplace={handleReplace}
-          onReplaceAll={handleReplaceAll}
-          currentMatchIndex={currentMatchIndex}
-          totalMatches={searchMatches.length}
-        />
+          <div className="hidden sm:flex items-center text-xs text-slate-500 font-mono">
+            {inputMode === "visual" ? (
+              <span className="text-[11px] text-slate-500">
+                ✨ ซ่อนสัญลักษณ์ Syntax อัตโนมัติ (WYSIWYG)
+              </span>
+            ) : (
+              <span className="text-[11px] text-slate-500">
+                💻 โค้ดดิบ Markdown สำหรับใส่โค้ด/ไดอะแกรม
+              </span>
+            )}
+          </div>
+        </div>
 
-        {uploadStatus && (
-          <div className="bg-blue-600/10 border-b border-blue-500/20 px-4 py-1 text-xs text-blue-600 dark:text-blue-300 flex items-center justify-between">
-            <span>{uploadStatus}</span>
+        {/* Visual Mode View */}
+        {inputMode === "visual" ? (
+          <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+            <VisualEditor
+              ref={visualEditorRef}
+              content={content}
+              onChange={onChange}
+              onSave={onSave}
+              onUploadImage={handleUploadImage}
+              isUploading={isUploading}
+            />
+          </div>
+        ) : (
+          /* Raw Markdown Mode View */
+          <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+            {/* Formatting Toolbar */}
+            <EditorToolbar
+              onInsertText={insertTextAtCursor}
+              onUploadImage={handleUploadImage}
+              isUploading={isUploading}
+              onOpenSearch={() => setIsSearchOpen(true)}
+              editorTheme={editorTheme}
+              onToggleTheme={() =>
+                setEditorTheme(editorTheme === "light" ? "dark" : "light")
+              }
+            />
+
+            {/* In-Editor Search Overlay */}
+            <EditorSearch
+              isOpen={isSearchOpen}
+              onClose={() => setIsSearchOpen(false)}
+              content={content}
+              onFindNext={handleFindNext}
+              onFindPrev={handleFindPrev}
+              onReplace={handleReplace}
+              onReplaceAll={handleReplaceAll}
+              currentMatchIndex={currentMatchIndex}
+              totalMatches={searchMatches.length}
+            />
+
+            {uploadStatus && (
+              <div className="bg-blue-600/10 border-b border-blue-500/20 px-4 py-1 text-xs text-blue-600 dark:text-blue-300 flex items-center justify-between">
+                <span>{uploadStatus}</span>
+              </div>
+            )}
+
+            {/* Main Editor Textarea (Clean, comfortable, perfectly readable) */}
+            <div className="relative flex-1 flex overflow-hidden">
+              <textarea
+                ref={textareaRef}
+                value={content}
+                onChange={(e) => onChange(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onKeyUp={handleSelectOrClick}
+                onClick={handleSelectOrClick}
+                onScroll={handleScroll}
+                onPaste={handlePaste}
+                onDrop={handleDrop}
+                placeholder="เริ่มเขียนเอกสาร Markdown ที่นี่..."
+                className={`w-full h-full p-6 sm:p-8 font-mono text-[13.5px] leading-relaxed resize-none focus:outline-none selection:bg-blue-500 selection:text-white ${editorBg}`}
+                spellCheck={false}
+              />
+            </div>
           </div>
         )}
-
-        {/* Main Editor Textarea (Clean, comfortable, perfectly readable) */}
-        <div className="relative flex-1 flex overflow-hidden">
-          <textarea
-            ref={textareaRef}
-            value={content}
-            onChange={(e) => onChange(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onKeyUp={handleSelectOrClick}
-            onClick={handleSelectOrClick}
-            onScroll={handleScroll}
-            onPaste={handlePaste}
-            onDrop={handleDrop}
-            placeholder="เริ่มเขียนเอกสาร Markdown ที่นี่..."
-            className={`w-full h-full p-6 sm:p-8 font-mono text-[13.5px] leading-relaxed resize-none focus:outline-none selection:bg-blue-500 selection:text-white ${editorBg}`}
-            spellCheck={false}
-          />
-        </div>
 
         {/* Bottom Status Bar (Single line, no overlapping text, clean metrics) */}
         <div className={`border-t px-4 py-2 flex items-center justify-between text-xs font-mono select-none overflow-x-auto whitespace-nowrap gap-4 ${statusBg}`}>

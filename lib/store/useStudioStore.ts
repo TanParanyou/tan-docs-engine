@@ -4,6 +4,7 @@ import { DocsConfig, WorkspaceData } from "@/lib/types";
 export type ViewMode = "split" | "editor" | "preview";
 export type ActiveTab = "files" | "outline" | "snippets" | "settings" | null;
 export type EditorTheme = "light" | "dark";
+export type InputMode = "visual" | "markdown";
 
 export interface FileItem {
   filename: string;
@@ -20,6 +21,7 @@ interface StudioState {
 
   // View & UI controls
   viewMode: ViewMode;
+  inputMode: InputMode;
   activeTab: ActiveTab;
   splitRatio: number;
   syncScroll: boolean;
@@ -42,6 +44,7 @@ interface StudioState {
   setConfig: (config: DocsConfig) => void;
   setFiles: (files: FileItem[]) => void;
   setViewMode: (mode: ViewMode) => void;
+  setInputMode: (mode: InputMode) => void;
   setActiveTab: (tab: ActiveTab) => void;
   toggleActiveTab: (tab: ActiveTab) => void;
   setSplitRatio: (ratio: number) => void;
@@ -74,6 +77,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   savedContent: "",
 
   viewMode: "split",
+  inputMode: "visual",
   activeTab: "outline",
   splitRatio: 50,
   syncScroll: true,
@@ -110,6 +114,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   setConfig: (config) => set({ config }),
   setFiles: (files) => set({ files }),
   setViewMode: (viewMode) => set({ viewMode }),
+  setInputMode: (inputMode) => set({ inputMode }),
   setActiveTab: (activeTab) => set({ activeTab }),
   toggleActiveTab: (tab) =>
     set((state) => ({ activeTab: state.activeTab === tab ? null : tab })),

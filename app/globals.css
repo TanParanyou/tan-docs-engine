@@ -1,0 +1,200 @@
+@import "../templates/style.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Ensure preview and print have exact same typography and resets */
+body {
+  color: var(--text-color, #1e293b);
+  background-color: #f8fafc;
+  font-family: var(--font-sans);
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Document typography resets to override Tailwind Preflight */
+.doc-content p,
+.document-content p {
+  margin: 0 0 12px 0;
+  line-height: 1.7;
+}
+
+.doc-content h1,
+.document-content h1 {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-top: 24px;
+  margin-bottom: 12px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--accent-color, #1d4ed8);
+}
+
+.doc-content h2,
+.document-content h2 {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.35;
+  margin-top: 22px;
+  margin-bottom: 10px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+}
+
+.doc-content h3,
+.document-content h3 {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+  margin-top: 18px;
+  margin-bottom: 8px;
+  color: #0f172a;
+}
+
+.doc-content h4,
+.document-content h4 {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  margin-top: 14px;
+  margin-bottom: 6px;
+  color: var(--accent-color, #1e40af);
+}
+
+.doc-content ul,
+.document-content ul {
+  list-style-type: disc;
+  padding-left: 24px;
+  margin: 10px 0 16px 0;
+}
+
+.doc-content ol,
+.document-content ol {
+  list-style-type: decimal;
+  padding-left: 24px;
+  margin: 10px 0 16px 0;
+}
+
+.doc-content li,
+.document-content li {
+  margin-bottom: 6px;
+  line-height: 1.6;
+}
+
+.doc-content ul.contains-task-list,
+.document-content ul.contains-task-list {
+  list-style-type: none;
+  padding-left: 4px;
+}
+
+.doc-content hr,
+.document-content hr {
+  margin: 24px 0;
+  border: 0;
+  border-top: 1px solid #cbd5e1;
+}
+
+/* Print Specific Rules */
+@media print {
+  body {
+    background-color: #ffffff;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* TipTap ProseMirror Visual Canvas Styles */
+.doc-visual-canvas {
+  font-family: var(--font-sans);
+  color: #1e293b;
+}
+
+.doc-visual-canvas h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-color, #0f3b6c);
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 2px solid var(--accent-color, #1e40af);
+}
+
+.doc-visual-canvas h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary-color, #0f3b6c);
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.doc-visual-canvas h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.doc-visual-canvas p {
+  margin-bottom: 0.75rem;
+  line-height: 1.7;
+}
+
+.doc-visual-canvas table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  border: 1px solid #cbd5e1;
+}
+
+.doc-visual-canvas th,
+.doc-visual-canvas td {
+  border: 1px solid #cbd5e1;
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: top;
+  position: relative;
+}
+
+.doc-visual-canvas th {
+  background-color: var(--primary-color, #0f3b6c);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.doc-visual-canvas td {
+  background-color: #ffffff;
+  font-size: 13px;
+}
+
+.doc-visual-canvas ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.doc-visual-canvas ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.doc-visual-canvas blockquote {
+  border-left: 4px solid var(--accent-color, #2563eb);
+  padding: 0.5rem 1rem;
+  background-color: #f8fafc;
+  color: #475569;
+  margin: 1rem 0;
+  border-radius: 0 4px 4px 0;
+}
+
+.doc-visual-canvas hr {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 1.5rem 0;
+}
+
