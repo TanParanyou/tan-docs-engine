@@ -128,7 +128,42 @@ export function createWorkspace(input: import("./types").CreateWorkspaceInput): 
   const assetsDir = path.join(srcDir, "assets");
   fs.mkdirSync(assetsDir, { recursive: true });
 
-  const initialFilename = "01-system-overview.md";
+  const hasInitialFiles = Array.isArray(input.initialFiles) && input.initialFiles.length > 0;
+  const processedFiles: string[] = [];
+
+  if (hasInitialFiles) {
+    const seenNames = new Set<string>();
+    input.initialFiles!.forEach((item, index) => {
+      let base = path.basename(item.filename || `document-${index + 1}.md`);
+      if (!base.toLowerCase().endsWith(".md")) {
+        base += ".md";
+      }
+      // Sanitize: allow alphanumeric, thai, hyphens, underscores, dots
+      let safeName = base.replace(/[^a-zA-Z0-9_\u0E00-\u0E7F.-]/g, "-").replace(/-+/g, "-");
+      if (!safeName || safeName === ".md") {
+        safeName = `document-${index + 1}.md`;
+      }
+      // Ensure unique filename
+      let uniqueName = safeName;
+      let counter = 1;
+      const ext = path.extname(safeName);
+      const nameWithoutExt = path.basename(safeName, ext);
+      while (seenNames.has(uniqueName.toLowerCase())) {
+        uniqueName = `${nameWithoutExt}-${counter}${ext}`;
+        counter++;
+      }
+      seenNames.add(uniqueName.toLowerCase());
+
+      fs.writeFileSync(path.join(srcDir, uniqueName), item.content || "", "utf-8");
+      processedFiles.push(uniqueName);
+    });
+  } else {
+    const initialFilename = "01-system-overview.md";
+    const initialContent = `# ${input.title}\n\n## 1. บทนำและวัตถุประสงค์ (Overview)\nยินดีต้อนรับสู่เอกสารสเปกของ **${input.name}**\n\n- **Project:** ${input.name}\n- **Version:** v${input.version || "1.0.0"}\n- **Author:** ${input.author}\n\n## 2. แผนภาพสถาปัตยกรรม (Architecture Flowchart)\n\`\`\`mermaid\ngraph TD\n  Client[User Application] --> Gateway[API Gateway]\n  Gateway --> Service[Core Microservice]\n  Service --> DB[(Database Cluster)]\n\`\`\`\n\n<!-- pagebreak -->\n\n## 3. รายละเอียดระบบ (System Specifications)\n| โมดูล (Module) | รายละเอียด (Description) | สถานะ (Status) |\n| :--- | :--- | :--- |\n| Core Engine | ประมวลผลและจัดการข้อมูลหลัก | กำลังพัฒนา |\n| Security & Auth | การยืนยันตัวตนและการเข้าถึง | เสร็จสมบูรณ์ |\n`;
+    fs.writeFileSync(path.join(srcDir, initialFilename), initialContent, "utf-8");
+    processedFiles.push(initialFilename);
+  }
+
   const initialConfig: DocsConfig = {
     name: input.name,
     title: input.title,
@@ -140,7 +175,7 @@ export function createWorkspace(input: import("./types").CreateWorkspaceInput): 
     client: input.client || "",
     organization: input.organization || "TAN TECHNOLOGY SOLUTIONS",
     date: new Date().toISOString().split("T")[0],
-    files: [initialFilename],
+    files: processedFiles,
     theme: {
       primaryColor: input.theme?.primaryColor || "#0f172a",
       accentColor: input.theme?.accentColor || "#2563eb",
@@ -158,10 +193,6 @@ export function createWorkspace(input: import("./types").CreateWorkspaceInput): 
     JSON.stringify(initialConfig, null, 2),
     "utf-8"
   );
-
-  const initialContent = `# ${input.title}\n\n## 1. บทนำและวัตถุประสงค์ (Overview)\nยินดีต้อนรับสู่เอกสารสเปกของ **${input.name}**\n\n- **Project:** ${input.name}\n- **Version:** v${initialConfig.version}\n- **Author:** ${input.author}\n\n## 2. แผนภาพสถาปัตยกรรม (Architecture Flowchart)\n\`\`\`mermaid\ngraph TD\n  Client[User Application] --> Gateway[API Gateway]\n  Gateway --> Service[Core Microservice]\n  Service --> DB[(Database Cluster)]\n\`\`\`\n\n<!-- pagebreak -->\n\n## 3. รายละเอียดระบบ (System Specifications)\n| โมดูล (Module) | รายละเอียด (Description) | สถานะ (Status) |\n| :--- | :--- | :--- |\n| Core Engine | ประมวลผลและจัดการข้อมูลหลัก | กำลังพัฒนา |\n| Security & Auth | การยืนยันตัวตนและการเข้าถึง | เสร็จสมบูรณ์ |\n`;
-
-  fs.writeFileSync(path.join(srcDir, initialFilename), initialContent, "utf-8");
 
   const data = getWorkspaceData(input.slug);
   if (!data) {

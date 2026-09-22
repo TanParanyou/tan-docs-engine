@@ -94,6 +94,36 @@ body {
   border-top: 1px solid #cbd5e1;
 }
 
+/* Responsive container rules for tables, pre, and images inside documents */
+.doc-content table,
+.document-content table {
+  display: table;
+  max-width: 100%;
+}
+
+@media (max-width: 640px) {
+  .doc-content table,
+  .document-content table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+.doc-content pre,
+.document-content pre {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.doc-content img,
+.document-content img {
+  max-width: 100%;
+  height: auto;
+}
+
 /* Print Specific Rules */
 @media print {
   body {

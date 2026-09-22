@@ -1,0 +1,25 @@
+{
+  "name": "d",
+  "title": "d Requirement Confirmation & System Specifications",
+  "subtitle": "",
+  "documentNumber": "DOC-D-2026-001",
+  "version": "1.0.0",
+  "status": "Draft",
+  "author": "Tan System Architecture Team",
+  "client": "",
+  "organization": "TAN TECHNOLOGY SOLUTIONS",
+  "date": "2026-09-22",
+  "files": [
+    "01-system-overview.md"
+  ],
+  "theme": {
+    "primaryColor": "#0f172a",
+    "accentColor": "#2563eb"
+  },
+  "pdfOptions": {
+    "format": "A4",
+    "orientation": "portrait",
+    "printBackground": true,
+    "displayHeaderFooter": true
+  }
+}

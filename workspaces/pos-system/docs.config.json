@@ -1,0 +1,22 @@
+{
+  "name": "Smart POS Terminal",
+  "title": "System Architecture & Integration Manual",
+  "subtitle": "คู่มือสถาปัตยกรรมและข้อกำหนดการเชื่อมต่อระบบขายหน้าร้าน",
+  "documentNumber": "DOC-POS-2026-004",
+  "version": "2.1.0",
+  "status": "Review",
+  "author": "Tan Hardware & Retail Engineering",
+  "client": "Retail HyperMart Global",
+  "organization": "TAN TECHNOLOGY SOLUTIONS",
+  "date": "2026-09-22",
+  "theme": {
+    "primaryColor": "#064e3b",
+    "accentColor": "#059669"
+  },
+  "pdfOptions": {
+    "format": "A4",
+    "orientation": "portrait",
+    "printBackground": true,
+    "displayHeaderFooter": true
+  }
+}

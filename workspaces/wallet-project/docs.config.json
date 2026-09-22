@@ -1,0 +1,22 @@
+{
+  "name": "E-Wallet Platform",
+  "title": "Requirement Confirmation & System Specifications",
+  "subtitle": "เอกสารยืนยันขอบเขตความต้องการและสถาปัตยกรรมระบบกระเป๋าเงินอิเล็กทรอนิกส์",
+  "documentNumber": "DOC-WLT-2026-001",
+  "version": "1.0.0",
+  "status": "Approved",
+  "author": "Tan System Architecture Team",
+  "client": "Financial Services Corp Ltd.",
+  "organization": "TAN TECHNOLOGY SOLUTIONS",
+  "date": "2026-09-22",
+  "theme": {
+    "primaryColor": "#0f172a",
+    "accentColor": "#2563eb"
+  },
+  "pdfOptions": {
+    "format": "A4",
+    "orientation": "portrait",
+    "printBackground": true,
+    "displayHeaderFooter": true
+  }
+}

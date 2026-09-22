@@ -44,6 +44,11 @@ export interface WorkspaceData {
   combinedHtml: string;
 }
 
+export interface InitialMarkdownFile {
+  filename: string;
+  content: string;
+}
+
 export interface CreateWorkspaceInput {
   slug: string;
   name: string;
@@ -56,4 +61,5 @@ export interface CreateWorkspaceInput {
   client?: string;
   organization?: string;
   theme?: ThemeConfig;
+  initialFiles?: InitialMarkdownFile[];
 }

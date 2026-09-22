@@ -1,0 +1,556 @@
+/* ==========================================================================
+   tan-docs-engine: Global Professional Document Stylesheet
+   Designed for Multi-tenant Technical & Requirement Confirmation Documents
+   ========================================================================== */
+
+:root {
+  --primary-color: #1e293b;
+  --primary-light: #334155;
+  --accent-color: #2563eb;
+  --accent-light: #eff6ff;
+  --text-color: #1e293b;
+  --text-muted: #64748b;
+  --bg-color: #ffffff;
+  --bg-subtle: #f8fafc;
+  --border-color: #e2e8f0;
+  --border-dark: #cbd5e1;
+  --table-header-bg: #f8fafc;
+  --table-row-even: #ffffff;
+  --table-row-odd: #fcfdfe;
+  --code-bg: #f8fafc;
+  --success-color: #059669;
+  --warning-color: #d97706;
+  --danger-color: #dc2626;
+
+  /* Typography: Optimal for Thai and English technical documents */
+  --font-sans: "Thonburi", "Sukhumvit Set", -apple-system, BlinkMacSystemFont, "Sarabun", "Prompt", "Noto Sans Thai", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "SF Mono", Menlo, Consolas, Monaco, "Liberation Mono", "Courier New", monospace;
+}
+
+@page {
+  size: A4 portrait;
+  margin: 18mm 16mm 18mm 16mm;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-color);
+  background-color: var(--bg-color);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* ==========================================================================
+   Page Breaks & Section Controls
+   ========================================================================== */
+
+.page-break {
+  page-break-after: always;
+  break-after: page;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  display: block;
+}
+
+.no-break {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+/* ==========================================================================
+   Cover Page Layout
+   ========================================================================== */
+
+.cover-page {
+  page-break-after: always;
+  break-after: page;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 250mm; /* A4 printable height */
+  padding: 20mm 0 10mm 0;
+}
+
+.cover-header {
+  border-bottom: 3px solid var(--accent-color);
+  padding-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.cover-logo img {
+  max-height: 50px;
+  max-width: 180px;
+  object-fit: contain;
+}
+
+.cover-org {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cover-body {
+  margin-top: 50mm;
+  margin-bottom: auto;
+}
+
+.cover-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-color);
+  background-color: var(--accent-light);
+  border: 1px solid var(--accent-color);
+  border-radius: 4px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  letter-spacing: 0.03em;
+}
+
+.cover-title {
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--primary-color);
+  margin: 0 0 16px 0;
+}
+
+.cover-subtitle {
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.cover-meta-table {
+  width: 100%;
+  margin-top: 30mm;
+  border-collapse: collapse;
+}
+
+.cover-meta-table td {
+  padding: 8px 12px;
+  font-size: 13px;
+  border-top: 1px solid var(--border-color);
+}
+
+.cover-meta-table td.label {
+  width: 25%;
+  font-weight: 600;
+  color: var(--text-muted);
+  background-color: var(--bg-subtle);
+}
+
+.cover-meta-table td.value {
+  color: var(--text-color);
+  font-weight: 500;
+}
+
+.cover-footer {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  border-top: 1px solid var(--border-color);
+  padding-top: 12px;
+}
+
+/* ==========================================================================
+   Document Header Banner (When coverPage is false)
+   ========================================================================== */
+
+.doc-header-banner {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.doc-main-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary-color, #0f3b6c);
+  margin: 0 0 6px 0;
+  text-align: center;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.doc-main-subtitle {
+  font-size: 13px;
+  color: var(--text-muted, #475569);
+  font-style: italic;
+  margin: 0 0 12px 0;
+  text-align: center;
+}
+
+.doc-header-divider {
+  border-bottom: 2px solid var(--accent-color, #1e40af);
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+/* ==========================================================================
+   Document Content Headings
+   ========================================================================== */
+
+.doc-content h1, .document-content h1, h1,
+.doc-content h2, .document-content h2, h2,
+.doc-content h3, .document-content h3, h3,
+.doc-content h4, .document-content h4, h4,
+.doc-content h5, .document-content h5, h5,
+.doc-content h6, .document-content h6, h6 {
+  color: var(--primary-color);
+  font-weight: 700;
+  break-after: avoid;
+  page-break-after: avoid;
+}
+
+.doc-content h1, .document-content h1, h1 {
+  font-size: 20px;
+  line-height: 1.3;
+  margin-top: 24px;
+  margin-bottom: 12px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--accent-color);
+}
+
+.doc-content h2, .document-content h2, h2 {
+  font-size: 16px;
+  line-height: 1.35;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.doc-content h3, .document-content h3, h3 {
+  font-size: 14px;
+  line-height: 1.4;
+  margin-top: 18px;
+  margin-bottom: 8px;
+  color: #0f172a;
+}
+
+.doc-content h4, .document-content h4, h4 {
+  font-size: 13px;
+  line-height: 1.4;
+  margin-top: 14px;
+  margin-bottom: 6px;
+  color: var(--accent-color, #1e40af);
+}
+
+.doc-content p, .document-content p, p {
+  margin: 0 0 12px 0;
+  line-height: 1.7;
+}
+
+/* ==========================================================================
+   Tables (Navy Header, Crisp Borders, Professional Format)
+   ========================================================================== */
+
+.doc-content table, .document-content table, table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0 16px 0;
+  font-size: 11px;
+  line-height: 1.5;
+  page-break-inside: avoid;
+  break-inside: avoid;
+  border: 1px solid #000000;
+}
+
+.doc-content th, .document-content th, th,
+.doc-content td, .document-content td, td {
+  padding: 6px 10px;
+  text-align: left;
+  vertical-align: top;
+  border: 1px solid #000000;
+}
+
+.doc-content th, .document-content th, th {
+  background-color: var(--primary-color, #0f3b6c) !important;
+  color: #ffffff !important;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+
+.doc-content td, .document-content td, td {
+  background-color: #ffffff;
+}
+
+/* ==========================================================================
+   Review Box (ผลการพิจารณา)
+   ========================================================================== */
+
+.review-box {
+  margin: 16px 0 24px 0;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.review-box-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.review-box-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #000000;
+  margin: 0;
+}
+
+.review-box-table td {
+  border: 1px solid #000000;
+  padding: 6px 10px;
+  font-size: 11px;
+  background-color: #ffffff;
+}
+
+.review-box-table td.label-cell {
+  width: 30%;
+  font-weight: 600;
+  vertical-align: top;
+}
+
+.review-box-table td.notes-cell {
+  height: 48px;
+}
+
+.review-status-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 16px;
+  font-size: 11px;
+}
+
+/* ==========================================================================
+   Sign-off Table (2 Columns with Signature Lines)
+   ========================================================================== */
+
+.signoff-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #000000;
+  margin-top: 14px;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.signoff-table td {
+  width: 50%;
+  border: 1px solid #000000;
+  padding: 14px 16px;
+  vertical-align: top;
+  font-size: 11px;
+  line-height: 1.6;
+  background-color: #ffffff;
+}
+
+.signoff-line {
+  margin-top: 10px;
+}
+
+/* ==========================================================================
+   Task Lists & Checkboxes
+   ========================================================================== */
+
+ul.contains-task-list {
+  list-style-type: none;
+  padding-left: 4px;
+  margin: 12px 0;
+}
+
+li.task-list-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+li.task-list-item input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 15px;
+  height: 15px;
+  border: 1.5px solid var(--border-dark);
+  border-radius: 3px;
+  margin: 0;
+  position: relative;
+  top: 2px;
+  background-color: #fff;
+  flex-shrink: 0;
+}
+
+li.task-list-item input[type="checkbox"]:checked {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+}
+
+li.task-list-item input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* Standard Lists */
+.doc-content ul, .document-content ul, ul {
+  list-style-type: disc;
+  padding-left: 24px;
+  margin: 10px 0 16px 0;
+}
+
+.doc-content ol, .document-content ol, ol {
+  list-style-type: decimal;
+  padding-left: 24px;
+  margin: 10px 0 16px 0;
+}
+
+.doc-content li, .document-content li, li {
+  margin-bottom: 6px;
+  line-height: 1.6;
+}
+
+/* ==========================================================================
+   Blockquotes, Callouts, and Alerts
+   ========================================================================== */
+
+.doc-content blockquote, .document-content blockquote, blockquote {
+  margin: 16px 0;
+  padding: 12px 18px;
+  background-color: var(--bg-subtle);
+  border-left: 4px solid var(--accent-color);
+  color: var(--text-color);
+  border-radius: 0 4px 4px 0;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.doc-content blockquote p:last-child, .document-content blockquote p:last-child, blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+/* ==========================================================================
+   Code Blocks & Inline Code
+   ========================================================================== */
+
+.doc-content code, .document-content code, code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background-color: var(--code-bg);
+  border: 1px solid var(--border-color);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #b91c1c;
+}
+
+.doc-content pre, .document-content pre, pre {
+  background-color: #1e293b;
+  color: #f8fafc;
+  padding: 14px 16px;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 16px 0;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.doc-content pre code, .document-content pre code, pre code {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+}
+
+/* ==========================================================================
+   Mermaid Diagrams & Images
+   ========================================================================== */
+
+.mermaid {
+  display: flex;
+  justify-content: center;
+  margin: 24px 0;
+  page-break-inside: avoid;
+  break-inside: avoid;
+  background-color: #ffffff;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+}
+
+.mermaid svg {
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 12px auto;
+  display: block;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+/* ==========================================================================
+   Badge & Status Pills
+   ========================================================================== */
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 12px;
+  text-transform: uppercase;
+}
+
+.badge-success {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.badge-warning {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.badge-info {
+  background-color: #e0f2fe;
+  color: #0369a1;
+}
+
+.badge-danger {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}

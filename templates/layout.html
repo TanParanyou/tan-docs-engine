@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{documentTitle}}</title>
+  <base href="{{baseHref}}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <style>
+    /* Global & Dynamic Theme Styles */
+    {{globalStyles}}
+    {{themeStyles}}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'neutral',
+      securityLevel: 'loose',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Sarabun", "Prompt", "Segoe UI", Roboto, sans-serif'
+    });
+
+    window.__renderMermaid = async function() {
+      const nodes = document.querySelectorAll('.mermaid');
+      if (nodes.length > 0) {
+        try {
+          await mermaid.run({ nodes });
+        } catch (err) {
+          console.warn('Mermaid rendering warning:', err);
+        }
+      }
+      return true;
+    };
+  </script>
+</head>
+<body>
+
+  <!-- Optional Cover Page -->
+  {{coverPageHtml}}
+
+  <!-- Main Content Area -->
+  <main class="document-content">
+    {{contentHtml}}
+  </main>
+
+</body>
+</html>

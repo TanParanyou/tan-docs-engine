@@ -5,7 +5,8 @@ import EditorToolbar from "./EditorToolbar";
 import EditorSearch from "./EditorSearch";
 import VisualEditor, { VisualEditorHandle } from "./VisualEditor";
 import { useStudioStore } from "@/lib/store/useStudioStore";
-import { Eye, Code } from "lucide-react";
+import EditorModeSwitcher from "./editor/EditorModeSwitcher";
+import EditorStatusBar from "./editor/EditorStatusBar";
 
 export interface MarkdownEditorHandle {
   jumpToLine: (lineNumber: number) => void;
@@ -365,52 +366,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
     return (
       <div className={`flex flex-col h-full ${editorBg} border-r border-slate-200 dark:border-slate-800 relative transition-colors`}>
         {/* Editor Mode Header */}
-        <div className="h-10 bg-white border-b border-slate-200 px-4 flex items-center justify-between flex-shrink-0 z-10 shadow-2xs">
-          <div className="flex items-center space-x-2.5">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">โหมดแก้ไข:</span>
-            {/* Mode Switcher Segmented Control */}
-            <div className="flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5">
-              <button
-                type="button"
-                onClick={() => setInputMode("visual")}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-semibold transition-all ${
-                  inputMode === "visual"
-                    ? "bg-white text-blue-600 shadow-xs"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-                title="โหมดพิมพ์เสมือนจริง (เหมือน Word / Notion ไม่เห็นเครื่องหมาย # หรือ **)"
-              >
-                <Eye className="w-3.5 h-3.5" />
-                <span>Visual (พิมพ์จริง)</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setInputMode("markdown")}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-semibold transition-all ${
-                  inputMode === "markdown"
-                    ? "bg-white text-blue-600 shadow-xs"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-                title="โหมดโค้ดดิบ Markdown (แสดงสัญลักษณ์ syntax สำหรับใส่โค้ด ไดอะแกรม)"
-              >
-                <Code className="w-3.5 h-3.5" />
-                <span>Markdown (โค้ดดิบ)</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="hidden sm:flex items-center text-xs text-slate-500 font-mono">
-            {inputMode === "visual" ? (
-              <span className="text-[11px] text-slate-500">
-                ✨ ซ่อนสัญลักษณ์ Syntax อัตโนมัติ (WYSIWYG)
-              </span>
-            ) : (
-              <span className="text-[11px] text-slate-500">
-                💻 โค้ดดิบ Markdown สำหรับใส่โค้ด/ไดอะแกรม
-              </span>
-            )}
-          </div>
-        </div>
+        <EditorModeSwitcher inputMode={inputMode} onChange={setInputMode} />
 
         {/* Visual Mode View */}
         {inputMode === "visual" ? (
@@ -478,34 +434,16 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
           </div>
         )}
 
-        {/* Bottom Status Bar (Single line, no overlapping text, clean metrics) */}
-        <div className={`border-t px-4 py-2 flex items-center justify-between text-xs font-mono select-none overflow-x-auto whitespace-nowrap gap-4 ${statusBg}`}>
-          <div className="flex items-center gap-3">
-            <span className="font-semibold text-blue-600 dark:text-blue-400 truncate max-w-[220px]">
-              {filename}
-            </span>
-            <span className="text-slate-300 dark:text-slate-700">&bull;</span>
-            <span className="font-medium">
-              Ln {cursorPos.line}, Col {cursorPos.col}
-            </span>
-            <span className="text-slate-300 dark:text-slate-700">&bull;</span>
-            <span>{lineCount} บรรทัด</span>
-            <span className="text-slate-300 dark:text-slate-700">&bull;</span>
-            <span>{words.toLocaleString()} คำ</span>
-            <span className="text-slate-300 dark:text-slate-700">&bull;</span>
-            <span>{chars.toLocaleString()} ตัวอักษร</span>
-          </div>
-
-          <div className="flex items-center gap-2 text-slate-400 dark:text-slate-500 text-[11px]">
-            <span>คีย์ลัด:</span>
-            <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-sans shadow-xs">
-              ⌘S บันทึก
-            </kbd>
-            <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-sans shadow-xs">
-              ⌘F ค้นหา
-            </kbd>
-          </div>
-        </div>
+        {/* Bottom Status Bar */}
+        <EditorStatusBar
+          filename={filename}
+          cursorLine={cursorPos.line}
+          cursorCol={cursorPos.col}
+          lineCount={lineCount}
+          words={words}
+          chars={chars}
+          isLight={isLight}
+        />
       </div>
     );
   }
