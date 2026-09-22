@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState, useCallback, useEffect, useImperativeHandle, forwardRef } from "react";
+import React, { useRef, useState, useCallback, useImperativeHandle, forwardRef } from "react";
 import EditorToolbar from "./EditorToolbar";
 import EditorSearch from "./EditorSearch";
 
@@ -25,7 +25,6 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
     ref
   ) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const lineNumbersRef = useRef<HTMLDivElement>(null);
     const [editorTheme, setEditorTheme] = useState<"light" | "dark">("light");
     const [isUploading, setIsUploading] = useState(false);
     const [uploadStatus, setUploadStatus] = useState<string | null>(null);
@@ -53,9 +52,13 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
         textarea.focus();
         textarea.setSelectionRange(charIndex, charIndex);
 
-        // Approximate scroll to line
-        const lineHeight = 21; // font-size 13px + line-height ~21px
-        textarea.scrollTop = Math.max(0, (lineNumber - 5) * lineHeight);
+        // Approximate scroll to line smoothly
+        const totalLines = Math.max(1, lines.length);
+        const percentage = Math.max(0, (lineNumber - 2) / totalLines);
+        textarea.scrollTop = percentage * (textarea.scrollHeight - textarea.clientHeight);
+
+        // Update cursor
+        setCursorPos({ line: lineNumber, col: 1 });
       },
       insertSnippet: (snippet: string) => {
         insertTextAtCursor(snippet);
@@ -85,6 +88,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
           textarea.focus();
           const cursorPosition = start + before.length + textToInsert.length;
           textarea.setSelectionRange(cursorPosition, cursorPosition);
+          handleSelectOrClick();
         }, 0);
       },
       [onChange]
@@ -230,14 +234,10 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
       }
     };
 
-    // Synchronize scrolling with line numbers and preview
+    // Synchronize scrolling with preview
     const handleScroll = () => {
       const textarea = textareaRef.current;
       if (!textarea) return;
-
-      if (lineNumbersRef.current) {
-        lineNumbersRef.current.scrollTop = textarea.scrollTop;
-      }
 
       if (syncScroll && onScroll) {
         const maxScroll = textarea.scrollHeight - textarea.clientHeight;
@@ -272,7 +272,6 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
       setSearchMatches(matches);
 
       if (matches.length > 0) {
-        // Find match after current cursor or loop to first
         const currentCursor = textarea.selectionStart;
         let nextIndex = matches.findIndex((idx) => idx > currentCursor);
         if (nextIndex === -1) nextIndex = 0;
@@ -343,15 +342,14 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
       setSearchMatches([]);
     };
 
-    // Calculate lines
+    // Calculate document statistics
     const lineCount = content ? content.split("\n").length : 1;
     const words = content ? content.trim().split(/\s+/).filter(Boolean).length : 0;
     const chars = content.length;
 
     const isLight = editorTheme === "light";
     const editorBg = isLight ? "bg-white text-slate-800" : "bg-slate-900 text-slate-100";
-    const gutterBg = isLight ? "bg-slate-50 text-slate-400 border-slate-200" : "bg-slate-950 text-slate-600 border-slate-800";
-    const statusBg = isLight ? "bg-slate-100 border-slate-200 text-slate-600" : "bg-slate-950 border-slate-800 text-slate-400";
+    const statusBg = isLight ? "bg-slate-50 border-slate-200 text-slate-600" : "bg-slate-950 border-slate-800 text-slate-400";
 
     return (
       <div className={`flex flex-col h-full ${editorBg} border-r border-slate-200 dark:border-slate-800 relative transition-colors`}>
@@ -386,21 +384,8 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
           </div>
         )}
 
-        {/* Editor Main Canvas with Line Numbers */}
+        {/* Main Editor Textarea (Clean, comfortable, perfectly readable) */}
         <div className="relative flex-1 flex overflow-hidden">
-          {/* Line Numbers Gutter */}
-          <div
-            ref={lineNumbersRef}
-            className={`w-12 flex-shrink-0 select-none text-right pr-3 pt-4 font-mono text-xs leading-[21px] overflow-hidden border-r ${gutterBg}`}
-          >
-            {Array.from({ length: lineCount }, (_, i) => (
-              <div key={i + 1} className={i + 1 === cursorPos.line ? "font-bold text-blue-600 dark:text-blue-400" : ""}>
-                {i + 1}
-              </div>
-            ))}
-          </div>
-
-          {/* Markdown Textarea */}
           <textarea
             ref={textareaRef}
             value={content}
@@ -411,37 +396,37 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
             onScroll={handleScroll}
             onPaste={handlePaste}
             onDrop={handleDrop}
-            placeholder="เริ่มเขียนเอกสาร Markdown ที่นี่... (พิมพ์ตามปกติ, วางรูปภาพได้เลย, หรือใช้ Snippets ทางซ้าย)"
-            className={`flex-1 p-4 font-mono text-[13px] leading-[21px] resize-none focus:outline-none selection:bg-blue-500 selection:text-white ${editorBg}`}
+            placeholder="เริ่มเขียนเอกสาร Markdown ที่นี่..."
+            className={`w-full h-full p-6 sm:p-8 font-mono text-[13.5px] leading-relaxed resize-none focus:outline-none selection:bg-blue-500 selection:text-white ${editorBg}`}
             spellCheck={false}
           />
         </div>
 
-        {/* Bottom Status Bar */}
-        <div className={`border-t px-4 py-1.5 flex items-center justify-between text-[11px] font-mono ${statusBg}`}>
+        {/* Bottom Status Bar (Single line, no overlapping text, clean metrics) */}
+        <div className={`border-t px-4 py-2 flex items-center justify-between text-xs font-mono select-none overflow-x-auto whitespace-nowrap gap-4 ${statusBg}`}>
           <div className="flex items-center gap-3">
-            <span className="font-semibold text-blue-600 dark:text-blue-400 truncate max-w-[200px]">
+            <span className="font-semibold text-blue-600 dark:text-blue-400 truncate max-w-[220px]">
               {filename}
             </span>
-            <span>&bull;</span>
-            <span>
+            <span className="text-slate-300 dark:text-slate-700">&bull;</span>
+            <span className="font-medium">
               Ln {cursorPos.line}, Col {cursorPos.col}
             </span>
-            <span>&bull;</span>
-            <span>{lineCount} lines</span>
-            <span>&bull;</span>
-            <span>{words} words</span>
-            <span>&bull;</span>
-            <span>{chars} chars</span>
+            <span className="text-slate-300 dark:text-slate-700">&bull;</span>
+            <span>{lineCount} บรรทัด</span>
+            <span className="text-slate-300 dark:text-slate-700">&bull;</span>
+            <span>{words.toLocaleString()} คำ</span>
+            <span className="text-slate-300 dark:text-slate-700">&bull;</span>
+            <span>{chars.toLocaleString()} ตัวอักษร</span>
           </div>
 
-          <div className="hidden sm:flex items-center gap-2 text-slate-500">
-            <span>Shortcut:</span>
-            <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-[10px]">
-              ⌘S Save
+          <div className="flex items-center gap-2 text-slate-400 dark:text-slate-500 text-[11px]">
+            <span>คีย์ลัด:</span>
+            <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-sans shadow-xs">
+              ⌘S บันทึก
             </kbd>
-            <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-[10px]">
-              ⌘F Find
+            <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-sans shadow-xs">
+              ⌘F ค้นหา
             </kbd>
           </div>
         </div>

@@ -333,47 +333,47 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
   const activeName = config.name || initialWorkspace.config.name;
 
   return (
-    <div className="h-screen flex flex-col bg-slate-950 text-slate-100 overflow-hidden font-sans select-none">
+    <div className="h-screen flex flex-col bg-slate-100 text-slate-800 overflow-hidden font-sans select-none">
       {/* Top Application Header */}
-      <header className="h-14 bg-slate-900 border-b border-slate-800 px-4 flex items-center justify-between flex-shrink-0 z-30 shadow-md">
+      <header className="h-14 bg-white border-b border-slate-200 px-4 flex items-center justify-between flex-shrink-0 z-30 shadow-xs">
         {/* Left: Brand, Navigation & File Info */}
         <div className="flex items-center space-x-3">
           <Link
             href={`/${activeSlug}`}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-2.5 py-1.5 rounded-lg transition-colors border border-slate-700/60"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 px-2.5 py-1.5 rounded-lg transition-colors border border-slate-200"
             title="Back to Document Reader"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Reader View</span>
           </Link>
 
-          <div className="h-4 w-px bg-slate-800" />
+          <div className="h-4 w-px bg-slate-200" />
 
           <div className="flex items-center space-x-2">
-            <span className="font-bold text-sm text-slate-100 truncate max-w-xs">
+            <span className="font-bold text-sm text-slate-900 truncate max-w-xs">
               {activeName}
             </span>
-            <span className="text-slate-500 font-mono text-xs">/</span>
-            <span className="text-xs font-mono text-blue-400 bg-blue-950/70 border border-blue-800/80 px-2 py-0.5 rounded-md font-semibold truncate max-w-[180px]">
+            <span className="text-slate-400 font-mono text-xs">/</span>
+            <span className="text-xs font-mono text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md font-semibold truncate max-w-[180px]">
               {selectedFile}
             </span>
           </div>
 
           {/* Dirty / Saved Status Badge */}
           {isDirty ? (
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-amber-950/70 text-amber-300 border border-amber-800 animate-pulse">
-              <Clock className="w-3 h-3 text-amber-400" />
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">
+              <Clock className="w-3 h-3 text-amber-500" />
               <span>Unsaved Changes</span>
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-emerald-950/70 text-emerald-300 border border-emerald-800">
-              <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <CheckCircle2 className="w-3 h-3 text-emerald-500" />
               <span>Saved {lastSavedTime ? `(${lastSavedTime})` : ""}</span>
             </span>
           )}
 
           {saveToast && (
-            <span className="text-xs font-semibold text-emerald-400">
+            <span className="text-xs font-semibold text-emerald-600">
               {saveToast}
             </span>
           )}
@@ -382,14 +382,14 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
         {/* Center: View Mode & Split Presets */}
         <div className="hidden lg:flex items-center space-x-2">
           {/* View Modes */}
-          <div className="flex items-center bg-slate-950 border border-slate-800 rounded-lg p-0.5">
+          <div className="flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5">
             <button
               type="button"
               onClick={() => setViewMode("editor")}
               className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${
                 viewMode === "editor"
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-white text-blue-600 shadow-xs font-semibold"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
               title="Full Editor Mode"
             >
@@ -401,8 +401,8 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
               onClick={() => setViewMode("split")}
               className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${
                 viewMode === "split"
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-white text-blue-600 shadow-xs font-semibold"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
               title="Split View Mode"
             >
@@ -414,8 +414,8 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
               onClick={() => setViewMode("preview")}
               className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${
                 viewMode === "preview"
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-white text-blue-600 shadow-xs font-semibold"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
               title="Full Preview Mode"
             >
@@ -426,14 +426,14 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
 
           {/* Split Ratio Presets */}
           {viewMode === "split" && (
-            <div className="flex items-center bg-slate-950 border border-slate-800 rounded-lg p-0.5 text-[11px] font-mono">
+            <div className="flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5 text-[11px] font-mono">
               <button
                 type="button"
                 onClick={() => setSplitRatio(35)}
                 className={`px-1.5 py-0.5 rounded transition-colors ${
                   splitRatio === 35
-                    ? "bg-slate-800 text-blue-400 font-bold"
-                    : "text-slate-500 hover:text-slate-300"
+                    ? "bg-white text-blue-600 font-bold shadow-xs"
+                    : "text-slate-500 hover:text-slate-800"
                 }`}
                 title="Preview Focus (35:65)"
               >
@@ -444,8 +444,8 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
                 onClick={() => setSplitRatio(50)}
                 className={`px-1.5 py-0.5 rounded transition-colors ${
                   splitRatio === 50
-                    ? "bg-slate-800 text-blue-400 font-bold"
-                    : "text-slate-500 hover:text-slate-300"
+                    ? "bg-white text-blue-600 font-bold shadow-xs"
+                    : "text-slate-500 hover:text-slate-800"
                 }`}
                 title="Balanced (50:50)"
               >
@@ -456,8 +456,8 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
                 onClick={() => setSplitRatio(65)}
                 className={`px-1.5 py-0.5 rounded transition-colors ${
                   splitRatio === 65
-                    ? "bg-slate-800 text-blue-400 font-bold"
-                    : "text-slate-500 hover:text-slate-300"
+                    ? "bg-white text-blue-600 font-bold shadow-xs"
+                    : "text-slate-500 hover:text-slate-800"
                 }`}
                 title="Editor Focus (65:35)"
               >
@@ -473,8 +473,8 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
               onClick={toggleSyncScroll}
               className={`px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 border transition-colors ${
                 syncScroll
-                  ? "bg-blue-950/60 border-blue-800 text-blue-300"
-                  : "bg-slate-900 border-slate-800 text-slate-500 hover:text-slate-300"
+                  ? "bg-blue-50 border-blue-200 text-blue-700"
+                  : "bg-slate-100 border-slate-200 text-slate-500 hover:text-slate-800"
               }`}
               title="Synchronize scrolling between editor and preview"
             >
@@ -491,7 +491,7 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
             type="button"
             onClick={handleSaveFile}
             disabled={isSaving}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 disabled:opacity-50 px-3.5 py-1.5 rounded-lg shadow-sm shadow-blue-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 px-3.5 py-1.5 rounded-lg shadow-xs transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
             <Save className="w-3.5 h-3.5" />
             <span>{isSaving ? "Saving..." : "Save (⌘S)"}</span>
@@ -501,12 +501,12 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
           <Link
             href={`/${activeSlug}/print`}
             target="_blank"
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-1.5 rounded-lg shadow-sm transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg shadow-xs transition-colors"
             title="Open Print A4 View"
           >
-            <Printer className="w-3.5 h-3.5 text-slate-400" />
+            <Printer className="w-3.5 h-3.5 text-slate-500" />
             <span className="hidden sm:inline">Print A4</span>
-            <ExternalLink className="w-2.5 h-2.5 text-slate-500" />
+            <ExternalLink className="w-2.5 h-2.5 text-slate-400" />
           </Link>
 
           {/* Export PDF with real loading state */}
@@ -514,17 +514,17 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
             type="button"
             onClick={handleExportPdf}
             disabled={isExportingPdf}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-200 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-1.5 rounded-lg shadow-sm transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg shadow-xs transition-colors disabled:opacity-50"
             title="Download PDF via Puppeteer"
           >
             {isExportingPdf ? (
               <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-400" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
                 <span>Generating PDF...</span>
               </>
             ) : (
               <>
-                <Download className="w-3.5 h-3.5 text-slate-400" />
+                <Download className="w-3.5 h-3.5 text-slate-500" />
                 <span className="hidden sm:inline">Export PDF</span>
               </>
             )}
@@ -535,14 +535,14 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
       {/* Main Workspace Body */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Mini-Rail for Drawer Tabs */}
-        <aside className="w-14 bg-slate-900 border-r border-slate-800 flex flex-col items-center py-3 space-y-3 flex-shrink-0 z-20">
+        <aside className="w-14 bg-slate-50 border-r border-slate-200 flex flex-col items-center py-3 space-y-3 flex-shrink-0 z-20">
           <button
             type="button"
             onClick={() => toggleActiveTab("outline")}
             className={`p-2.5 rounded-xl transition-all relative ${
               activeTab === "outline"
-                ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                : "text-slate-400 hover:text-white hover:bg-slate-800"
+                ? "bg-blue-600 text-white shadow-xs"
+                : "text-slate-500 hover:text-slate-800 hover:bg-slate-200/70"
             }`}
             title="Document Outline / Table of Contents"
           >
@@ -554,8 +554,8 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
             onClick={() => toggleActiveTab("snippets")}
             className={`p-2.5 rounded-xl transition-all relative ${
               activeTab === "snippets"
-                ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                : "text-slate-400 hover:text-white hover:bg-slate-800"
+                ? "bg-blue-600 text-white shadow-xs"
+                : "text-slate-500 hover:text-slate-800 hover:bg-slate-200/70"
             }`}
             title="Requirement Confirmation Snippets"
           >
@@ -567,23 +567,23 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
             onClick={() => toggleActiveTab("files")}
             className={`p-2.5 rounded-xl transition-all relative ${
               activeTab === "files"
-                ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                : "text-slate-400 hover:text-white hover:bg-slate-800"
+                ? "bg-blue-600 text-white shadow-xs"
+                : "text-slate-500 hover:text-slate-800 hover:bg-slate-200/70"
             }`}
             title="Document Files & Sections"
           >
             <Files className="w-4 h-4" />
           </button>
 
-          <div className="w-8 h-px bg-slate-800 my-1" />
+          <div className="w-8 h-px bg-slate-200 my-1" />
 
           <button
             type="button"
             onClick={() => toggleActiveTab("settings")}
             className={`p-2.5 rounded-xl transition-all relative ${
               activeTab === "settings"
-                ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                : "text-slate-400 hover:text-white hover:bg-slate-800"
+                ? "bg-blue-600 text-white shadow-xs"
+                : "text-slate-500 hover:text-slate-800 hover:bg-slate-200/70"
             }`}
             title="Workspace Settings (docs.config.json)"
           >
@@ -597,7 +597,7 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
             <button
               type="button"
               onClick={() => setActiveTab(null)}
-              className="p-2 text-slate-500 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+              className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200/70 rounded-lg transition-colors"
               title="Close Sidebar Panel"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -607,7 +607,7 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
 
         {/* Expanded Drawer Panel */}
         {activeTab && (
-          <aside className="w-72 sm:w-80 flex-shrink-0 z-10 transition-all border-r border-slate-800">
+          <aside className="w-72 sm:w-80 flex-shrink-0 z-10 transition-all border-r border-slate-200 bg-white">
             {activeTab === "outline" && (
               <DocumentOutline
                 content={fileContent}
@@ -668,7 +668,7 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
           {viewMode === "split" && (
             <div
               onMouseDown={handleMouseDownSplitter}
-              className="w-1.5 hover:w-2 bg-slate-300 dark:bg-slate-800 hover:bg-blue-500 cursor-col-resize transition-all z-20 flex items-center justify-center relative group select-none"
+              className="w-1.5 hover:w-2 bg-slate-200 hover:bg-blue-500 cursor-col-resize transition-all z-20 flex items-center justify-center relative group select-none"
               title="Drag to resize Editor and Preview"
             >
               <div className="w-0.5 h-6 bg-slate-400 group-hover:bg-white rounded-full transition-colors" />

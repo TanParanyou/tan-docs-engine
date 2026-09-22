@@ -252,30 +252,9 @@ const LivePreview = forwardRef<LivePreviewHandle, LivePreviewProps>(
                   : "max-w-4xl p-8 rounded-lg shadow-sm"
               }`}
             >
-              {/* Document Banner */}
+              {/* Real Document Content matching print and reader view */}
               <div
-                className="border-b-2 pb-4 mb-6"
-                style={{ borderColor: accentColor }}
-              >
-                <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1">
-                  <span className="font-semibold uppercase tracking-wider">
-                    DOCUMENT SPECIFICATION
-                  </span>
-                  <span className="font-mono">
-                    {documentNumber || "DOC-001"}
-                  </span>
-                </div>
-                <h1
-                  className="text-2xl font-extrabold tracking-tight leading-tight"
-                  style={{ color: primaryColor }}
-                >
-                  {title || "Untitled Document"}
-                </h1>
-              </div>
-
-              {/* Rendered Markdown Body */}
-              <div
-                className="prose prose-slate max-w-none doc-content markdown-rendered-body"
+                className="doc-content"
                 dangerouslySetInnerHTML={{ __html: renderedHtml }}
               />
             </div>

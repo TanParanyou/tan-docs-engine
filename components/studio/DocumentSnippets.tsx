@@ -34,7 +34,7 @@ export default function DocumentSnippets({
       title: "Requirement Confirmation Block",
       description: "บล็อกสเปกแยกข้อ พร้อมพฤติกรรมที่คาดหวังและผลการพิจารณา",
       category: "Requirement",
-      icon: <FileCheck2 className="w-4 h-4 text-blue-400" />,
+      icon: <FileCheck2 className="w-4 h-4 text-blue-600" />,
       content: `\n#### **4.X REQ-POS-XXX — [ชื่อฟังก์ชัน / Feature Name]**
 
 **Requirement จากการประชุม**  
@@ -68,7 +68,7 @@ export default function DocumentSnippets({
       title: "Requirement Summary Matrix",
       description: "ตารางสรุปภาพรวม Requirement ทุกข้อ",
       category: "Table",
-      icon: <Table className="w-4 h-4 text-emerald-400" />,
+      icon: <Table className="w-4 h-4 text-emerald-600" />,
       content: `\n### **ส่วนที่ 3: ตารางสรุปภาพรวม Requirement (Requirement Summary Matrix)**
 
 | REQ ID | ชื่อฟังก์ชัน (Feature) | สรุปขอบเขตงาน (Scope Summary) | สถานะ |
@@ -85,7 +85,7 @@ export default function DocumentSnippets({
       title: "Mermaid Architecture Diagram",
       description: "แผนภาพโฟลว์การทำงาน / สถาปัตยกรรมระบบ",
       category: "Diagram",
-      icon: <Workflow className="w-4 h-4 text-purple-400" />,
+      icon: <Workflow className="w-4 h-4 text-purple-600" />,
       content: `\n\`\`\`mermaid
 graph TD
   User([ผู้ใช้งาน / Client]) --> POS[หน้าร้าน POS Screen]
@@ -100,7 +100,7 @@ graph TD
       title: "Glossary & Definitions",
       description: "ตารางนิยามคำศัพท์ที่ใช้ร่วมกัน",
       category: "Table",
-      icon: <Boxes className="w-4 h-4 text-amber-400" />,
+      icon: <Boxes className="w-4 h-4 text-amber-600" />,
       content: `\n### **ส่วนที่ 2: นิยามคำศัพท์ที่ใช้ร่วมกัน (Glossary & Definitions)**
 * **Order / Invoice**: รายการสั่งซื้อบริการหรือสินค้าหน้าร้านของลูกค้า
 * **Consult Sheet / Color Formula**: บันทึกสูตรผสมสี ปริมาณ หน่วย Lot และหมายเหตุเคมี
@@ -114,7 +114,7 @@ graph TD
       title: "Notice / Warning Callout",
       description: "กล่องเน้นข้อความสำคัญ หรือข้อควรระวัง",
       category: "Document",
-      icon: <AlertCircle className="w-4 h-4 text-rose-400" />,
+      icon: <AlertCircle className="w-4 h-4 text-rose-600" />,
       content: `\n> **ข้อควรระวัง (Important Note):**  
 > การแก้ไขหรือเปลี่ยนแปลงขอบเขตนี้ อาจมีผลกระทบต่อระยะเวลาส่งมอบและงบประมาณโครงการ กรุณายืนยันก่อนดำเนินการ\n`,
     },
@@ -123,7 +123,7 @@ graph TD
       title: "A4 Page Break (ตัวตัดหน้า PDF)",
       description: "สั่งให้ขึ้นหน้ากระดาษแผ่นใหม่ในไฟล์ PDF",
       category: "Document",
-      icon: <Scissors className="w-4 h-4 text-amber-400" />,
+      icon: <Scissors className="w-4 h-4 text-amber-600" />,
       content: `\n<!-- pagebreak -->\n`,
     },
     {
@@ -131,7 +131,7 @@ graph TD
       title: "Sign-off Section (ส่วนลงนาม)",
       description: "ตารางการลงนามยืนยันขอบเขตของทั้งสองฝ่าย",
       category: "Document",
-      icon: <PenTool className="w-4 h-4 text-blue-400" />,
+      icon: <PenTool className="w-4 h-4 text-blue-600" />,
       content: `\n<!-- pagebreak -->
 
 ### **ส่วนที่ 5: การลงนามยืนยันขอบเขตความต้องการ (Sign-off & Confirmation)**
@@ -155,22 +155,22 @@ graph TD
   ];
 
   return (
-    <div className="flex flex-col h-full bg-slate-900 border-r border-slate-800 text-slate-200">
+    <div className="flex flex-col h-full bg-white border-r border-slate-200 text-slate-800">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+      <div className="px-4 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <Boxes className="w-4 h-4 text-blue-400" />
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+          <Boxes className="w-4 h-4 text-blue-600" />
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
             Document Snippets
           </span>
         </div>
-        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400">
+        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-semibold">
           1-Click Insert
         </span>
       </div>
 
-      <div className="p-3 text-[11px] text-slate-400 border-b border-slate-800 bg-slate-950/40">
-        คลิกที่บล็อกเพื่อแทรกแม่แบบเอกสาร Requirement Confirmation ลงในตำแหน่งเคอร์เซอร์ทันที
+      <div className="p-3 text-[11px] text-slate-500 border-b border-slate-200 bg-slate-50/50">
+        คลิกที่ปุ่มเพื่อแทรกแม่แบบเอกสาร Requirement Confirmation ลงในตำแหน่งเคอร์เซอร์ทันที
       </div>
 
       {/* Snippet Cards */}
@@ -178,23 +178,23 @@ graph TD
         {snippets.map((snip) => (
           <div
             key={snip.id}
-            className="p-3 bg-slate-800/70 hover:bg-slate-800 rounded-xl border border-slate-700/80 hover:border-blue-500/50 transition-all flex flex-col justify-between group"
+            className="p-3 bg-white hover:bg-slate-50/80 rounded-xl border border-slate-200 hover:border-blue-400 transition-all flex flex-col justify-between group shadow-xs"
           >
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-2">
-                  <div className="p-1 rounded bg-slate-900 border border-slate-700">
+                  <div className="p-1 rounded-lg bg-slate-100 border border-slate-200">
                     {snip.icon}
                   </div>
-                  <h4 className="font-semibold text-xs text-slate-100 group-hover:text-blue-300 transition-colors">
+                  <h4 className="font-semibold text-xs text-slate-900 group-hover:text-blue-600 transition-colors">
                     {snip.title}
                   </h4>
                 </div>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-900 text-slate-400 border border-slate-700">
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
                   {snip.category}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 leading-relaxed mb-3">
+              <p className="text-[11px] text-slate-500 leading-relaxed mb-3">
                 {snip.description}
               </p>
             </div>
@@ -202,7 +202,7 @@ graph TD
             <button
               type="button"
               onClick={() => onInsertSnippet(snip.content)}
-              className="w-full py-1.5 px-3 bg-slate-900 hover:bg-blue-600 text-slate-300 hover:text-white rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition-colors border border-slate-700 hover:border-blue-500"
+              className="w-full py-1.5 px-3 bg-slate-50 hover:bg-blue-600 text-slate-700 hover:text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors border border-slate-200 hover:border-blue-600 shadow-xs"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>แทรกลงในเอกสาร</span>
