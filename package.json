@@ -1,0 +1,51 @@
+{
+  "name": "tan-docs-engine",
+  "version": "1.0.0",
+  "description": "Centralized multi-tenant documentation engine with Next.js, Markdown-it & Puppeteer",
+  "main": "scripts/generate.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "generate": "tsx scripts/generate.ts",
+    "generate:wallet": "tsx scripts/generate.ts --workspace wallet-project",
+    "generate:pos": "tsx scripts/generate.ts --workspace pos-system",
+    "generate:all": "tsx scripts/generate.ts --all"
+  },
+  "keywords": [
+    "documentation",
+    "nextjs",
+    "pdf",
+    "markdown",
+    "puppeteer",
+    "multi-tenant"
+  ],
+  "author": "Tan Architecture Team",
+  "license": "ISC",
+  "dependencies": {
+    "commander": "^13.1.0",
+    "highlight.js": "^11.11.1",
+    "lucide-react": "^1.16.0",
+    "markdown-it": "^14.1.0",
+    "markdown-it-task-lists": "^2.1.1",
+    "next": "^15.2.1",
+    "puppeteer": "^24.4.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.88.0",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.16",
+    "@types/markdown-it": "^14.1.2",
+    "@types/node": "^22.13.9",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}

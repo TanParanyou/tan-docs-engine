@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
 import { DocsConfig } from "@/lib/types";
-import { Settings, Save, CheckCircle2, AlertCircle } from "lucide-react";
+import { Settings, Save, CheckCircle2, AlertCircle, RotateCcw } from "lucide-react";
 
 interface WorkspaceSettingsDrawerProps {
   slug: string;
@@ -15,63 +16,64 @@ export default function WorkspaceSettingsDrawer({
   config,
   onUpdateConfig,
 }: WorkspaceSettingsDrawerProps) {
-  const [formData, setFormData] = useState<DocsConfig>({ ...config });
-  const [isSaving, setIsSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{
     type: "success" | "error";
     text: string;
   } | null>(null);
 
-  const handleChange = (
-    field: keyof DocsConfig,
-    value: string
-  ) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
+  // Initialize react-hook-form
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors, isSubmitting, isDirty },
+  } = useForm<DocsConfig>({
+    defaultValues: config,
+  });
 
-  const handleThemeChange = (
-    field: "primaryColor" | "accentColor",
-    value: string
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      theme: {
-        ...prev.theme,
-        [field]: value,
-      },
-    }));
-  };
+  // Watch colors for live color picker preview
+  const primaryColor = watch("theme.primaryColor") || config.theme?.primaryColor || "#0f3b6c";
+  const accentColor = watch("theme.accentColor") || config.theme?.accentColor || "#1d4ed8";
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSaving(true);
+  // Keep form in sync if external config changes
+  useEffect(() => {
+    reset(config);
+  }, [config, reset]);
+
+  const onSubmit = async (data: DocsConfig) => {
     setStatusMessage(null);
-
     try {
-      await onUpdateConfig(formData);
+      await onUpdateConfig(data);
+      reset(data); // Mark form as pristine after successful save
       setStatusMessage({
         type: "success",
-        text: "บันทึกการตั้งค่าเอกสารเรียบร้อยแล้ว!",
+        text: "บันทึกการตั้งค่าเอกสาร (docs.config.json) เรียบร้อยแล้ว!",
       });
-      setTimeout(() => setStatusMessage(null), 3000);
+      setTimeout(() => setStatusMessage(null), 3500);
     } catch (err: any) {
       setStatusMessage({
         type: "error",
         text: err.message || "Failed to update settings",
       });
-    } finally {
-      setIsSaving(false);
     }
   };
 
   return (
     <div className="flex flex-col h-full bg-slate-900 border-r border-slate-800 text-slate-200 overflow-y-auto">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-slate-800 flex items-center space-x-2">
-        <Settings className="w-4 h-4 text-blue-400" />
-        <span className="text-xs font-semibold uppercase tracking-wider text-slate-300">
-          Workspace Settings (docs.config.json)
-        </span>
+      <div className="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <Settings className="w-4 h-4 text-blue-400" />
+          <span className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+            Settings (docs.config.json)
+          </span>
+        </div>
+        {isDirty && (
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-950/80 text-amber-300 border border-amber-800">
+            Unsaved
+          </span>
+        )}
       </div>
 
       {statusMessage && (
@@ -83,54 +85,59 @@ export default function WorkspaceSettingsDrawer({
           }`}
         >
           {statusMessage.type === "success" ? (
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
           ) : (
-            <AlertCircle className="w-3.5 h-3.5 text-red-400" />
+            <AlertCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
           )}
           <span>{statusMessage.text}</span>
         </div>
       )}
 
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="p-4 space-y-4 text-xs">
+      {/* Form using React Hook Form */}
+      <form onSubmit={handleSubmit(onSubmit)} className="p-4 space-y-4 text-xs">
+        {/* Project Name */}
         <div>
           <label className="text-slate-400 font-medium block mb-1">
-            ชื่อโปรเจกต์ (Project Name)
+            ชื่อโปรเจกต์ (Project Name) *
           </label>
           <input
             type="text"
-            value={formData.name || ""}
-            onChange={(e) => handleChange("name", e.target.value)}
-            required
+            {...register("name", { required: "กรุณาระบุชื่อระบบ/โปรเจกต์" })}
             className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded text-slate-100 focus:outline-none focus:border-blue-500 font-medium"
           />
+          {errors.name && (
+            <p className="text-red-400 text-[10px] mt-1">{errors.name.message}</p>
+          )}
         </div>
 
+        {/* Document Title */}
         <div>
           <label className="text-slate-400 font-medium block mb-1">
-            หัวข้อเอกสาร (Document Title)
+            หัวข้อเอกสาร (Document Title) *
           </label>
           <input
             type="text"
-            value={formData.title || ""}
-            onChange={(e) => handleChange("title", e.target.value)}
-            required
+            {...register("title", { required: "กรุณาระบุหัวข้อเอกสาร" })}
             className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded text-slate-100 focus:outline-none focus:border-blue-500 font-medium"
           />
+          {errors.title && (
+            <p className="text-red-400 text-[10px] mt-1">{errors.title.message}</p>
+          )}
         </div>
 
+        {/* Subtitle */}
         <div>
           <label className="text-slate-400 font-medium block mb-1">
             คำอธิบายย่อย (Subtitle)
           </label>
           <textarea
-            value={formData.subtitle || ""}
-            onChange={(e) => handleChange("subtitle", e.target.value)}
+            {...register("subtitle")}
             rows={2}
             className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded text-slate-100 focus:outline-none focus:border-blue-500"
           />
         </div>
 
+        {/* Doc ID & Version */}
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="text-slate-400 font-medium block mb-1">
@@ -138,35 +145,34 @@ export default function WorkspaceSettingsDrawer({
             </label>
             <input
               type="text"
-              value={formData.documentNumber || ""}
-              onChange={(e) => handleChange("documentNumber", e.target.value)}
+              {...register("documentNumber")}
               className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded text-slate-100 font-mono"
             />
           </div>
           <div>
             <label className="text-slate-400 font-medium block mb-1">
-              เวอร์ชัน (Version)
+              เวอร์ชัน (Version) *
             </label>
             <input
               type="text"
-              value={formData.version || ""}
-              onChange={(e) => handleChange("version", e.target.value)}
+              {...register("version", { required: "กรุณาระบุเวอร์ชัน" })}
               className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded text-slate-100 font-mono"
             />
           </div>
         </div>
 
+        {/* Status & Date */}
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="text-slate-400 font-medium block mb-1">
               สถานะ (Status)
             </label>
             <select
-              value={formData.status || "Draft"}
-              onChange={(e) => handleChange("status", e.target.value)}
+              {...register("status")}
               className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded text-slate-100 focus:outline-none focus:border-blue-500"
             >
               <option value="Draft">Draft (ร่าง)</option>
+              <option value="Draft for Confirmation">Draft for Confirmation (รอยืนยัน)</option>
               <option value="Review">Review (ตรวจสอบ)</option>
               <option value="Approved">Approved (อนุมัติแล้ว)</option>
               <option value="Final">Final (สมบูรณ์)</option>
@@ -177,54 +183,53 @@ export default function WorkspaceSettingsDrawer({
               วันที่ออกเอกสาร (Date)
             </label>
             <input
-              type="date"
-              value={formData.date || ""}
-              onChange={(e) => handleChange("date", e.target.value)}
+              type="text"
+              {...register("date")}
+              className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded text-slate-100 font-sans"
+            />
+          </div>
+        </div>
+
+        {/* Author */}
+        <div>
+          <label className="text-slate-400 font-medium block mb-1">
+            ผู้จัดทำ (Prepared By / Author) *
+          </label>
+          <input
+            type="text"
+            {...register("author", { required: "กรุณาระบุผู้จัดทำ" })}
+            className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded text-slate-100"
+          />
+        </div>
+
+        {/* Client & Organization */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-slate-400 font-medium block mb-1">
+              ลูกค้า (Client)
+            </label>
+            <input
+              type="text"
+              {...register("client")}
+              className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded text-slate-100"
+            />
+          </div>
+          <div>
+            <label className="text-slate-400 font-medium block mb-1">
+              องค์กร (Org)
+            </label>
+            <input
+              type="text"
+              {...register("organization")}
               className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded text-slate-100"
             />
           </div>
         </div>
 
-        <div>
-          <label className="text-slate-400 font-medium block mb-1">
-            ผู้จัดทำ (Prepared By / Author)
-          </label>
-          <input
-            type="text"
-            value={formData.author || ""}
-            onChange={(e) => handleChange("author", e.target.value)}
-            className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded text-slate-100"
-          />
-        </div>
-
-        <div>
-          <label className="text-slate-400 font-medium block mb-1">
-            ลูกค้า/ผู้ว่าจ้าง (Client)
-          </label>
-          <input
-            type="text"
-            value={formData.client || ""}
-            onChange={(e) => handleChange("client", e.target.value)}
-            className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded text-slate-100"
-          />
-        </div>
-
-        <div>
-          <label className="text-slate-400 font-medium block mb-1">
-            องค์กร (Organization)
-          </label>
-          <input
-            type="text"
-            value={formData.organization || ""}
-            onChange={(e) => handleChange("organization", e.target.value)}
-            className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded text-slate-100"
-          />
-        </div>
-
         {/* Theme Colors */}
         <div className="border-t border-slate-800 pt-3">
           <label className="text-slate-300 font-semibold block mb-2">
-            สีธีมเอกสาร (Theme Styling)
+            สีธีมเอกสาร (Theme Color Palette)
           </label>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -234,12 +239,11 @@ export default function WorkspaceSettingsDrawer({
               <div className="flex items-center gap-2">
                 <input
                   type="color"
-                  value={formData.theme?.primaryColor || "#0f172a"}
-                  onChange={(e) => handleThemeChange("primaryColor", e.target.value)}
+                  {...register("theme.primaryColor")}
                   className="w-7 h-7 rounded border border-slate-700 bg-transparent cursor-pointer"
                 />
                 <span className="font-mono text-slate-300 text-xs">
-                  {formData.theme?.primaryColor || "#0f172a"}
+                  {primaryColor}
                 </span>
               </div>
             </div>
@@ -251,27 +255,44 @@ export default function WorkspaceSettingsDrawer({
               <div className="flex items-center gap-2">
                 <input
                   type="color"
-                  value={formData.theme?.accentColor || "#2563eb"}
-                  onChange={(e) => handleThemeChange("accentColor", e.target.value)}
+                  {...register("theme.accentColor")}
                   className="w-7 h-7 rounded border border-slate-700 bg-transparent cursor-pointer"
                 />
                 <span className="font-mono text-slate-300 text-xs">
-                  {formData.theme?.accentColor || "#2563eb"}
+                  {accentColor}
                 </span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Save Button */}
-        <div className="pt-2">
+        {/* Save & Reset Buttons */}
+        <div className="pt-2 flex items-center gap-2">
+          {isDirty && (
+            <button
+              type="button"
+              onClick={() => reset(config)}
+              className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium flex items-center gap-1 transition-colors"
+              title="Reset to saved values"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>คืนค่า</span>
+            </button>
+          )}
+
           <button
             type="submit"
-            disabled={isSaving}
-            className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-medium rounded-lg shadow-sm flex items-center justify-center gap-1.5 transition-colors"
+            disabled={isSubmitting || !isDirty}
+            className="flex-1 py-2 px-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white font-medium rounded-lg shadow-sm flex items-center justify-center gap-1.5 transition-colors"
           >
             <Save className="w-3.5 h-3.5" />
-            <span>{isSaving ? "กำลังบันทึก..." : "บันทึกการตั้งค่า (Save Settings)"}</span>
+            <span>
+              {isSubmitting
+                ? "กำลังบันทึก..."
+                : isDirty
+                ? "บันทึกการตั้งค่า (Save)"
+                : "บันทึกแล้ว (Saved)"}
+            </span>
           </button>
         </div>
       </form>

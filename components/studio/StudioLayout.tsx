@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { WorkspaceData, DocsConfig } from "@/lib/types";
+import { useStudioStore } from "@/lib/store/useStudioStore";
 import MarkdownEditor, { MarkdownEditorHandle } from "./MarkdownEditor";
 import LivePreview, { LivePreviewHandle } from "./LivePreview";
 import FileManagementDrawer from "./FileManagementDrawer";
@@ -27,56 +28,64 @@ import {
   Loader2,
   SlidersHorizontal,
   ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 
 interface StudioLayoutProps {
   initialWorkspace: WorkspaceData;
 }
 
-type ViewMode = "split" | "editor" | "preview";
-type ActiveTab = "files" | "outline" | "snippets" | "settings" | null;
-
 export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
-  const { slug } = initialWorkspace;
-  const [config, setConfig] = useState<DocsConfig>(initialWorkspace.config);
-  const [files, setFiles] = useState<{ filename: string; title: string }[]>(
-    initialWorkspace.files.map((f) => ({ filename: f.filename, title: "" }))
-  );
-  const [selectedFile, setSelectedFile] = useState<string>(
-    initialWorkspace.files[0]?.filename || "01-system-overview.md"
-  );
-  const [fileContent, setFileContent] = useState<string>(
-    initialWorkspace.files[0]?.content || ""
-  );
-  const [savedContent, setSavedContent] = useState<string>(
-    initialWorkspace.files[0]?.content || ""
-  );
+  // Access centralized Zustand store
+  const {
+    slug,
+    config,
+    files,
+    selectedFile,
+    fileContent,
+    savedContent,
+    viewMode,
+    activeTab,
+    splitRatio,
+    syncScroll,
+    isSaving,
+    saveToast,
+    lastSavedTime,
+    isExportingPdf,
+    initStudio,
+    setFileContent,
+    setSavedContent,
+    setSelectedFile,
+    setConfig,
+    setFiles,
+    setViewMode,
+    setActiveTab,
+    toggleActiveTab,
+    setSplitRatio,
+    toggleSyncScroll,
+    setIsSaving,
+    setSaveToast,
+    setLastSavedTime,
+    setIsExportingPdf,
+  } = useStudioStore();
 
-  // Layout & Navigation State
-  const [viewMode, setViewMode] = useState<ViewMode>("split");
-  const [activeTab, setActiveTab] = useState<ActiveTab>("outline");
-  const [splitRatio, setSplitRatio] = useState<number>(50); // percentage for editor width
-  const [isDraggingSplitter, setIsDraggingSplitter] = useState(false);
-  const [syncScroll, setSyncScroll] = useState<boolean>(true);
+  const isDirty = fileContent !== savedContent;
+  const isDraggingSplitterRef = useRef(false);
 
-  // Status & Feedback State
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveToast, setSaveToast] = useState<string | null>(null);
-  const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
-  const [isExportingPdf, setIsExportingPdf] = useState(false);
-
-  // Component Refs
+  // Component Refs for cross-component imperative actions (jump, scroll, insert)
   const editorRef = useRef<MarkdownEditorHandle>(null);
   const previewRef = useRef<LivePreviewHandle>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const isDirty = fileContent !== savedContent;
+  // Initialize Zustand store on mount or workspace change
+  useEffect(() => {
+    initStudio(initialWorkspace);
+  }, [initialWorkspace, initStudio]);
 
   // Refresh files list from server
   const refreshFiles = useCallback(async () => {
+    const currentSlug = slug || initialWorkspace.slug;
     try {
-      const res = await fetch(`/api/workspaces/${slug}/files`);
+      const res = await fetch(`/api/workspaces/${currentSlug}/files`);
       const json = await res.json();
       if (json.success && json.data) {
         setFiles(json.data.files);
@@ -84,13 +93,14 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
     } catch (err) {
       console.error("Failed to refresh files:", err);
     }
-  }, [slug]);
+  }, [slug, initialWorkspace.slug, setFiles]);
 
   // Load content of selected file
   const loadFileContent = useCallback(
     async (filename: string) => {
+      const currentSlug = slug || initialWorkspace.slug;
       try {
-        const res = await fetch(`/api/workspaces/${slug}/files/${filename}`);
+        const res = await fetch(`/api/workspaces/${currentSlug}/files/${filename}`);
         const json = await res.json();
         if (json.success && json.data) {
           setFileContent(json.data.content);
@@ -100,7 +110,7 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
         console.error("Failed to load file content:", err);
       }
     },
-    [slug]
+    [slug, initialWorkspace.slug, setFileContent, setSavedContent]
   );
 
   // Switch selected file
@@ -120,11 +130,13 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
 
   // Save current file content
   const handleSaveFile = async () => {
+    const currentSlug = slug || initialWorkspace.slug;
     if (!selectedFile) return;
+
     setIsSaving(true);
     try {
       const res = await fetch(
-        `/api/workspaces/${slug}/files/${selectedFile}`,
+        `/api/workspaces/${currentSlug}/files/${selectedFile}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -156,9 +168,10 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
 
   // Export PDF with actual progress and download handler
   const handleExportPdf = async () => {
+    const currentSlug = slug || initialWorkspace.slug;
     setIsExportingPdf(true);
     try {
-      const res = await fetch(`/api/pdf?workspace=${slug}`);
+      const res = await fetch(`/api/pdf?workspace=${currentSlug}`);
       if (!res.ok) {
         const errJson = await res.json();
         throw new Error(errJson.error || "Failed to generate PDF");
@@ -168,8 +181,10 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      const sanitizedTitle = config.title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-      a.download = `${slug}-${sanitizedTitle}-v${config.version}.pdf`;
+      const sanitizedTitle = (config.title || initialWorkspace.config.title)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-");
+      a.download = `${currentSlug}-${sanitizedTitle}-v${config.version || "1.0.0"}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -183,7 +198,8 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
 
   // File CRUD operations
   const handleCreateFile = async (newFilename: string) => {
-    const res = await fetch(`/api/workspaces/${slug}/files`, {
+    const currentSlug = slug || initialWorkspace.slug;
+    const res = await fetch(`/api/workspaces/${currentSlug}/files`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "create", filename: newFilename }),
@@ -198,7 +214,8 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
   };
 
   const handleRenameFile = async (oldName: string, newName: string) => {
-    const res = await fetch(`/api/workspaces/${slug}/files`, {
+    const currentSlug = slug || initialWorkspace.slug;
+    const res = await fetch(`/api/workspaces/${currentSlug}/files`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -218,7 +235,8 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
   };
 
   const handleDeleteFile = async (filename: string) => {
-    const res = await fetch(`/api/workspaces/${slug}/files`, {
+    const currentSlug = slug || initialWorkspace.slug;
+    const res = await fetch(`/api/workspaces/${currentSlug}/files`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "delete", filename }),
@@ -238,7 +256,8 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
   };
 
   const handleReorderFiles = async (newOrder: string[]) => {
-    const res = await fetch(`/api/workspaces/${slug}/files`, {
+    const currentSlug = slug || initialWorkspace.slug;
+    const res = await fetch(`/api/workspaces/${currentSlug}/files`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "reorder", files: newOrder }),
@@ -251,7 +270,8 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
   };
 
   const handleUpdateConfig = async (partialConfig: Partial<DocsConfig>) => {
-    const res = await fetch(`/api/workspaces/${slug}/config`, {
+    const currentSlug = slug || initialWorkspace.slug;
+    const res = await fetch(`/api/workspaces/${currentSlug}/config`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(partialConfig),
@@ -283,12 +303,12 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
 
   // Draggable Splitter mouse event handlers
   const handleMouseDownSplitter = () => {
-    setIsDraggingSplitter(true);
+    isDraggingSplitterRef.current = true;
   };
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (!isDraggingSplitter || !containerRef.current) return;
+      if (!isDraggingSplitterRef.current || !containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
       const newRatio = ((e.clientX - rect.left) / rect.width) * 100;
       if (newRatio >= 20 && newRatio <= 80) {
@@ -297,31 +317,20 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
     };
 
     const handleMouseUp = () => {
-      setIsDraggingSplitter(false);
+      isDraggingSplitterRef.current = false;
     };
 
-    if (isDraggingSplitter) {
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-      document.body.style.cursor = "col-resize";
-      document.body.style.userSelect = "none";
-    } else {
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
-    }
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
 
     return () => {
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
     };
-  }, [isDraggingSplitter]);
+  }, [setSplitRatio]);
 
-  // Initial load
-  useEffect(() => {
-    refreshFiles();
-  }, [refreshFiles]);
+  const activeSlug = slug || initialWorkspace.slug;
+  const activeName = config.name || initialWorkspace.config.name;
 
   return (
     <div className="h-screen flex flex-col bg-slate-950 text-slate-100 overflow-hidden font-sans select-none">
@@ -330,7 +339,7 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
         {/* Left: Brand, Navigation & File Info */}
         <div className="flex items-center space-x-3">
           <Link
-            href={`/${slug}`}
+            href={`/${activeSlug}`}
             className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-2.5 py-1.5 rounded-lg transition-colors border border-slate-700/60"
             title="Back to Document Reader"
           >
@@ -342,7 +351,7 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
 
           <div className="flex items-center space-x-2">
             <span className="font-bold text-sm text-slate-100 truncate max-w-xs">
-              {config.name}
+              {activeName}
             </span>
             <span className="text-slate-500 font-mono text-xs">/</span>
             <span className="text-xs font-mono text-blue-400 bg-blue-950/70 border border-blue-800/80 px-2 py-0.5 rounded-md font-semibold truncate max-w-[180px]">
@@ -415,14 +424,16 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
             </button>
           </div>
 
-          {/* Split Ratio Presets (when in split mode) */}
+          {/* Split Ratio Presets */}
           {viewMode === "split" && (
             <div className="flex items-center bg-slate-950 border border-slate-800 rounded-lg p-0.5 text-[11px] font-mono">
               <button
                 type="button"
                 onClick={() => setSplitRatio(35)}
                 className={`px-1.5 py-0.5 rounded transition-colors ${
-                  splitRatio === 35 ? "bg-slate-800 text-blue-400 font-bold" : "text-slate-500 hover:text-slate-300"
+                  splitRatio === 35
+                    ? "bg-slate-800 text-blue-400 font-bold"
+                    : "text-slate-500 hover:text-slate-300"
                 }`}
                 title="Preview Focus (35:65)"
               >
@@ -432,7 +443,9 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
                 type="button"
                 onClick={() => setSplitRatio(50)}
                 className={`px-1.5 py-0.5 rounded transition-colors ${
-                  splitRatio === 50 ? "bg-slate-800 text-blue-400 font-bold" : "text-slate-500 hover:text-slate-300"
+                  splitRatio === 50
+                    ? "bg-slate-800 text-blue-400 font-bold"
+                    : "text-slate-500 hover:text-slate-300"
                 }`}
                 title="Balanced (50:50)"
               >
@@ -442,7 +455,9 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
                 type="button"
                 onClick={() => setSplitRatio(65)}
                 className={`px-1.5 py-0.5 rounded transition-colors ${
-                  splitRatio === 65 ? "bg-slate-800 text-blue-400 font-bold" : "text-slate-500 hover:text-slate-300"
+                  splitRatio === 65
+                    ? "bg-slate-800 text-blue-400 font-bold"
+                    : "text-slate-500 hover:text-slate-300"
                 }`}
                 title="Editor Focus (65:35)"
               >
@@ -455,7 +470,7 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
           {viewMode === "split" && (
             <button
               type="button"
-              onClick={() => setSyncScroll(!syncScroll)}
+              onClick={toggleSyncScroll}
               className={`px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 border transition-colors ${
                 syncScroll
                   ? "bg-blue-950/60 border-blue-800 text-blue-300"
@@ -484,7 +499,7 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
 
           {/* Print A4 */}
           <Link
-            href={`/${slug}/print`}
+            href={`/${activeSlug}/print`}
             target="_blank"
             className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-1.5 rounded-lg shadow-sm transition-colors"
             title="Open Print A4 View"
@@ -523,9 +538,7 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
         <aside className="w-14 bg-slate-900 border-r border-slate-800 flex flex-col items-center py-3 space-y-3 flex-shrink-0 z-20">
           <button
             type="button"
-            onClick={() =>
-              setActiveTab((prev) => (prev === "outline" ? null : "outline"))
-            }
+            onClick={() => toggleActiveTab("outline")}
             className={`p-2.5 rounded-xl transition-all relative ${
               activeTab === "outline"
                 ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
@@ -538,9 +551,7 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
 
           <button
             type="button"
-            onClick={() =>
-              setActiveTab((prev) => (prev === "snippets" ? null : "snippets"))
-            }
+            onClick={() => toggleActiveTab("snippets")}
             className={`p-2.5 rounded-xl transition-all relative ${
               activeTab === "snippets"
                 ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
@@ -553,9 +564,7 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
 
           <button
             type="button"
-            onClick={() =>
-              setActiveTab((prev) => (prev === "files" ? null : "files"))
-            }
+            onClick={() => toggleActiveTab("files")}
             className={`p-2.5 rounded-xl transition-all relative ${
               activeTab === "files"
                 ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
@@ -570,9 +579,7 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
 
           <button
             type="button"
-            onClick={() =>
-              setActiveTab((prev) => (prev === "settings" ? null : "settings"))
-            }
+            onClick={() => toggleActiveTab("settings")}
             className={`p-2.5 rounded-xl transition-all relative ${
               activeTab === "settings"
                 ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
@@ -623,7 +630,7 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
             )}
             {activeTab === "settings" && (
               <WorkspaceSettingsDrawer
-                slug={slug}
+                slug={activeSlug}
                 config={config}
                 onUpdateConfig={handleUpdateConfig}
               />
@@ -632,7 +639,10 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
         )}
 
         {/* Center Canvas: Split Editor & Preview */}
-        <main ref={containerRef} className="flex-1 flex min-w-0 overflow-hidden relative">
+        <main
+          ref={containerRef}
+          className="flex-1 flex min-w-0 overflow-hidden relative"
+        >
           {/* Markdown Editor Pane */}
           {(viewMode === "split" || viewMode === "editor") && (
             <div
@@ -646,7 +656,7 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
                 content={fileContent}
                 onChange={setFileContent}
                 onSave={handleSaveFile}
-                slug={slug}
+                slug={activeSlug}
                 filename={selectedFile}
                 onScroll={handleEditorScroll}
                 syncScroll={syncScroll}
@@ -658,9 +668,7 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
           {viewMode === "split" && (
             <div
               onMouseDown={handleMouseDownSplitter}
-              className={`w-1.5 hover:w-2 bg-slate-300 dark:bg-slate-800 hover:bg-blue-500 cursor-col-resize transition-all z-20 flex items-center justify-center relative group select-none ${
-                isDraggingSplitter ? "bg-blue-500 w-2" : ""
-              }`}
+              className="w-1.5 hover:w-2 bg-slate-300 dark:bg-slate-800 hover:bg-blue-500 cursor-col-resize transition-all z-20 flex items-center justify-center relative group select-none"
               title="Drag to resize Editor and Preview"
             >
               <div className="w-0.5 h-6 bg-slate-400 group-hover:bg-white rounded-full transition-colors" />

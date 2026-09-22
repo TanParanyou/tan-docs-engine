@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { CreateWorkspaceInput } from "@/lib/types";
 import {
   X,
   Plus,
@@ -9,6 +11,7 @@ import {
   Sparkles,
   ArrowRight,
   AlertCircle,
+  Loader2,
 } from "lucide-react";
 
 interface NewWorkspaceModalProps {
@@ -21,63 +24,78 @@ export default function NewWorkspaceModal({
   onClose,
 }: NewWorkspaceModalProps) {
   const router = useRouter();
-  const [slug, setSlug] = useState("");
-  const [name, setName] = useState("");
-  const [title, setTitle] = useState("");
-  const [subtitle, setSubtitle] = useState("");
-  const [documentNumber, setDocumentNumber] = useState("");
-  const [author, setAuthor] = useState("Tan System Architecture Team");
-  const [client, setClient] = useState("");
-  const [primaryColor, setPrimaryColor] = useState("#0f172a");
-  const [accentColor, setAccentColor] = useState("#2563eb");
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [isSlugCustomized, setIsSlugCustomized] = useState(false);
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<CreateWorkspaceInput>({
+    defaultValues: {
+      slug: "",
+      name: "",
+      title: "",
+      subtitle: "",
+      documentNumber: "",
+      version: "1.0.0",
+      status: "Draft",
+      author: "Tan System Architecture Team",
+      client: "",
+      organization: "TAN TECHNOLOGY SOLUTIONS",
+      theme: {
+        primaryColor: "#0f172a",
+        accentColor: "#2563eb",
+      },
+    },
+  });
 
-  if (!isOpen) return null;
+  const watchedName = watch("name");
+  const watchedSlug = watch("slug");
+  const primaryColor = watch("theme.primaryColor") || "#0f172a";
+  const accentColor = watch("theme.accentColor") || "#2563eb";
 
-  // Auto-generate slug and doc number when name changes if not manually modified
-  const handleNameChange = (val: string) => {
-    setName(val);
-    const generatedSlug = val
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
-    setSlug(generatedSlug);
+  // Auto-generate slug and doc number from project name
+  useEffect(() => {
+    if (!watchedName) return;
 
-    const cleanCode = val
+    if (!isSlugCustomized) {
+      const generatedSlug = watchedName
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+      setValue("slug", generatedSlug, { shouldValidate: true });
+    }
+
+    const cleanCode = watchedName
       .toUpperCase()
       .replace(/[^A-Z0-9]+/g, "")
       .substring(0, 4);
     if (cleanCode) {
-      setDocumentNumber(`DOC-${cleanCode}-2026-001`);
+      setValue("documentNumber", `DOC-${cleanCode}-2026-001`);
     }
-  };
+  }, [watchedName, isSlugCustomized, setValue]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
+  if (!isOpen) return null;
+
+  const onSubmit = async (data: CreateWorkspaceInput) => {
+    setServerError(null);
 
     try {
+      const title =
+        data.title ||
+        `${data.name} Requirement Confirmation & System Specifications`;
+
       const res = await fetch("/api/workspaces", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          slug: slug.trim(),
-          name: name.trim(),
-          title: title.trim() || `${name} Requirement Confirmation & System Specifications`,
-          subtitle: subtitle.trim(),
-          documentNumber: documentNumber.trim(),
-          version: "1.0.0",
-          status: "Draft",
-          author: author.trim(),
-          client: client.trim(),
-          theme: {
-            primaryColor,
-            accentColor,
-          },
+          ...data,
+          title,
         }),
       });
 
@@ -86,13 +104,12 @@ export default function NewWorkspaceModal({
         throw new Error(json.error || "Failed to create workspace");
       }
 
+      reset();
       onClose();
-      // Redirect to Studio for immediate authoring
+      // Navigate to Studio for immediate authoring
       router.push(`/${json.data.slug}/edit`);
     } catch (err: any) {
-      setError(err.message || "Failed to create workspace");
-    } finally {
-      setIsLoading(false);
+      setServerError(err.message || "Failed to create workspace");
     }
   };
 
@@ -114,7 +131,7 @@ export default function NewWorkspaceModal({
                 <Sparkles className="w-3.5 h-3.5 text-amber-400" />
               </h2>
               <p className="text-xs text-slate-400">
-                สร้างเล่มเอกสารสเปกและข้อกำหนดระบบใหม่ พร้อมเทมเพลตเริ่มต้น
+                สร้างเล่มเอกสารสเปกใหม่พร้อมเทมเพลตเริ่มต้น
               </p>
             </div>
           </div>
@@ -127,30 +144,36 @@ export default function NewWorkspaceModal({
           </button>
         </div>
 
-        {error && (
+        {serverError && (
           <div className="px-6 py-3 bg-red-50 border-b border-red-200 text-red-700 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
-            <span>{error}</span>
+            <span>{serverError}</span>
           </div>
         )}
 
-        {/* Modal Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto text-xs flex-1">
+        {/* Modal Form via React Hook Form */}
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="p-6 space-y-4 overflow-y-auto text-xs flex-1"
+        >
+          {/* Project Name */}
           <div>
             <label className="text-slate-700 font-semibold block mb-1">
               ชื่อระบบ / โครงการ (Project Name) *
             </label>
             <input
               type="text"
-              value={name}
-              onChange={(e) => handleNameChange(e.target.value)}
+              {...register("name", { required: "กรุณาระบุชื่อระบบหรือโครงการ" })}
               placeholder="e.g. Loyalty Point System"
-              required
               autoFocus
               className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
             />
+            {errors.name && (
+              <p className="text-red-500 text-[10px] mt-1">{errors.name.message}</p>
+            )}
           </div>
 
+          {/* Slug & Document ID */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-slate-700 font-semibold block mb-1">
@@ -158,15 +181,27 @@ export default function NewWorkspaceModal({
               </label>
               <input
                 type="text"
-                value={slug}
-                onChange={(e) => setSlug(e.target.value)}
+                {...register("slug", {
+                  required: "กรุณาระบุ Workspace ID",
+                  pattern: {
+                    value: /^[a-zA-Z0-9_-]+$/,
+                    message: "ใช้อักษรภาษาอังกฤษ, ตัวเลข, - หรือ _ เท่านั้น",
+                  },
+                })}
+                onChange={(e) => {
+                  setIsSlugCustomized(true);
+                  setValue("slug", e.target.value);
+                }}
                 placeholder="loyalty-point-system"
-                required
                 className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
               />
-              <span className="text-[10px] text-slate-400 block mt-0.5">
-                เก็บใน /workspaces/{slug || "slug"}
-              </span>
+              {errors.slug ? (
+                <p className="text-red-500 text-[10px] mt-0.5">{errors.slug.message}</p>
+              ) : (
+                <span className="text-[10px] text-slate-400 block mt-0.5">
+                  เก็บใน /workspaces/{watchedSlug || "slug"}
+                </span>
+              )}
             </div>
 
             <div>
@@ -175,40 +210,40 @@ export default function NewWorkspaceModal({
               </label>
               <input
                 type="text"
-                value={documentNumber}
-                onChange={(e) => setDocumentNumber(e.target.value)}
+                {...register("documentNumber")}
                 placeholder="DOC-LOY-2026-001"
                 className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
               />
             </div>
           </div>
 
+          {/* Document Title */}
           <div>
             <label className="text-slate-700 font-semibold block mb-1">
               หัวข้อเอกสาร (Document Title)
             </label>
             <input
               type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              {...register("title")}
               placeholder="Requirement Confirmation & System Specifications"
               className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
+          {/* Subtitle */}
           <div>
             <label className="text-slate-700 font-semibold block mb-1">
               คำอธิบายย่อย (Subtitle)
             </label>
             <input
               type="text"
-              value={subtitle}
-              onChange={(e) => setSubtitle(e.target.value)}
+              {...register("subtitle")}
               placeholder="เอกสารยืนยันขอบเขตความต้องการและสถาปัตยกรรมระบบ"
               className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
+          {/* Author & Client */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-slate-700 font-semibold block mb-1">
@@ -216,11 +251,12 @@ export default function NewWorkspaceModal({
               </label>
               <input
                 type="text"
-                value={author}
-                onChange={(e) => setAuthor(e.target.value)}
-                required
+                {...register("author", { required: "กรุณาระบุผู้จัดทำ" })}
                 className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              {errors.author && (
+                <p className="text-red-500 text-[10px] mt-1">{errors.author.message}</p>
+              )}
             </div>
 
             <div>
@@ -229,8 +265,7 @@ export default function NewWorkspaceModal({
               </label>
               <input
                 type="text"
-                value={client}
-                onChange={(e) => setClient(e.target.value)}
+                {...register("client")}
                 placeholder="Enterprise Customer Co., Ltd."
                 className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
@@ -240,7 +275,7 @@ export default function NewWorkspaceModal({
           {/* Theme Colors */}
           <div className="border-t border-slate-100 pt-3">
             <label className="text-slate-700 font-semibold block mb-2">
-              ชุดสีธีมเอกสาร (Theme Color Scheme)
+              ชุดสีธีมเอกสาร (Theme Color Palette)
             </label>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -250,8 +285,7 @@ export default function NewWorkspaceModal({
                 <div className="flex items-center gap-2">
                   <input
                     type="color"
-                    value={primaryColor}
-                    onChange={(e) => setPrimaryColor(e.target.value)}
+                    {...register("theme.primaryColor")}
                     className="w-7 h-7 rounded border border-slate-300 cursor-pointer"
                   />
                   <span className="font-mono text-slate-700 text-xs">{primaryColor}</span>
@@ -265,8 +299,7 @@ export default function NewWorkspaceModal({
                 <div className="flex items-center gap-2">
                   <input
                     type="color"
-                    value={accentColor}
-                    onChange={(e) => setAccentColor(e.target.value)}
+                    {...register("theme.accentColor")}
                     className="w-7 h-7 rounded border border-slate-300 cursor-pointer"
                   />
                   <span className="font-mono text-slate-700 text-xs">{accentColor}</span>
@@ -286,11 +319,14 @@ export default function NewWorkspaceModal({
             </button>
             <button
               type="submit"
-              disabled={isLoading || !slug || !name}
+              disabled={isSubmitting}
               className="px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg shadow-sm shadow-blue-500/20 flex items-center gap-1.5 transition-all"
             >
-              {isLoading ? (
-                <span>กำลังสร้าง...</span>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>กำลังสร้าง...</span>
+                </>
               ) : (
                 <>
                   <Plus className="w-3.5 h-3.5" />
