@@ -11,7 +11,14 @@ import {
   Check,
   X,
   Layers,
+  BookOpen,
+  Sparkles,
 } from "lucide-react";
+import {
+  SECTION_TEMPLATES,
+  SectionTemplate,
+  getSectionTemplateById,
+} from "@/lib/document-templates";
 
 interface FileItem {
   filename: string;
@@ -22,7 +29,7 @@ interface FileManagementDrawerProps {
   files: FileItem[];
   selectedFile: string;
   onSelectFile: (filename: string) => void;
-  onCreateFile: (filename: string) => Promise<void>;
+  onCreateFile: (filename: string, initialContent?: string) => Promise<void>;
   onRenameFile: (oldName: string, newName: string) => Promise<void>;
   onDeleteFile: (filename: string) => Promise<void>;
   onReorderFiles: (files: string[]) => Promise<void>;
@@ -38,12 +45,39 @@ export default function FileManagementDrawer({
   onReorderFiles,
 }: FileManagementDrawerProps) {
   const [isCreating, setIsCreating] = useState(false);
+  const [creationMode, setCreationMode] = useState<"template" | "blank">("template");
+  const [selectedSectionTemplateId, setSelectedSectionTemplateId] = useState<string>(
+    SECTION_TEMPLATES[0]?.id || ""
+  );
   const [newFilename, setNewFilename] = useState("");
   const [editingFile, setEditingFile] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [deletingFile, setDeletingFile] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const handleStartCreate = () => {
+    setIsCreating(true);
+    setCreationMode("template");
+    const tpl = SECTION_TEMPLATES[0];
+    if (tpl) {
+      setSelectedSectionTemplateId(tpl.id);
+      const prefix = String(files.length + 1).padStart(2, "0");
+      setNewFilename(`${prefix}-${tpl.filename}`);
+    } else {
+      setNewFilename(`0${files.length + 1}-section.md`);
+    }
+    setErrorMessage(null);
+  };
+
+  const handleTemplateChange = (tplId: string) => {
+    setSelectedSectionTemplateId(tplId);
+    const tpl = getSectionTemplateById(tplId);
+    if (tpl) {
+      const prefix = String(files.length + 1).padStart(2, "0");
+      setNewFilename(`${prefix}-${tpl.filename}`);
+    }
+  };
 
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,10 +88,18 @@ export default function FileManagementDrawer({
       filename += ".md";
     }
 
+    let initialContent: string | undefined = undefined;
+    if (creationMode === "template") {
+      const tpl = getSectionTemplateById(selectedSectionTemplateId);
+      if (tpl) {
+        initialContent = tpl.content;
+      }
+    }
+
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      await onCreateFile(filename);
+      await onCreateFile(filename, initialContent);
       setNewFilename("");
       setIsCreating(false);
     } catch (err: any) {
@@ -136,9 +178,11 @@ export default function FileManagementDrawer({
         <button
           type="button"
           onClick={() => {
-            setIsCreating(!isCreating);
-            setNewFilename("");
-            setErrorMessage(null);
+            if (isCreating) {
+              setIsCreating(false);
+            } else {
+              handleStartCreate();
+            }
           }}
           className="p-1 rounded-lg hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors"
           title="Add new Markdown file"
@@ -160,34 +204,92 @@ export default function FileManagementDrawer({
       {isCreating && (
         <form
           onSubmit={handleCreateSubmit}
-          className="p-3 bg-slate-50 border-b border-slate-200 space-y-2"
+          className="p-3 bg-slate-50 border-b border-slate-200 space-y-2.5"
         >
-          <label className="text-[11px] font-semibold text-slate-600 block">
-            ชื่อไฟล์ใหม่ (e.g. 02-specifications.md)
-          </label>
-          <div className="flex items-center gap-1.5">
-            <input
-              type="text"
-              value={newFilename}
-              onChange={(e) => setNewFilename(e.target.value)}
-              placeholder="02-specifications.md"
-              autoFocus
-              className="flex-1 px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono"
-            />
+          {/* Mode Switcher */}
+          <div className="flex items-center gap-1 bg-slate-200/70 p-0.5 rounded-lg text-[10.5px]">
             <button
-              type="submit"
-              disabled={isLoading || !newFilename.trim()}
-              className="p-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-xs"
+              type="button"
+              onClick={() => {
+                setCreationMode("template");
+                handleTemplateChange(selectedSectionTemplateId || SECTION_TEMPLATES[0].id);
+              }}
+              className={`flex-1 py-1 rounded font-medium flex items-center justify-center gap-1 transition-all ${
+                creationMode === "template"
+                  ? "bg-white text-blue-700 shadow-xs"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
             >
-              <Check className="w-3.5 h-3.5" />
+              <BookOpen className="w-3 h-3" />
+              <span>จากแม่แบบ</span>
             </button>
             <button
               type="button"
-              onClick={() => setIsCreating(false)}
-              className="p-1.5 hover:bg-slate-200 text-slate-500 rounded-lg text-xs"
+              onClick={() => {
+                setCreationMode("blank");
+                setNewFilename(`0${files.length + 1}-custom.md`);
+              }}
+              className={`flex-1 py-1 rounded font-medium flex items-center justify-center gap-1 transition-all ${
+                creationMode === "blank"
+                  ? "bg-white text-blue-700 shadow-xs"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
             >
-              <X className="w-3.5 h-3.5" />
+              <FileText className="w-3 h-3" />
+              <span>ไฟล์เปล่า</span>
             </button>
+          </div>
+
+          {/* Section Template Select */}
+          {creationMode === "template" && (
+            <div>
+              <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block mb-1">
+                เลือกแม่แบบส่วนงาน (Section Template)
+              </label>
+              <select
+                value={selectedSectionTemplateId}
+                onChange={(e) => handleTemplateChange(e.target.value)}
+                className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {SECTION_TEMPLATES.map((tpl) => (
+                  <option key={tpl.id} value={tpl.id}>
+                    [{tpl.category}] {tpl.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div>
+            <label className="text-[10.5px] font-semibold text-slate-600 block mb-1">
+              ชื่อไฟล์ (Filename):
+            </label>
+            <div className="flex items-center gap-1.5">
+              <input
+                type="text"
+                value={newFilename}
+                onChange={(e) => setNewFilename(e.target.value)}
+                placeholder="02-specifications.md"
+                autoFocus
+                className="flex-1 px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+              />
+              <button
+                type="submit"
+                disabled={isLoading || !newFilename.trim()}
+                className="p-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-xs flex items-center justify-center"
+                title="สร้างไฟล์"
+              >
+                <Check className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsCreating(false)}
+                className="p-1.5 hover:bg-slate-200 text-slate-500 rounded-lg text-xs"
+                title="ยกเลิก"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </form>
       )}

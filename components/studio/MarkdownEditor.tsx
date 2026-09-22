@@ -11,7 +11,9 @@ import EditorStatusBar from "./editor/EditorStatusBar";
 export interface MarkdownEditorHandle {
   jumpToLine: (lineNumber: number) => void;
   insertSnippet: (snippet: string) => void;
+  scrollToPercentage?: (percentage: number) => void;
 }
+
 
 interface MarkdownEditorProps {
   content: string;
@@ -73,6 +75,17 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
           visualEditorRef.current?.insertSnippet(snippet);
         } else {
           insertTextAtCursor(snippet);
+        }
+      },
+      scrollToPercentage: (percentage: number) => {
+        if (inputMode === "visual") {
+          visualEditorRef.current?.scrollToPercentage(percentage);
+        } else {
+          const textarea = textareaRef.current;
+          if (textarea) {
+            const maxScroll = textarea.scrollHeight - textarea.clientHeight;
+            textarea.scrollTop = percentage * maxScroll;
+          }
         }
       },
     }));
@@ -378,6 +391,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
               onSave={onSave}
               onUploadImage={handleUploadImage}
               isUploading={isUploading}
+              onScroll={onScroll}
             />
           </div>
         ) : (
@@ -427,7 +441,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
                 onPaste={handlePaste}
                 onDrop={handleDrop}
                 placeholder="เริ่มเขียนเอกสาร Markdown ที่นี่..."
-                className={`w-full h-full p-6 sm:p-8 font-mono text-[13.5px] leading-relaxed resize-none focus:outline-none selection:bg-blue-500 selection:text-white ${editorBg}`}
+                className={`w-full h-full p-6 sm:p-8 font-mono text-[13.5px] leading-relaxed resize-none overflow-y-auto focus:outline-none selection:bg-blue-500 selection:text-white ${editorBg}`}
                 spellCheck={false}
               />
             </div>

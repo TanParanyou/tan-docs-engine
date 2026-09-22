@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import {
   Heading1,
   Heading2,
@@ -20,7 +20,9 @@ import {
   Sparkles,
   AlertCircle,
   FileCheck2,
+  BookOpen,
 } from "lucide-react";
+import TemplateSnippetModal from "./TemplateSnippetModal";
 
 interface EditorToolbarProps {
   onInsertText: (before: string, after?: string, defaultText?: string) => void;
@@ -40,6 +42,7 @@ export default function EditorToolbar({
   onToggleTheme,
 }: EditorToolbarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isSnippetModalOpen, setIsSnippetModalOpen] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0] && onUploadImage) {
@@ -203,6 +206,16 @@ export default function EditorToolbar({
 
           <button
             type="button"
+            title="คลังแม่แบบบล็อกเนื้อหาสำเร็จรูป (Snippet Templates)"
+            onClick={() => setIsSnippetModalOpen(true)}
+            className="px-2 py-1 bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-500/25 rounded transition-colors flex items-center gap-1 font-semibold text-[11px]"
+          >
+            <BookOpen className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+            <span>แม่แบบ 🧩</span>
+          </button>
+
+          <button
+            type="button"
             title="Page Break สำหรับการพิมพ์ PDF (<!-- pagebreak -->)"
             onClick={() => onInsertText("\n<!-- pagebreak -->\n")}
             className="px-2 py-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 rounded transition-colors flex items-center gap-1 font-medium text-[11px]"
@@ -273,6 +286,13 @@ export default function EditorToolbar({
           <span className="capitalize">{editorTheme}</span>
         </button>
       </div>
+
+      {/* Snippet Template Modal */}
+      <TemplateSnippetModal
+        isOpen={isSnippetModalOpen}
+        onClose={() => setIsSnippetModalOpen(false)}
+        onInsertSnippet={(snippet) => onInsertText(snippet)}
+      />
     </div>
   );
 }

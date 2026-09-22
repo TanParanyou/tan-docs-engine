@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { DocsConfig, MarkdownFileItem, WorkspaceData } from "./types";
 import { renderMarkdown } from "./markdown";
+import { getTemplateById, interpolateTemplateContent } from "./document-templates";
 
 const WORKSPACES_DIR = path.join(process.cwd(), "workspaces");
 
@@ -157,6 +158,24 @@ export function createWorkspace(input: import("./types").CreateWorkspaceInput): 
       fs.writeFileSync(path.join(srcDir, uniqueName), item.content || "", "utf-8");
       processedFiles.push(uniqueName);
     });
+  } else if (input.templateId && getTemplateById(input.templateId)) {
+    const template = getTemplateById(input.templateId)!;
+    const templateVars = {
+      projectName: input.name,
+      title: input.title,
+      subtitle: input.subtitle,
+      version: input.version,
+      author: input.author,
+      client: input.client,
+      organization: input.organization,
+      date: new Date().toISOString().split("T")[0],
+    };
+
+    for (const tFile of template.files) {
+      const interpolated = interpolateTemplateContent(tFile.content, templateVars);
+      fs.writeFileSync(path.join(srcDir, tFile.filename), interpolated, "utf-8");
+      processedFiles.push(tFile.filename);
+    }
   } else {
     const initialFilename = "01-system-overview.md";
     const initialContent = `# ${input.title}\n\n## 1. บทนำและวัตถุประสงค์ (Overview)\nยินดีต้อนรับสู่เอกสารสเปกของ **${input.name}**\n\n- **Project:** ${input.name}\n- **Version:** v${input.version || "1.0.0"}\n- **Author:** ${input.author}\n\n## 2. แผนภาพสถาปัตยกรรม (Architecture Flowchart)\n\`\`\`mermaid\ngraph TD\n  Client[User Application] --> Gateway[API Gateway]\n  Gateway --> Service[Core Microservice]\n  Service --> DB[(Database Cluster)]\n\`\`\`\n\n<!-- pagebreak -->\n\n## 3. รายละเอียดระบบ (System Specifications)\n| โมดูล (Module) | รายละเอียด (Description) | สถานะ (Status) |\n| :--- | :--- | :--- |\n| Core Engine | ประมวลผลและจัดการข้อมูลหลัก | กำลังพัฒนา |\n| Security & Auth | การยืนยันตัวตนและการเข้าถึง | เสร็จสมบูรณ์ |\n`;

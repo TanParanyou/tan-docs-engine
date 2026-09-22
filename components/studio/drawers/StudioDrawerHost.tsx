@@ -23,7 +23,7 @@ interface StudioDrawerHostProps {
   files: FileItem[];
   selectedFile: string;
   onSelectFile: (filename: string) => void;
-  onCreateFile: (filename: string) => Promise<void>;
+  onCreateFile: (filename: string, initialContent?: string) => Promise<void>;
   onRenameFile: (oldName: string, newName: string) => Promise<void>;
   onDeleteFile: (filename: string) => Promise<void>;
   onReorderFiles: (newOrder: string[]) => Promise<void>;

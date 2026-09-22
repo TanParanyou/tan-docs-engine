@@ -107,8 +107,6 @@ export default function DocumentViewer({
 
   return (
     <div className={`flex flex-col w-full ${className}`}>
-  return (
-    <div className={`flex flex-col w-full ${className}`}>
       {/* Viewer Floating/Sticky Toolbar */}
       {showToolbar && (
         <div className="sticky top-14 sm:top-16 z-30 bg-slate-900/95 backdrop-blur-md text-white border-b border-slate-700/80 px-2.5 sm:px-4 py-2 sm:py-2.5 shadow-md flex flex-wrap items-center justify-between gap-2 sm:gap-3 mb-4 sm:mb-6 rounded-xl">

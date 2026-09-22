@@ -61,5 +61,6 @@ export interface CreateWorkspaceInput {
   client?: string;
   organization?: string;
   theme?: ThemeConfig;
+  templateId?: string;
   initialFiles?: InitialMarkdownFile[];
 }

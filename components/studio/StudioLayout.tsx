@@ -186,12 +186,12 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
   };
 
   // File CRUD operations
-  const handleCreateFile = async (newFilename: string) => {
+  const handleCreateFile = async (newFilename: string, initialContent?: string) => {
     const currentSlug = slug || initialWorkspace.slug;
     const res = await fetch(`/api/workspaces/${currentSlug}/files`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "create", filename: newFilename }),
+      body: JSON.stringify({ action: "create", filename: newFilename, initialContent }),
     });
     const json = await res.json();
     if (!res.ok || !json.success) {
@@ -322,7 +322,7 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
   const activeName = config.name || initialWorkspace.config.name;
 
   return (
-    <div className="h-screen flex flex-col bg-slate-100 text-slate-800 overflow-hidden font-sans select-none">
+    <div className="h-screen flex flex-col bg-slate-100 text-slate-800 overflow-hidden font-sans">
       {/* Studio Global Header */}
       <StudioHeader
         slug={activeSlug}

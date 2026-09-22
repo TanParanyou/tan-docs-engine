@@ -14,7 +14,13 @@ import {
   Edit3,
   Search,
   Sparkles,
+  BookOpen,
+  ArrowRight,
+  ChevronRight,
+  Zap,
 } from "lucide-react";
+import TemplateGalleryModal from "./TemplateGalleryModal";
+import { DocumentTemplate, WORKSPACE_TEMPLATES } from "@/lib/document-templates";
 
 interface WorkspaceDashboardProps {
   initialWorkspaces: WorkspaceData[];
@@ -24,6 +30,8 @@ export default function WorkspaceDashboard({
   initialWorkspaces,
 }: WorkspaceDashboardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("srs-standard");
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredWorkspaces = initialWorkspaces.filter((ws) => {
@@ -44,6 +52,16 @@ export default function WorkspaceDashboard({
       <NewWorkspaceModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        preselectedTemplateId={selectedTemplateId}
+      />
+
+      <TemplateGalleryModal
+        isOpen={isGalleryOpen}
+        onClose={() => setIsGalleryOpen(false)}
+        onSelectTemplate={(tpl: DocumentTemplate) => {
+          setSelectedTemplateId(tpl.id);
+          setIsModalOpen(true);
+        }}
       />
 
       {/* Action Bar & Search */}
@@ -59,15 +77,94 @@ export default function WorkspaceDashboard({
           />
         </div>
 
-        <button
-          type="button"
-          onClick={() => setIsModalOpen(true)}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-md shadow-blue-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
-        >
-          <Plus className="w-4 h-4" />
-          <span>New Workspace</span>
-          <Sparkles className="w-3.5 h-3.5 text-blue-200" />
-        </button>
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => setIsGalleryOpen(true)}
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 text-xs font-semibold rounded-xl border border-slate-200 hover:border-slate-300 shadow-xs transition-all"
+            title="เปิดคลังแม่แบบเอกสาร"
+          >
+            <BookOpen className="w-4 h-4 text-blue-600" />
+            <span>คลังแม่แบบ (Templates)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedTemplateId("srs-standard");
+              setIsModalOpen(true);
+            }}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-md shadow-blue-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <Plus className="w-4 h-4" />
+            <span>New Workspace</span>
+            <Sparkles className="w-3.5 h-3.5 text-blue-200" />
+          </button>
+        </div>
+      </div>
+
+      {/* Quick Start Templates Shelf */}
+      <div className="mb-8 p-4 bg-white rounded-2xl border border-slate-200/90 shadow-2xs">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+              <Zap className="w-3.5 h-3.5 fill-blue-600/20" />
+            </div>
+            <div>
+              <span className="text-xs font-bold text-slate-900 block leading-tight">
+                สร้างเอกสารด่วนจากแม่แบบมาตรฐาน (Quick Start with Templates)
+              </span>
+              <span className="text-[10.5px] text-slate-500 block">
+                เลือกแม่แบบที่ต้องการแล้วกรอกเพียงชื่อระบบ เพื่อเริ่มต้นได้ทันที
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsGalleryOpen(true)}
+            className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 hover:underline flex-shrink-0"
+          >
+            <span>ดูแม่แบบทั้งหมด ({WORKSPACE_TEMPLATES.length})</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {WORKSPACE_TEMPLATES.slice(0, 4).map((tpl) => (
+            <div
+              key={tpl.id}
+              onClick={() => {
+                setSelectedTemplateId(tpl.id);
+                setIsModalOpen(true);
+              }}
+              className="p-3.5 bg-slate-50 hover:bg-blue-50/50 border border-slate-200 hover:border-blue-300 rounded-xl text-left transition-all cursor-pointer group flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-600 group-hover:border-blue-200 group-hover:text-blue-700 transition-colors">
+                    {tpl.categoryLabel}
+                  </span>
+                  <div
+                    className="w-2.5 h-2.5 rounded-full"
+                    style={{ backgroundColor: tpl.theme.primaryColor }}
+                    title={`Primary: ${tpl.theme.primaryColor}`}
+                  />
+                </div>
+                <h4 className="text-xs font-bold text-slate-800 group-hover:text-blue-900 transition-colors line-clamp-1">
+                  {tpl.name}
+                </h4>
+                <p className="text-[11px] text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+                  {tpl.description}
+                </p>
+              </div>
+
+              <div className="mt-3 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[11px] text-blue-600 font-semibold group-hover:text-blue-700">
+                <span>ใช้แม่แบบนี้</span>
+                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Workspaces Grid */}
