@@ -8,6 +8,8 @@ const nextConfig: NextConfig = {
     "chromium-bidi",
     "highlight.js",
     "markdown-it",
+    "exceljs",
+    "html-to-docx",
   ],
   images: {
     unoptimized: true,

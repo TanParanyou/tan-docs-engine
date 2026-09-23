@@ -24,7 +24,7 @@ function findChromeExecutable(): string | undefined {
   ];
 
   for (const p of commonPaths) {
-    if (fs.existsSync(p)) {
+    if (fs.existsSync(/*turbopackIgnore: true*/ p)) {
       return p;
     }
   }
