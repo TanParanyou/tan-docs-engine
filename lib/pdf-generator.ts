@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { WorkspaceData } from "./types";
 import { generateWorkspaceHtml } from "./template";
+import { sanitizeDocumentFilename } from "./export-utils";
 
 function findChromeExecutable(): string | undefined {
   if (process.env.PUPPETEER_EXECUTABLE_PATH && fs.existsSync(process.env.PUPPETEER_EXECUTABLE_PATH)) {
@@ -35,7 +36,7 @@ function findChromeExecutable(): string | undefined {
 export async function renderWorkspacePdf(
   workspace: WorkspaceData,
   outputDir = path.join(process.cwd(), "output")
-): Promise<{ filePath: string; buffer: Uint8Array }> {
+): Promise<{ filePath: string; buffer: Uint8Array; filename: string }> {
   const puppeteer = (await import("puppeteer")).default;
   const html = generateWorkspaceHtml(workspace);
 
@@ -43,17 +44,12 @@ export async function renderWorkspacePdf(
     fs.mkdirSync(outputDir, { recursive: true });
   }
 
-  let sanitizedTitle = workspace.config.title;
-  const enMatch = sanitizedTitle.match(/\(([A-Za-z0-9\s-]+)\)/);
-  if (enMatch) {
-    sanitizedTitle = enMatch[1];
-  }
-  const cleanTitle = sanitizedTitle
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "") || "document";
-
-  const filename = `${workspace.slug}-${cleanTitle}-v${workspace.config.version}.pdf`;
+  const filename = sanitizeDocumentFilename(
+    workspace.slug,
+    workspace.config.title,
+    workspace.config.version,
+    "pdf"
+  );
   const filePath = path.join(outputDir, filename);
 
   const executablePath = findChromeExecutable();
@@ -118,7 +114,7 @@ export async function renderWorkspacePdf(
     };
 
     const buffer = await page.pdf(pdfOptions);
-    return { filePath, buffer };
+    return { filePath, buffer, filename };
   } finally {
     await browser.close();
   }

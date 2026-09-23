@@ -117,47 +117,7 @@ export function preprocessRequirementDoc(markdown: string): string {
     }
   );
 
-  // 5. Review Box (ผลการพิจารณา)
-  // Split into sections by REQ ID to attach specific title
-  const sections = content.split(/(?=#{2,4}\s*[\s\S]*?REQ-[A-Z0-9-]+)/g);
-  content = sections.map((sec) => {
-    const reqMatch = sec.match(/REQ-[A-Z0-9-]+/);
-    const reqId = reqMatch ? reqMatch[0] : "";
-    const titleLabel = reqId ? `ผลการพิจารณาสำหรับ ${reqId}:` : "ผลการพิจารณา:";
 
-    const reviewBoxHtml = `
-<div class="review-box-container">
-  <div class="review-box-label">${titleLabel}</div>
-  <table class="review-box-table">
-    <tbody>
-      <tr>
-        <td class="review-label-cell">สถานะการพิจารณา</td>
-        <td class="review-status-cell">
-          <div class="review-status-grid">
-            <span>[ ] ยืนยันตามข้อเสนอ</span>
-            <span>[ ] ขอแก้ไข</span>
-            <span>[ ] ไม่อยู่ในขอบเขต</span>
-            <span>[ ] รอหารือเพิ่ม</span>
-          </div>
-        </td>
-      </tr>
-      <tr>
-        <td class="review-label-cell">ข้อคิดเห็น / หมายเหตุ</td>
-        <td class="review-notes-cell"></td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-`;
-
-    // Match both bold markdown pattern (**ผลการพิจารณา:**) and plain text pattern from OCR/NotebookLM
-    const reviewPattern = /(?:\*\*ผลการพิจารณา:\*\*[\s\S]*?(?:\*\*หมายเหตุลูกค้า:\*\*[^\n]*|\n---\s*\n|\n#{2,3}|\s*$)|(?:^|\n)ผลการพิจารณา(?:สำหรับ[^\n:]*)?:[\s\S]*?(?:ข้อคิดเห็น\s*\/\s*หมายเหตุ[^\n]*|\n---\s*\n|\n#{2,3}|\s*$))/i;
-
-    if (reviewPattern.test(sec)) {
-      return sec.replace(reviewPattern, reviewBoxHtml);
-    }
-    return sec;
-  }).join("");
 
   // 6. Section: Sign-off Section -> 2-Column Table
   content = content.replace(

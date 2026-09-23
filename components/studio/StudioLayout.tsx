@@ -198,9 +198,18 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
       let filename = "";
       const disposition = res.headers.get("Content-Disposition");
       if (disposition) {
-        const match = disposition.match(/filename="?([^";]+)"?/i);
-        if (match && match[1]) {
-          filename = match[1];
+        const utf8Match = disposition.match(/filename\*=(?:UTF-8''|utf-8'')([^;]+)/i);
+        if (utf8Match && utf8Match[1]) {
+          try {
+            filename = decodeURIComponent(utf8Match[1].trim().replace(/^["']|["']$/g, ""));
+          } catch {
+            // fallback
+          }
+        } else {
+          const match = disposition.match(/filename="?([^";]+)"?/i);
+          if (match && match[1]) {
+            filename = match[1].trim();
+          }
         }
       }
 

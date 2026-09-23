@@ -11,7 +11,6 @@ import {
   ZoomOut,
   RotateCcw,
   ExternalLink,
-  Download,
   Printer,
   RefreshCw,
   Loader2,
@@ -19,7 +18,6 @@ import {
   ChevronRight,
   Smartphone,
 } from "lucide-react";
-import ExportDropdown from "@/components/common/ExportDropdown";
 
 export interface DocumentViewerHandle {
   scrollToPercentage: (percentage: number) => void;
@@ -186,7 +184,6 @@ const DocumentViewer = React.forwardRef<DocumentViewerHandle, DocumentViewerProp
   const fileParam = selectedFile && selectedFile !== "all" ? `&file=${encodeURIComponent(selectedFile)}` : "";
   const fileQueryParam = selectedFile && selectedFile !== "all" ? `?file=${encodeURIComponent(selectedFile)}` : "";
   const pdfUrl = `/api/pdf?workspace=${workspaceSlug}${fileParam}&inline=true`;
-  const pdfDownloadUrl = `/api/pdf?workspace=${workspaceSlug}${fileParam}`;
   const printUrl = `/${workspaceSlug}/print${fileQueryParam}`;
 
   return (
@@ -326,19 +323,11 @@ const DocumentViewer = React.forwardRef<DocumentViewerHandle, DocumentViewerProp
               href={printUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden md:inline-flex items-center gap-1.5 text-xs text-theme-text hover:text-theme-primary bg-theme-surface hover:bg-theme-surface-hover border border-theme-border px-2 sm:px-2.5 py-1.5 rounded-retro shadow-retro-sm transition-colors active:translate-x-[0.5px] active:translate-y-[0.5px]"
+              className="inline-flex items-center gap-1.5 text-xs text-theme-text hover:text-theme-primary bg-theme-surface hover:bg-theme-surface-hover border border-theme-border px-2 sm:px-2.5 py-1.5 rounded-retro shadow-retro-sm transition-colors active:translate-x-[0.5px] active:translate-y-[0.5px]"
               title="พิมพ์เอกสาร (Print Window)"
             >
               <Printer className="w-3.5 h-3.5 text-theme-text-muted" />
-            </a>
-
-            <a
-              href={pdfDownloadUrl}
-              className="inline-flex items-center gap-1 sm:gap-1.5 text-xs font-semibold text-theme-primary-text bg-theme-primary hover:bg-theme-primary-hover border border-theme-border px-2 sm:px-3 py-1.5 rounded-retro shadow-retro-sm transition-colors active:translate-x-[0.5px] active:translate-y-[0.5px]"
-              title="ดาวน์โหลดไฟล์ PDF"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span className="hidden lg:inline">ดาวน์โหลด</span>
+              <span className="hidden lg:inline font-medium">พิมพ์</span>
             </a>
           </div>
         </div>

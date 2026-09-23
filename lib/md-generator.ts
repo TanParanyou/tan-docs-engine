@@ -1,4 +1,5 @@
 import { WorkspaceData } from "./types";
+import { sanitizeDocumentFilename } from "./export-utils";
 
 export interface MarkdownExportResult {
   content: string;
@@ -13,7 +14,12 @@ export function generateWorkspaceMarkdown(
   workspace: WorkspaceData,
   singleFilename?: string
 ): MarkdownExportResult {
-  const sanitizedTitle = workspace.config.title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  const filename = sanitizeDocumentFilename(
+    workspace.slug,
+    workspace.config.title,
+    workspace.config.version,
+    "md"
+  );
 
   // Export a single file if specified
   if (singleFilename) {
@@ -76,7 +82,6 @@ export function generateWorkspaceMarkdown(
     .join("");
 
   const fullContent = `${frontmatter}\n${metadataSummary}\n${combinedSections}\n`;
-  const filename = `${workspace.slug}-${sanitizedTitle}-v${workspace.config.version}.md`;
 
   return {
     content: fullContent,

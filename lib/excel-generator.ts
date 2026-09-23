@@ -2,6 +2,7 @@ import path from "node:path";
 import fs from "node:fs";
 import ExcelJS from "exceljs";
 import { WorkspaceData } from "./types";
+import { sanitizeDocumentFilename } from "./export-utils";
 
 export interface ExcelExportResult {
   buffer: Buffer;
@@ -50,7 +51,13 @@ function extractMarkdownTables(content: string, filename: string): ParsedTable[]
       const cells = line
         .slice(1, -1)
         .split("|")
-        .map((c) => c.trim().replace(/[*_`]/g, ""));
+        .map((c) =>
+          c
+            .replace(/<br\s*\/?>/gi, "\n")
+            .replace(/&nbsp;/gi, " ")
+            .replace(/[*_`]/g, "")
+            .trim()
+        );
 
       // Check if delimiter row (e.g. | :--- | :--- |)
       const isDelimiter = cells.every((c) => /^:?-+:?$/.test(c));
@@ -412,8 +419,7 @@ export async function renderWorkspaceExcel(
     ];
   }
 
-  const sanitizedTitle = config.title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-  const filename = `${slug}-${sanitizedTitle}-v${config.version}.xlsx`;
+  const filename = sanitizeDocumentFilename(slug, config.title, config.version, "xlsx");
 
   const buffer = Buffer.from(await workbook.xlsx.writeBuffer());
 

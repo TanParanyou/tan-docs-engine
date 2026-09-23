@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getWorkspaceData } from "@/lib/workspaces";
 import { renderWorkspaceExcel } from "@/lib/excel-generator";
+import { buildContentDisposition } from "@/lib/export-utils";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
       status: 200,
       headers: {
         "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "Content-Disposition": `attachment; filename="${filename}"`,
+        "Content-Disposition": buildContentDisposition(filename),
         "Cache-Control": "no-cache, no-store, must-revalidate",
       },
     });

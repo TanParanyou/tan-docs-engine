@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getWorkspaceData } from "@/lib/workspaces";
 import { renderWorkspacePdf } from "@/lib/pdf-generator";
+import { buildContentDisposition, sanitizeDocumentFilename } from "@/lib/export-utils";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -26,10 +27,16 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const { buffer } = await renderWorkspacePdf(workspace);
-    const sanitizedTitle = workspace.config.title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const { buffer, filename: generatedFilename } = await renderWorkspacePdf(workspace);
     const fileSuffix = specificFile && specificFile !== "all" ? `-${specificFile.replace(/\.md$/i, "")}` : "";
-    const filename = `${workspace.slug}${fileSuffix}-${sanitizedTitle}-v${workspace.config.version}.pdf`;
+    const filename = fileSuffix
+      ? sanitizeDocumentFilename(
+          `${workspace.slug}${fileSuffix}`,
+          workspace.config.title,
+          workspace.config.version,
+          "pdf"
+        )
+      : generatedFilename;
     const isInline = searchParams.get("inline") === "true" || searchParams.get("inline") === "1";
     const dispositionType = isInline ? "inline" : "attachment";
 
@@ -37,7 +44,7 @@ export async function GET(request: NextRequest) {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `${dispositionType}; filename="${filename}"`,
+        "Content-Disposition": buildContentDisposition(filename, dispositionType),
         "Cache-Control": "no-cache, no-store, must-revalidate",
       },
     });

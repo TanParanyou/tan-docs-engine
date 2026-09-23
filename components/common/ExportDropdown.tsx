@@ -162,9 +162,19 @@ export default function ExportDropdown({
         let downloadName = fallbackName;
         const disposition = res.headers.get("Content-Disposition");
         if (disposition) {
-          const match = disposition.match(/filename="?([^";]+)"?/i);
-          if (match && match[1]) {
-            downloadName = match[1];
+          // RFC 5987 / RFC 6266 filename* takes precedence (supports UTF-8 encoded Thai and English)
+          const utf8Match = disposition.match(/filename\*=(?:UTF-8''|utf-8'')([^;]+)/i);
+          if (utf8Match && utf8Match[1]) {
+            try {
+              downloadName = decodeURIComponent(utf8Match[1].trim().replace(/^["']|["']$/g, ""));
+            } catch {
+              // fallback to regular match if decoding fails
+            }
+          } else {
+            const match = disposition.match(/filename="?([^";]+)"?/i);
+            if (match && match[1]) {
+              downloadName = match[1].trim();
+            }
           }
         }
 
@@ -256,12 +266,12 @@ export default function ExportDropdown({
               right: `${coords?.right ?? 16}px`,
               zIndex: 999999,
             }}
-            className="w-64 rounded-retro bg-theme-surface border-2 border-theme-border shadow-retro-lg py-1.5 text-xs divide-y divide-theme-border-subtle animate-in fade-in zoom-in-95 duration-100 select-none"
+            className="w-64 max-w-[calc(100vw-24px)] rounded-retro bg-theme-surface border-2 border-theme-border shadow-retro-lg py-1.5 text-xs divide-y divide-theme-border-subtle animate-in fade-in zoom-in-95 duration-100 select-none"
           >
             {/* Main Document Formats */}
             <div className="py-1">
               <div className="px-3 py-1 text-[10px] font-mono font-semibold uppercase tracking-wider text-theme-text-muted">
-                รูปแบบเอกสารหลัก (Main Formats)
+                ส่งออกเอกสารทั้งเล่ม (Complete Document)
               </div>
 
               {/* PDF */}
@@ -281,7 +291,7 @@ export default function ExportDropdown({
                     </span>
                   </div>
                   <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
-                    เอกสารจัดหน้า A4 สวยงาม พร้อมสารบัญและแผนภาพ
+                    เอกสารทางการทั้งเล่ม จัดหน้า A4 สวยงาม พร้อมสารบัญ
                   </div>
                 </div>
               </button>
@@ -303,7 +313,7 @@ export default function ExportDropdown({
                     </span>
                   </div>
                   <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
-                    ไฟล์ Microsoft Word แก้ไขต่อได้ ฟอนต์สารบรรณ
+                    ไฟล์ Microsoft Word ทั้งเล่ม รองรับ Google Docs สมบูรณ์
                   </div>
                 </div>
               </button>
@@ -325,7 +335,7 @@ export default function ExportDropdown({
                     </span>
                   </div>
                   <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
-                    สมุดงานตารางข้อมูล สเปก และเช็กลิสต์แยกชีต
+                    สมุดงานตารางข้อมูลและรายการข้อกำหนดทุกไฟล์
                   </div>
                 </div>
               </button>
@@ -348,13 +358,13 @@ export default function ExportDropdown({
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between">
-                    <span>Export Markdown (รวม)</span>
+                    <span>Markdown รวมทั้งเล่ม</span>
                     <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
                       .md
                     </span>
                   </div>
                   <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
-                    รวมเนื้อหาทุกไฟล์พร้อม Frontmatter และ Metadata
+                    รวมเนื้อหาทุกไฟล์พร้อม Frontmatter และข้อมูลโครงการ
                   </div>
                 </div>
               </button>
@@ -372,12 +382,12 @@ export default function ExportDropdown({
                   <div className="flex-1 min-w-0">
                     <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between">
                       <span>เฉพาะไฟล์ปัจจุบัน</span>
-                      <span className="text-[9px] font-mono px-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 truncate max-w-[70px]">
+                      <span className="text-[9px] font-mono px-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 truncate max-w-[80px]" title={currentFilename}>
                         {currentFilename}
                       </span>
                     </div>
                     <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
-                      ดาวน์โหลดเฉพาะไฟล์ที่กำลังเปิดแก้ไขในขณะนี้
+                      ดาวน์โหลดเฉพาะไฟล์ <code className="text-[10px] bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">{currentFilename}</code> ที่กำลังแก้ไข
                     </div>
                   </div>
                 </button>
