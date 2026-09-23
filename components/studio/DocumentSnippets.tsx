@@ -155,46 +155,46 @@ graph TD
   ];
 
   return (
-    <div className="flex flex-col h-full bg-white border-r border-slate-200 text-slate-800">
+    <div className="flex flex-col h-full bg-theme-surface border-r-2 border-theme-border text-theme-text select-none">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+      <div className="px-4 py-3 border-b-2 border-theme-border bg-theme-surface-sunken flex items-center justify-between flex-shrink-0">
         <div className="flex items-center space-x-2">
-          <Boxes className="w-4 h-4 text-blue-600" />
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
+          <Boxes className="w-4 h-4 text-theme-primary" />
+          <span className="text-xs font-bold font-mono uppercase tracking-wider text-theme-text">
             Document Snippets
           </span>
         </div>
-        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-semibold">
+        <span className="text-[10px] font-mono px-2 py-0.5 rounded-retro bg-theme-accent-light text-theme-accent-text border border-theme-accent/40 font-bold shadow-2xs">
           1-Click Insert
         </span>
       </div>
 
-      <div className="p-3 text-[11px] text-slate-500 border-b border-slate-200 bg-slate-50/50">
-        คลิกที่ปุ่มเพื่อแทรกแม่แบบเอกสาร Requirement Confirmation ลงในตำแหน่งเคอร์เซอร์ทันที
+      <div className="p-3 text-[11px] text-theme-text-muted border-b border-theme-border-subtle bg-theme-surface-sunken/40 leading-relaxed font-sans">
+        คลิกที่ปุ่มเพื่อแทรกบล็อกสเปกและตารางมาตรฐานลงในเอกสารทันที
       </div>
 
       {/* Snippet Cards */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
+      <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {snippets.map((snip) => (
           <div
             key={snip.id}
-            className="p-3 bg-white hover:bg-slate-50/80 rounded-xl border border-slate-200 hover:border-blue-400 transition-all flex flex-col justify-between group shadow-xs"
+            className="p-3.5 bg-theme-surface-sunken hover:bg-theme-surface rounded-retro border-2 border-theme-border hover:border-theme-primary transition-all flex flex-col justify-between group shadow-retro-sm"
           >
             <div>
-              <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <div className="p-1 rounded-lg bg-slate-100 border border-slate-200">
+                  <div className="p-1 rounded-retro bg-theme-surface border border-theme-border shadow-2xs">
                     {snip.icon}
                   </div>
-                  <h4 className="font-semibold text-xs text-slate-900 group-hover:text-blue-600 transition-colors">
+                  <h4 className="font-bold text-xs text-theme-text group-hover:text-theme-primary transition-colors font-sans">
                     {snip.title}
                   </h4>
                 </div>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-retro bg-theme-surface text-theme-text-muted border border-theme-border-subtle">
                   {snip.category}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 leading-relaxed mb-3">
+              <p className="text-[11px] text-theme-text-muted leading-relaxed mb-3 font-sans">
                 {snip.description}
               </p>
             </div>
@@ -202,7 +202,7 @@ graph TD
             <button
               type="button"
               onClick={() => onInsertSnippet(snip.content)}
-              className="w-full h-8.5 py-2 px-3 bg-slate-50 hover:bg-blue-600 text-slate-700 hover:text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all border border-slate-200 hover:border-blue-600 shadow-2xs cursor-pointer active:scale-[0.98]"
+              className="w-full py-2 px-3 bg-theme-primary hover:bg-theme-primary-hover text-theme-primary-text rounded-retro text-xs font-bold flex items-center justify-center gap-1.5 transition-all border border-theme-border shadow-retro-sm cursor-pointer active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
             >
               <Plus className="w-4 h-4" />
               <span>แทรกลงในเอกสาร</span>

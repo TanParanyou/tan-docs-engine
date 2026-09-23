@@ -50,7 +50,8 @@ export async function POST(request: NextRequest, { params }: RouteProps) {
 
   try {
     const body = await request.json();
-    const action = body.action as "create" | "rename" | "delete" | "reorder";
+    const action = body.action as "create" | "upload" | "rename" | "delete" | "reorder";
+    let createdFilename: string | undefined;
 
     switch (action) {
       case "create": {
@@ -61,7 +62,21 @@ export async function POST(request: NextRequest, { params }: RouteProps) {
             { status: 400 }
           );
         }
-        createWorkspaceFile(slug, filename, initialContent);
+        createdFilename = createWorkspaceFile(slug, filename, initialContent);
+        break;
+      }
+
+      case "upload": {
+        const { files } = body;
+        if (!Array.isArray(files) || files.length === 0) {
+          return NextResponse.json(
+            { success: false, error: "files array is required" },
+            { status: 400 }
+          );
+        }
+        for (const f of files) {
+          createdFilename = createWorkspaceFile(slug, f.filename, f.content);
+        }
         break;
       }
 
@@ -109,7 +124,7 @@ export async function POST(request: NextRequest, { params }: RouteProps) {
     }
 
     const updated = listWorkspaceFiles(slug);
-    return NextResponse.json({ success: true, data: updated });
+    return NextResponse.json({ success: true, data: updated, createdFilename });
   } catch (error: any) {
     console.error("File operation failed:", error);
     return NextResponse.json(

@@ -253,6 +253,27 @@ flowchart TD
 - บันทึกไฟล์ไปยัง `workspaces/[slug]/src/assets/<timestamp>-<name>`
 - แทรก Markdown `![alt](/api/workspaces/[slug]/files/assets/<name>)` เข้าตำแหน่งเคอร์เซอร์อัตโนมัติ
 
+### 6.5 Document Snippets Palette (One-Click Enterprise Specification Blocks)
+แผงเครื่องมือสำหรับแทรกบล็อกข้อกำหนดมาตรฐานที่ใช้บ่อย เพื่อลดเวลาในการพิมพ์และคงมาตรฐานของเล่มเอกสารตามรูปแบบ Retro Sharp Industrial Workstation:
+- **Design System Consistency:** กรอบสี่เหลี่ยมคมชัด (`--theme-radius: 0px`), เส้นขอบหมึกดำคู่ (`border-2 border-theme-border`), ปุ่มสัมผัสแบบ Tactile พร้อมเงาแข็ง (`shadow-retro-sm`) และเอฟเฟกต์กดแบบ 3D (`active:translate-x-[1px] active:translate-y-[1px]`)
+- **Supported Snippet Library:**
+  1. **Requirement Confirmation Block (`REQ-POS-XXX`):** บล็อกข้อกำหนดแยกตามฟังก์ชัน พร้อมส่วน Requirement จากการประชุม, พฤติกรรมที่คาดหวัง, เกณฑ์การยอมรับ (Acceptance Criteria), ประเด็นที่ต้องยืนยันเพิ่มเติม, และ Checklist ผลการพิจารณา (ยืนยันตามข้อเสนอ / ขอแก้ไข / ไม่อยู่ในขอบเขต / รอหารือเพิ่ม)
+  2. **Requirement Summary Matrix:** ตารางภาพรวมสรุป Requirement ทุกข้อ (ID, ชื่อฟังก์ชัน, สรุปขอบเขตงาน, สถานะ)
+  3. **Mermaid Architecture Diagram:** เทมเพลตแผนภาพโฟลว์การทำงานและสถาปัตยกรรมระบบ (Flowchart / Sequence) ที่พร้อมนำไปเรนเดอร์ใน Live Preview และ PDF
+  4. **Glossary & Definitions:** ตารางนิยามคำศัพท์เฉพาะ เพื่อสร้างความเข้าใจที่ตรงกันระหว่างลูกค้าและทีมพัฒนาระบบ
+  5. **Notice / Warning Callout:** กล่องข้อความแจ้งเตือนความสำคัญและประเด็นที่มีผลกระทบต่องบประมาณหรือระยะเวลาส่งมอบ
+  6. **A4 Page Break (`<!-- pagebreak -->`):** แท็กคำสั่งแบ่งหน้ากระดาษ A4 เพื่อบังคับให้ส่วนถัดไปขึ้นหน้ากระดาษใหม่เสมอในไฟล์ PDF
+  7. **Sign-off & Confirmation:** ส่วนลงนามลายมือชื่อเพื่อยืนยันขอบเขตงานระหว่างทั้งสองฝ่าย (Client Confirmation & Developer Acknowledgment)
+
+### 6.6 Workspace Settings Drawer (`docs.config.json` Configuration Panel)
+แผงควบคุมและแก้ไข Metadata ของเล่มเอกสารโดยตรงจากหน้า Web Studio โดยไม่ต้องแก้ไข JSON ด้วยตนเอง:
+- **Form Architecture & State Management:** ขับเคลื่อนด้วย `react-hook-form` ตรวจจับสถานะการเปลี่ยนแปลง (`isDirty`) แสดง Badge เตือน `Unsaved Changes` แบบ Pulse และมีปุ่ม `คืนค่า (Reset)` เมื่อต้องการย้อนกลับไปยังค่าเดิม
+- **Configurable Attributes:**
+  - **Project & Metadata:** `name` (รหัสโปรเจกต์), `title` (ชื่อเอกสารหลัก), `subtitle` (คำอธิบายย่อย), `documentNumber` (รหัสเอกสาร), `version` (เวอร์ชันเอกสาร), `status` (Draft, Draft for Confirmation, Review, Approved, Final), `date` (วันที่ออกเอกสาร)
+  - **Parties & Responsibility:** `author` (ผู้จัดทำ), `client` (ลูกค้า/ผู้ว่าจ้าง), `organization` (องค์กรผู้พัฒนา)
+  - **Document PDF Palette:** ตัวเลือก `theme.primaryColor` และ `theme.accentColor` ผ่าน Native Color Picker พร้อมแสดงรหัสสี Hex Monospace
+- **Atomic Persistence:** เมื่อกดบันทึก ระบบจะส่งคำขอ `PUT /api/workspaces/[slug]/config` เพื่ออัปเดตไฟล์ `docs.config.json` โดยคงรูปแบบและเรียงคีย์อย่างเป็นระเบียบ พร้อมแถบสถานะแจ้งผลการบันทึกแบบ Retro Alert
+
 ---
 
 ## 7. Backend API Architecture & Security

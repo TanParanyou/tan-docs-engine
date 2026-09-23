@@ -78,7 +78,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
 
   viewMode: "split",
   inputMode: "visual",
-  activeTab: "outline",
+  activeTab: null,
   splitRatio: 50,
   syncScroll: true,
   editorTheme: "light",

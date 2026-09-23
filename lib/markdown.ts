@@ -119,65 +119,81 @@ export function preprocessRequirementDoc(markdown: string): string {
 
   // 5. Review Box (ผลการพิจารณา)
   // Split into sections by REQ ID to attach specific title
-  const sections = content.split(/(?=####?\s*[\s\S]*?REQ-[A-Z0-9-]+)/g);
+  const sections = content.split(/(?=#{2,4}\s*[\s\S]*?REQ-[A-Z0-9-]+)/g);
   content = sections.map((sec) => {
     const reqMatch = sec.match(/REQ-[A-Z0-9-]+/);
     const reqId = reqMatch ? reqMatch[0] : "";
     const titleLabel = reqId ? `ผลการพิจารณาสำหรับ ${reqId}:` : "ผลการพิจารณา:";
 
-    return sec.replace(
-      /\*\*ผลการพิจารณา:\*\*[\s\S]*?\*\*หมายเหตุลูกค้า:\*\*[\s\S]*?(?=\n---\s*\n|\n#{2,3}|\s*$)/g,
-      `
-<div class="review-box">
-  <div class="review-box-title">${titleLabel}</div>
+    const reviewBoxHtml = `
+<div class="review-box-container">
+  <div class="review-box-label">${titleLabel}</div>
   <table class="review-box-table">
-    <tr>
-      <td class="label-cell">สถานะการพิจารณา</td>
-      <td>
-        <div class="review-status-grid">
-          <span>[ ] ยืนยันตามข้อเสนอ</span>
-          <span>[ ] ขอแก้ไข</span>
-          <span>[ ] ไม่อยู่ในขอบเขต</span>
-          <span>[ ] รอหารือเพิ่ม</span>
-        </div>
-      </td>
-    </tr>
-    <tr>
-      <td class="label-cell">ข้อคิดเห็น / หมายเหตุ</td>
-      <td class="notes-cell"></td>
-    </tr>
+    <tbody>
+      <tr>
+        <td class="review-label-cell">สถานะการพิจารณา</td>
+        <td class="review-status-cell">
+          <div class="review-status-grid">
+            <span>[ ] ยืนยันตามข้อเสนอ</span>
+            <span>[ ] ขอแก้ไข</span>
+            <span>[ ] ไม่อยู่ในขอบเขต</span>
+            <span>[ ] รอหารือเพิ่ม</span>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td class="review-label-cell">ข้อคิดเห็น / หมายเหตุ</td>
+        <td class="review-notes-cell"></td>
+      </tr>
+    </tbody>
   </table>
 </div>
-`
-    );
+`;
+
+    // Match both bold markdown pattern (**ผลการพิจารณา:**) and plain text pattern from OCR/NotebookLM
+    const reviewPattern = /(?:\*\*ผลการพิจารณา:\*\*[\s\S]*?(?:\*\*หมายเหตุลูกค้า:\*\*|\n---\s*\n|\n#{2,3}|\s*$)|(?:^|\n)ผลการพิจารณา(?:สำหรับ[^\n:]*)?:[\s\S]*?(?:ข้อคิดเห็น\s*\/\s*หมายเหตุ[^\n]*|\n---\s*\n|\n#{2,3}|\s*$))/i;
+
+    if (reviewPattern.test(sec)) {
+      return sec.replace(reviewPattern, reviewBoxHtml);
+    }
+    return sec;
   }).join("");
 
   // 6. Section: Sign-off Section -> 2-Column Table
   content = content.replace(
-    /(#{2,3}\s*\*{0,2}(?:ส่วนที่\s*\d+:\s*)?การลงนามยืนยันขอบเขตความต้องการ[^\n]*\*{0,2}\n)([\s\S]*?)(\*\*ฝั่งผู้ว่าจ้าง[\s\S]*?\*\*ฝั่งผู้พัฒนา[\s\S]*?$)/i,
-    (_match, header, introText, _signBlock) => {
+    /(#{2,3}\s*\*{0,2}(?:ส่วนที่\s*\d+:\s*)?การลงนามยืนยันขอบเขตความต้องการ[^\n]*\*{0,2}\n)([\s\S]*?)(\*\*ฝั่งผู้ว่าจ้าง[\s\S]*?$|ลงนาม:\s*ฝั่งผู้ว่าจ้าง[\s\S]*?$)/i,
+    (_match, header, introText, signBlock) => {
+      // Extract client & developer org names if available
+      const clientOrgMatch = signBlock.match(/(?:\*\*ฝั่งผู้ว่าจ้าง|ลงนาม:\s*ฝั่งผู้ว่าจ้าง)[^\n]*\n(?:\((.+?)\))?/i);
+      const devOrgMatch = signBlock.match(/(?:\*\*ฝั่งผู้พัฒนา|ลงนาม:\s*ฝั่งผู้พัฒนา)[^\n]*\n(?:\((.+?)\))?/i);
+
+      const clientOrg = clientOrgMatch && clientOrgMatch[1] ? clientOrgMatch[1].trim() : "Enrich Salon";
+      const devOrg = devOrgMatch && devOrgMatch[1] ? devOrgMatch[1].trim() : "Syaco Co., Ltd.";
+
       const signoffTableHtml = `
 ${introText.trim()}
 
 <table class="signoff-table">
-  <tr>
-    <td>
-      <p style="margin: 0 0 4px 0;"><strong>ลงนาม: ฝั่งผู้ว่าจ้าง (Client Confirmation)</strong></p>
-      <p style="margin: 0 0 16px 0; color: #64748b; font-size: 11px;">(ผู้แทนที่มีอำนาจลงนาม)</p>
-      <div class="signoff-line">ลายเซ็น: ____________________________________</div>
-      <div class="signoff-line">ชื่อ-นามสกุล: ________________________________</div>
-      <div class="signoff-line">ตำแหน่ง: ___________________________________</div>
-      <div class="signoff-line">วันที่: ________ / ________ / _______________</div>
-    </td>
-    <td>
-      <p style="margin: 0 0 4px 0;"><strong>ลงนาม: ฝั่งผู้พัฒนา (Developer Acknowledgment)</strong></p>
-      <p style="margin: 0 0 16px 0; color: #64748b; font-size: 11px;">(ผู้แทนทีมสถาปัตยกรรมและพัฒนา)</p>
-      <div class="signoff-line">ลายเซ็น: ____________________________________</div>
-      <div class="signoff-line">ชื่อ-นามสกุล: ________________________________</div>
-      <div class="signoff-line">ตำแหน่ง: ___________________________________</div>
-      <div class="signoff-line">วันที่: ________ / ________ / _______________</div>
-    </td>
-  </tr>
+  <tbody>
+    <tr>
+      <td style="width: 50%;">
+        <div style="font-weight: 700; margin-bottom: 2px;">ลงนาม: ฝั่งผู้ว่าจ้าง (Client Confirmation)</div>
+        <div style="color: #64748b; font-size: 11px; margin-bottom: 16px;">(${clientOrg})</div>
+        <div class="signoff-line">ลายเซ็น: ____________________________________</div>
+        <div class="signoff-line">ชื่อ-นามสกุล: ________________________________</div>
+        <div class="signoff-line">ตำแหน่ง: ___________________________________</div>
+        <div class="signoff-line">วันที่: ________ / ________ / _______________</div>
+      </td>
+      <td style="width: 50%;">
+        <div style="font-weight: 700; margin-bottom: 2px;">ลงนาม: ฝั่งผู้พัฒนา (Developer Acknowledgment)</div>
+        <div style="color: #64748b; font-size: 11px; margin-bottom: 16px;">(${devOrg})</div>
+        <div class="signoff-line">ลายเซ็น: ____________________________________</div>
+        <div class="signoff-line">ชื่อ-นามสกุล: ________________________________</div>
+        <div class="signoff-line">ตำแหน่ง: ___________________________________</div>
+        <div class="signoff-line">วันที่: ________ / ________ / _______________</div>
+      </td>
+    </tr>
+  </tbody>
 </table>
 `;
       return `${header}\n${signoffTableHtml}\n`;

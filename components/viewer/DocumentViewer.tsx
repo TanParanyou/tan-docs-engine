@@ -21,11 +21,17 @@ import {
 } from "lucide-react";
 import ExportDropdown from "@/components/common/ExportDropdown";
 
+export interface DocumentViewerHandle {
+  scrollToPercentage: (percentage: number) => void;
+  scrollToHeading: (headingText: string) => void;
+}
+
 export interface DocumentViewerProps {
   workspaceSlug: string;
   config: DocsConfig;
   coverPageHtml?: string;
-  files: MarkdownFileItem[];
+  files?: MarkdownFileItem[];
+  liveHtml?: string;
   primaryColor?: string;
   accentColor?: string;
   initialMode?: DocumentViewMode;
@@ -40,29 +46,64 @@ interface PageItem {
   html: string;
 }
 
-export default function DocumentViewer({
-  workspaceSlug,
-  config,
-  coverPageHtml,
-  files,
-  primaryColor = "#0f3b6c",
-  accentColor = "#1d4ed8",
-  initialMode = "paged",
-  showToolbar = true,
-  className = "",
-}: DocumentViewerProps) {
-  const {
-    viewMode,
-    setViewMode,
-    zoom,
-    zoomIn,
-    zoomOut,
-    resetZoom,
-  } = useDocumentViewMode({ defaultMode: initialMode });
+const DocumentViewer = React.forwardRef<DocumentViewerHandle, DocumentViewerProps>(
+  (
+    {
+      workspaceSlug,
+      config,
+      coverPageHtml,
+      files = [],
+      liveHtml,
+      primaryColor = "#0f3b6c",
+      accentColor = "#1d4ed8",
+      initialMode = "paged",
+      showToolbar = true,
+      className = "",
+    },
+    ref
+  ) => {
+    const {
+      viewMode,
+      setViewMode,
+      zoom,
+      zoomIn,
+      zoomOut,
+      resetZoom,
+    } = useDocumentViewMode({ defaultMode: initialMode });
 
-  const [pdfKey, setPdfKey] = useState<number>(0);
-  const [isPdfLoading, setIsPdfLoading] = useState<boolean>(true);
-  const [activePage, setActivePage] = useState<number>(1);
+    const [pdfKey, setPdfKey] = useState<number>(0);
+    const [isPdfLoading, setIsPdfLoading] = useState<boolean>(true);
+    const [activePage, setActivePage] = useState<number>(1);
+    const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+
+    // Expose scrolling methods to parent
+    React.useImperativeHandle(ref, () => ({
+      scrollToPercentage: (percentage: number) => {
+        const container = scrollContainerRef.current;
+        if (!container) return;
+        const maxScroll = container.scrollHeight - container.clientHeight;
+        if (maxScroll > 0) {
+          container.scrollTop = percentage * maxScroll;
+        }
+      },
+      scrollToHeading: (headingText: string) => {
+        const container = scrollContainerRef.current;
+        if (!container) return;
+
+        const cleanTarget = headingText.toLowerCase().trim();
+        const headings = container.querySelectorAll("h1, h2, h3, h4");
+        for (let i = 0; i < headings.length; i++) {
+          const h = headings[i] as HTMLElement;
+          const text = h.textContent?.toLowerCase().trim() || "";
+          if (text.includes(cleanTarget) || cleanTarget.includes(text)) {
+            h.scrollIntoView({ behavior: "smooth", block: "start" });
+            h.classList.add("bg-blue-100", "transition-colors");
+            setTimeout(() => h.classList.remove("bg-blue-100"), 1500);
+            break;
+          }
+        }
+      },
+    }));
 
   // Divide document into distinct A4 pages based on cover and page-break tags
   const pages = useMemo<PageItem[]>(() => {
@@ -76,6 +117,22 @@ export default function DocumentViewer({
         type: "cover",
         html: coverPageHtml,
       });
+    }
+
+    // If liveHtml is provided (e.g. from real-time Studio editing)
+    if (liveHtml !== undefined) {
+      const parts = liveHtml.split(/<div class="page-break"><\/div>/gi);
+      for (const part of parts) {
+        const trimmed = part.trim();
+        if (trimmed.length > 0) {
+          list.push({
+            pageNumber: pageCounter++,
+            type: "content",
+            html: trimmed,
+          });
+        }
+      }
+      return list;
     }
 
     // Subsequent Pages: Markdown files split by <div class="page-break"></div>
@@ -95,7 +152,7 @@ export default function DocumentViewer({
     }
 
     return list;
-  }, [coverPageHtml, files]);
+  }, [coverPageHtml, files, liveHtml]);
 
   const totalPages = pages.length;
 
@@ -368,6 +425,7 @@ export default function DocumentViewer({
       {/* VIEW MODE 3: CONTINUOUS WEB VIEW (แบบต่อเนื่องเดิม) */}
       {viewMode === "continuous" && (
         <div
+          ref={scrollContainerRef}
           className="w-full max-w-[210mm] mx-auto bg-white rounded-lg sm:rounded-xl border border-slate-200 shadow-md p-5 sm:p-10 md:p-14 transition-transform duration-200 origin-top overflow-x-auto"
           style={{
             transform: zoom !== 100 ? `scale(${zoom / 100})` : undefined,
@@ -380,24 +438,37 @@ export default function DocumentViewer({
           )}
 
           <div className="doc-content">
-            {files.map((file, idx) => (
-              <article key={file.filename} id={`section-${idx}`} className="relative">
+            {liveHtml !== undefined ? (
+              <article className="relative">
                 <div
-                  dangerouslySetInnerHTML={{ __html: file.html }}
+                  dangerouslySetInnerHTML={{ __html: liveHtml }}
                   className="markdown-rendered-body"
                 />
-                {idx < files.length - 1 && (
-                  <div className="my-10 border-t border-dashed border-slate-200 flex items-center justify-center">
-                    <span className="bg-white px-3 text-[11px] font-mono uppercase text-slate-400 tracking-wider">
-                      Page Break / Next Section
-                    </span>
-                  </div>
-                )}
               </article>
-            ))}
+            ) : (
+              files.map((file, idx) => (
+                <article key={file.filename} id={`section-${idx}`} className="relative">
+                  <div
+                    dangerouslySetInnerHTML={{ __html: file.html }}
+                    className="markdown-rendered-body"
+                  />
+                  {idx < files.length - 1 && (
+                    <div className="my-10 border-t border-dashed border-slate-200 flex items-center justify-center">
+                      <span className="bg-white px-3 text-[11px] font-mono uppercase text-slate-400 tracking-wider">
+                        Page Break / Next Section
+                      </span>
+                    </div>
+                  )}
+                </article>
+              ))
+            )}
           </div>
         </div>
       )}
     </div>
   );
-}
+});
+
+DocumentViewer.displayName = "DocumentViewer";
+
+export default DocumentViewer;

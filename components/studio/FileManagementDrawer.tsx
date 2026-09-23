@@ -12,7 +12,9 @@ import {
   X,
   Layers,
   BookOpen,
-  Sparkles,
+  UploadCloud,
+  ClipboardPaste,
+  Loader2,
 } from "lucide-react";
 import {
   SECTION_TEMPLATES,
@@ -30,6 +32,7 @@ interface FileManagementDrawerProps {
   selectedFile: string;
   onSelectFile: (filename: string) => void;
   onCreateFile: (filename: string, initialContent?: string) => Promise<void>;
+  onUploadFiles?: (files: { filename: string; content: string }[]) => Promise<void>;
   onRenameFile: (oldName: string, newName: string) => Promise<void>;
   onDeleteFile: (filename: string) => Promise<void>;
   onReorderFiles: (files: string[]) => Promise<void>;
@@ -40,16 +43,18 @@ export default function FileManagementDrawer({
   selectedFile,
   onSelectFile,
   onCreateFile,
+  onUploadFiles,
   onRenameFile,
   onDeleteFile,
   onReorderFiles,
 }: FileManagementDrawerProps) {
   const [isCreating, setIsCreating] = useState(false);
-  const [creationMode, setCreationMode] = useState<"template" | "blank">("template");
+  const [creationMode, setCreationMode] = useState<"template" | "blank" | "upload" | "paste">("template");
   const [selectedSectionTemplateId, setSelectedSectionTemplateId] = useState<string>(
     SECTION_TEMPLATES[0]?.id || ""
   );
   const [newFilename, setNewFilename] = useState("");
+  const [pasteContent, setPasteContent] = useState("");
   const [editingFile, setEditingFile] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [deletingFile, setDeletingFile] = useState<string | null>(null);
@@ -67,6 +72,7 @@ export default function FileManagementDrawer({
     } else {
       setNewFilename(`0${files.length + 1}-section.md`);
     }
+    setPasteContent("");
     setErrorMessage(null);
   };
 
@@ -76,6 +82,55 @@ export default function FileManagementDrawer({
     if (tpl) {
       const prefix = String(files.length + 1).padStart(2, "0");
       setNewFilename(`${prefix}-${tpl.filename}`);
+    }
+  };
+
+  const handlePasteChange = (text: string) => {
+    setPasteContent(text);
+    // If filename has not been customized or is blank, auto-extract heading
+    const match = text.match(/^#\s+(.+)$/m);
+    if (match && match[1]) {
+      const titleSlug = match[1]
+        .replace(/[*_`]/g, "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9_-]+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
+      const prefix = String(files.length + 1).padStart(2, "0");
+      setNewFilename(`${prefix}-${titleSlug || "notes"}.md`);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const incoming = Array.from(e.target.files);
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      const readFiles: { filename: string; content: string }[] = [];
+      for (const file of incoming) {
+        if (!file.name.toLowerCase().endsWith(".md")) continue;
+        const text = await file.text();
+        readFiles.push({ filename: file.name, content: text });
+      }
+      if (readFiles.length === 0) {
+        setErrorMessage("กรุณาเลือกไฟล์ที่มีนามสกุล .md เท่านั้น");
+        return;
+      }
+      if (onUploadFiles) {
+        await onUploadFiles(readFiles);
+      } else {
+        for (const item of readFiles) {
+          await onCreateFile(item.filename, item.content);
+        }
+      }
+      setIsCreating(false);
+    } catch (err: any) {
+      setErrorMessage(err.message || "Failed to upload files");
+    } finally {
+      setIsLoading(false);
+      e.target.value = "";
     }
   };
 
@@ -94,6 +149,8 @@ export default function FileManagementDrawer({
       if (tpl) {
         initialContent = tpl.content;
       }
+    } else if (creationMode === "paste") {
+      initialContent = pasteContent || `# ${filename.replace(/\.md$/, "")}\n\n`;
     }
 
     setIsLoading(true);
@@ -101,6 +158,7 @@ export default function FileManagementDrawer({
     try {
       await onCreateFile(filename, initialContent);
       setNewFilename("");
+      setPasteContent("");
       setIsCreating(false);
     } catch (err: any) {
       setErrorMessage(err.message || "Failed to create file");
@@ -204,24 +262,24 @@ export default function FileManagementDrawer({
       {isCreating && (
         <form
           onSubmit={handleCreateSubmit}
-          className="p-3 bg-slate-50 border-b border-slate-200 space-y-2.5"
+          className="p-3 bg-theme-surface-sunken border-b-2 border-theme-border space-y-2.5 shadow-inner"
         >
-          {/* Mode Switcher */}
-          <div className="flex items-center gap-1 bg-slate-200/70 p-0.5 rounded-lg text-[10.5px]">
+          {/* 4-Way Mode Switcher */}
+          <div className="grid grid-cols-4 gap-1 bg-theme-surface p-1 rounded-retro border border-theme-border text-[10px]">
             <button
               type="button"
               onClick={() => {
                 setCreationMode("template");
                 handleTemplateChange(selectedSectionTemplateId || SECTION_TEMPLATES[0].id);
               }}
-              className={`flex-1 py-1 rounded font-medium flex items-center justify-center gap-1 transition-all ${
+              className={`py-1 px-1 rounded-retro font-medium flex items-center justify-center gap-1 transition-all ${
                 creationMode === "template"
-                  ? "bg-white text-blue-700 shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
+                  ? "bg-theme-primary text-theme-primary-text font-bold shadow-retro-sm"
+                  : "text-theme-text-muted hover:text-theme-text"
               }`}
             >
               <BookOpen className="w-3 h-3" />
-              <span>จากแม่แบบ</span>
+              <span>แม่แบบ</span>
             </button>
             <button
               type="button"
@@ -229,27 +287,56 @@ export default function FileManagementDrawer({
                 setCreationMode("blank");
                 setNewFilename(`0${files.length + 1}-custom.md`);
               }}
-              className={`flex-1 py-1 rounded font-medium flex items-center justify-center gap-1 transition-all ${
+              className={`py-1 px-1 rounded-retro font-medium flex items-center justify-center gap-1 transition-all ${
                 creationMode === "blank"
-                  ? "bg-white text-blue-700 shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
+                  ? "bg-theme-primary text-theme-primary-text font-bold shadow-retro-sm"
+                  : "text-theme-text-muted hover:text-theme-text"
               }`}
             >
               <FileText className="w-3 h-3" />
               <span>ไฟล์เปล่า</span>
             </button>
+            <button
+              type="button"
+              onClick={() => {
+                setCreationMode("upload");
+              }}
+              className={`py-1 px-1 rounded-retro font-medium flex items-center justify-center gap-1 transition-all ${
+                creationMode === "upload"
+                  ? "bg-theme-primary text-theme-primary-text font-bold shadow-retro-sm"
+                  : "text-theme-text-muted hover:text-theme-text"
+              }`}
+            >
+              <UploadCloud className="w-3 h-3" />
+              <span>อัปโหลด</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setCreationMode("paste");
+                setNewFilename(`0${files.length + 1}-notes.md`);
+              }}
+              className={`py-1 px-1 rounded-retro font-medium flex items-center justify-center gap-1 transition-all ${
+                creationMode === "paste"
+                  ? "bg-theme-primary text-theme-primary-text font-bold shadow-retro-sm"
+                  : "text-theme-text-muted hover:text-theme-text"
+              }`}
+            >
+              <ClipboardPaste className="w-3 h-3" />
+              <span>วาง MD</span>
+            </button>
           </div>
 
-          {/* Section Template Select */}
+          {/* Mode 1: Section Template Select */}
           {creationMode === "template" && (
             <div>
-              <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block mb-1">
+              <label className="text-[10px] font-semibold text-theme-text-muted uppercase tracking-wider block mb-1">
                 เลือกแม่แบบส่วนงาน (Section Template)
               </label>
               <select
                 value={selectedSectionTemplateId}
                 onChange={(e) => handleTemplateChange(e.target.value)}
-                className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2 py-1.5 bg-theme-surface border border-theme-border rounded-retro text-xs text-theme-text focus:outline-none focus:border-theme-primary shadow-retro-sm"
               >
                 {SECTION_TEMPLATES.map((tpl) => (
                   <option key={tpl.id} value={tpl.id}>
@@ -260,37 +347,78 @@ export default function FileManagementDrawer({
             </div>
           )}
 
-          <div>
-            <label className="text-[10.5px] font-semibold text-slate-600 block mb-1">
-              ชื่อไฟล์ (Filename):
-            </label>
-            <div className="flex items-center gap-1.5">
-              <input
-                type="text"
-                value={newFilename}
-                onChange={(e) => setNewFilename(e.target.value)}
-                placeholder="02-specifications.md"
-                autoFocus
-                className="flex-1 px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
-              />
-              <button
-                type="submit"
-                disabled={isLoading || !newFilename.trim()}
-                className="p-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-xs flex items-center justify-center"
-                title="สร้างไฟล์"
-              >
-                <Check className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsCreating(false)}
-                className="p-1.5 hover:bg-slate-200 text-slate-500 rounded-lg text-xs"
-                title="ยกเลิก"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
+          {/* Mode 3: Direct File Upload */}
+          {creationMode === "upload" && (
+            <div className="space-y-2">
+              <label className="text-[10px] font-semibold text-theme-text-muted uppercase tracking-wider block">
+                เลือกไฟล์ Markdown (.md) จาก NotebookLM:
+              </label>
+              <label className="flex flex-col items-center justify-center border-2 border-dashed border-theme-border hover:border-theme-primary bg-theme-surface p-3 rounded-retro cursor-pointer text-center group transition-colors shadow-retro-sm">
+                <UploadCloud className="w-6 h-6 text-theme-text-muted group-hover:text-theme-primary mb-1 transition-colors" />
+                <span className="text-xs font-medium text-theme-text">คลิกเพื่อเลือกไฟล์ .md</span>
+                <span className="text-[10px] text-theme-text-muted">รองรับหลายไฟล์พร้อมกัน</span>
+                <input
+                  type="file"
+                  multiple
+                  accept=".md,text/markdown"
+                  onChange={handleFileUpload}
+                  disabled={isLoading}
+                  className="hidden"
+                />
+              </label>
             </div>
-          </div>
+          )}
+
+          {/* Mode 4: Paste Markdown directly */}
+          {creationMode === "paste" && (
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-semibold text-theme-text-muted uppercase tracking-wider block">
+                วางข้อความ Markdown จาก NotebookLM:
+              </label>
+              <textarea
+                value={pasteContent}
+                onChange={(e) => handlePasteChange(e.target.value)}
+                placeholder="# วางเนื้อหา Markdown จาก NotebookLM ที่นี่..."
+                rows={4}
+                className="w-full px-2 py-1.5 bg-theme-surface border border-theme-border rounded-retro text-xs font-mono text-theme-text focus:outline-none focus:border-theme-primary resize-y shadow-retro-sm"
+              />
+            </div>
+          )}
+
+          {/* Filename & Submit (for template, blank, and paste) */}
+          {creationMode !== "upload" && (
+            <div>
+              <label className="text-[10.5px] font-semibold text-theme-text-muted block mb-1">
+                ชื่อไฟล์ (Filename):
+              </label>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="text"
+                  value={newFilename}
+                  onChange={(e) => setNewFilename(e.target.value)}
+                  placeholder="02-specifications.md"
+                  autoFocus
+                  className="flex-1 px-2.5 py-1.5 bg-theme-surface border border-theme-border rounded-retro text-xs text-theme-text focus:outline-none focus:border-theme-primary font-mono shadow-retro-sm"
+                />
+                <button
+                  type="submit"
+                  disabled={isLoading || !newFilename.trim()}
+                  className="p-1.5 bg-theme-primary hover:bg-theme-primary-hover disabled:opacity-50 text-theme-primary-text rounded-retro text-xs flex items-center justify-center border border-theme-border shadow-retro-sm active:translate-x-[1px] active:translate-y-[1px] transition-all cursor-pointer"
+                  title="สร้างไฟล์"
+                >
+                  {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsCreating(false)}
+                  className="p-1.5 hover:bg-theme-surface-hover text-theme-text-muted rounded-retro text-xs border border-theme-border shadow-retro-sm cursor-pointer"
+                  title="ยกเลิก"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
         </form>
       )}
 

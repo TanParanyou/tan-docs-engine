@@ -16,7 +16,7 @@ interface StudioLayoutProps {
 }
 
 export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
-  const { isMobile, isMounted } = useResponsive();
+  const { isMobile, isTablet, isMounted } = useResponsive();
 
   // Centralized Zustand store
   const {
@@ -59,12 +59,12 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
   const previewRef = useRef<LivePreviewHandle>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Auto-switch away from split view on small mobile screens
+  // Auto-switch away from split view on mobile & tablet screens to prevent cramped UI
   useEffect(() => {
-    if (isMounted && isMobile && viewMode === "split") {
+    if (isMounted && (isMobile || isTablet) && viewMode === "split") {
       setViewMode("editor");
     }
-  }, [isMounted, isMobile, viewMode, setViewMode]);
+  }, [isMounted, isMobile, isTablet, viewMode, setViewMode]);
 
   // Initialize Zustand store on mount or workspace change
   useEffect(() => {
@@ -230,8 +230,27 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
       throw new Error(json.error || "Create file failed");
     }
     await refreshFiles();
-    setSelectedFile(newFilename);
-    await loadFileContent(newFilename);
+    const actualFilename = json.createdFilename || newFilename;
+    setSelectedFile(actualFilename);
+    await loadFileContent(actualFilename);
+  };
+
+  const handleUploadFiles = async (uploadedFiles: { filename: string; content: string }[]) => {
+    const currentSlug = slug || initialWorkspace.slug;
+    const res = await fetch(`/api/workspaces/${currentSlug}/files`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "upload", files: uploadedFiles }),
+    });
+    const json = await res.json();
+    if (!res.ok || !json.success) {
+      throw new Error(json.error || "Upload files failed");
+    }
+    await refreshFiles();
+    if (json.createdFilename) {
+      setSelectedFile(json.createdFilename);
+      await loadFileContent(json.createdFilename);
+    }
   };
 
   const handleRenameFile = async (oldName: string, newName: string) => {
@@ -408,6 +427,7 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
           selectedFile={selectedFile}
           onSelectFile={handleSelectFile}
           onCreateFile={handleCreateFile}
+          onUploadFiles={handleUploadFiles}
           onRenameFile={handleRenameFile}
           onDeleteFile={handleDeleteFile}
           onReorderFiles={handleReorderFiles}
@@ -470,6 +490,7 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
                 title={config.title}
                 documentNumber={config.documentNumber}
                 version={config.version}
+                slug={activeSlug}
               />
             </div>
           )}

@@ -115,6 +115,25 @@ export function isValidFilename(filename: string): boolean {
   return /^[a-zA-Z0-9_-]+\.md$/.test(filename);
 }
 
+export function sanitizeMarkdownFilename(filename: string, fallbackIndex: number = 1): string {
+  let base = path.basename(filename || `document-${fallbackIndex}.md`);
+  if (!base.toLowerCase().endsWith(".md")) {
+    base += ".md";
+  }
+  const rawWithoutExt = base.replace(/\.md$/i, "");
+  // Keep ASCII alphanumeric, hyphens and underscores; replace all others with hyphens
+  let safeBase = rawWithoutExt
+    .replace(/[^a-zA-Z0-9_-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  if (!safeBase) {
+    safeBase = `document-${String(fallbackIndex).padStart(2, "0")}`;
+  }
+
+  return `${safeBase}.md`;
+}
+
 export function createWorkspace(input: import("./types").CreateWorkspaceInput): WorkspaceData {
   if (!isValidSlug(input.slug)) {
     throw new Error("Invalid workspace slug. Only letters, numbers, hyphens, and underscores are allowed.");
@@ -135,21 +154,13 @@ export function createWorkspace(input: import("./types").CreateWorkspaceInput): 
   if (hasInitialFiles) {
     const seenNames = new Set<string>();
     input.initialFiles!.forEach((item, index) => {
-      let base = path.basename(item.filename || `document-${index + 1}.md`);
-      if (!base.toLowerCase().endsWith(".md")) {
-        base += ".md";
-      }
-      // Sanitize: allow alphanumeric, thai, hyphens, underscores, dots
-      let safeName = base.replace(/[^a-zA-Z0-9_\u0E00-\u0E7F.-]/g, "-").replace(/-+/g, "-");
-      if (!safeName || safeName === ".md") {
-        safeName = `document-${index + 1}.md`;
-      }
+      const safeName = sanitizeMarkdownFilename(item.filename, index + 1);
       // Ensure unique filename
       let uniqueName = safeName;
       let counter = 1;
       const ext = path.extname(safeName);
       const nameWithoutExt = path.basename(safeName, ext);
-      while (seenNames.has(uniqueName.toLowerCase())) {
+      while (seenNames.has(uniqueName.toLowerCase()) || fs.existsSync(path.join(srcDir, uniqueName))) {
         uniqueName = `${nameWithoutExt}-${counter}${ext}`;
         counter++;
       }
@@ -300,35 +311,41 @@ export function listWorkspaceFiles(slug: string): { files: { filename: string; t
   return { files, orderedFiles };
 }
 
-export function createWorkspaceFile(slug: string, filename: string, content?: string): void {
+export function createWorkspaceFile(slug: string, filename: string, content?: string): string {
   if (!isValidSlug(slug)) {
     throw new Error("Invalid workspace slug.");
   }
-  if (!isValidFilename(filename)) {
-    throw new Error("Invalid filename. Must end with .md and contain only alphanumeric, hyphen, and underscore.");
-  }
+  const safeFilename = sanitizeMarkdownFilename(filename);
 
   const srcDir = path.join(WORKSPACES_DIR, slug, "src");
   if (!fs.existsSync(srcDir)) {
     fs.mkdirSync(srcDir, { recursive: true });
   }
 
-  const filePath = path.join(srcDir, filename);
-  if (fs.existsSync(filePath)) {
-    throw new Error(`File "${filename}" already exists.`);
+  // Ensure unique filename if collision occurs
+  let uniqueName = safeFilename;
+  let counter = 1;
+  const ext = path.extname(safeFilename);
+  const nameWithoutExt = path.basename(safeFilename, ext);
+  while (fs.existsSync(path.join(srcDir, uniqueName))) {
+    uniqueName = `${nameWithoutExt}-${counter}${ext}`;
+    counter++;
   }
 
-  const initialContent = content || `# ${filename.replace(/\.md$/, "")}\n\nเนื้อหาสำหรับส่วนนี้...\n`;
+  const filePath = path.join(srcDir, uniqueName);
+  const initialContent = content || `# ${uniqueName.replace(/\.md$/, "")}\n\nเนื้อหาสำหรับส่วนนี้...\n`;
   fs.writeFileSync(filePath, initialContent, "utf-8");
 
   // Append to config.files
   const config = getWorkspaceConfig(slug);
   if (config) {
     const currentFiles = Array.isArray(config.files) ? config.files : [];
-    if (!currentFiles.includes(filename)) {
-      updateWorkspaceConfig(slug, { files: [...currentFiles, filename] });
+    if (!currentFiles.includes(uniqueName)) {
+      updateWorkspaceConfig(slug, { files: [...currentFiles, uniqueName] });
     }
   }
+
+  return uniqueName;
 }
 
 export function deleteWorkspaceFile(slug: string, filename: string): void {

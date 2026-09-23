@@ -24,6 +24,7 @@ interface StudioDrawerHostProps {
   selectedFile: string;
   onSelectFile: (filename: string) => void;
   onCreateFile: (filename: string, initialContent?: string) => Promise<void>;
+  onUploadFiles?: (files: { filename: string; content: string }[]) => Promise<void>;
   onRenameFile: (oldName: string, newName: string) => Promise<void>;
   onDeleteFile: (filename: string) => Promise<void>;
   onReorderFiles: (newOrder: string[]) => Promise<void>;
@@ -43,6 +44,7 @@ export default function StudioDrawerHost({
   selectedFile,
   onSelectFile,
   onCreateFile,
+  onUploadFiles,
   onRenameFile,
   onDeleteFile,
   onReorderFiles,
@@ -67,6 +69,7 @@ export default function StudioDrawerHost({
           selectedFile={selectedFile}
           onSelectFile={onSelectFile}
           onCreateFile={onCreateFile}
+          onUploadFiles={onUploadFiles}
           onRenameFile={onRenameFile}
           onDeleteFile={onDeleteFile}
           onReorderFiles={onReorderFiles}

@@ -55,7 +55,7 @@ const VisualEditor = forwardRef<VisualEditorHandle, VisualEditorProps>(
       editorProps: {
         attributes: {
           class:
-            "focus:outline-none min-h-[600px] px-8 sm:px-14 py-8 sm:py-12 font-sans text-theme-text leading-relaxed max-w-none doc-visual-canvas",
+            "focus:outline-none min-h-[600px] font-sans text-theme-text leading-relaxed max-w-none doc-visual-canvas",
         },
         handleKeyDown: (view, event) => {
           if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
@@ -138,14 +138,14 @@ const VisualEditor = forwardRef<VisualEditorHandle, VisualEditorProps>(
           isUploading={isUploading}
         />
 
-        {/* Scrollable Canvas for ProseMirror - Safe horizontal padding & retro chassis */}
+        {/* Scrollable Canvas for ProseMirror - Seamless continuous document surface */}
         <div
           ref={scrollContainerRef}
           onScroll={handleScroll}
-          className="flex-1 overflow-y-auto overflow-x-hidden bg-theme-bg flex justify-center p-4 sm:p-8 select-text"
+          className="flex-1 overflow-y-auto overflow-x-auto bg-theme-surface flex justify-center select-text"
           style={{ WebkitOverflowScrolling: "touch" }}
         >
-          <div className="w-full max-w-4xl bg-theme-surface border-2 border-theme-border shadow-retro rounded-retro min-h-[calc(100vh-160px)] pb-48 transition-all">
+          <div className="w-full max-w-4xl min-h-full px-6 sm:px-12 py-8 sm:py-12 pb-64">
             <EditorContent editor={editor} />
           </div>
         </div>

@@ -2,7 +2,7 @@
   "name": "Gojo Enrich Management System",
   "title": "เอกสารยืนยันความต้องการระบบ (Requirement Confirmation Document)",
   "subtitle": "โครงการพัฒนาระบบบริหารจัดการร้าน Gojo Enrich (Syaco x Enrich)",
-  "documentNumber": "REQ-CONF-POS-v1.1",
+  "documentNumber": "REQ-CONF-CRM-v1.1",
   "version": "1.1",
   "status": "Draft for Confirmation",
   "author": "ทีมวิเคราะห์ระบบ (Syaco) & ทีมบริหารจัดการ (Enrich)",
@@ -10,6 +10,9 @@
   "organization": "Syaco x Enrich",
   "date": "22 กันยายน 2026",
   "coverPage": false,
+  "files": [
+    "Requirement_Confirmation_CRM_Module.md"
+  ],
   "theme": {
     "primaryColor": "#0f3b6c",
     "accentColor": "#1d4ed8"
