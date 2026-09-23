@@ -28,7 +28,7 @@ export default function SegmentedControl<T extends string>({
   return (
     <div
       className={cn(
-        "inline-flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5 select-none",
+        "inline-flex items-center bg-slate-100/90 border border-slate-200/90 rounded-lg p-1 gap-1 select-none",
         className
       )}
     >
@@ -41,11 +41,13 @@ export default function SegmentedControl<T extends string>({
             onClick={() => onChange(opt.value)}
             title={opt.title || opt.label}
             className={cn(
-              "flex items-center gap-1.5 rounded font-semibold transition-all",
-              size === "sm" ? "px-2 py-0.5 text-[11px]" : "px-2.5 py-1 text-xs",
+              "flex items-center justify-center rounded-md font-medium transition-all cursor-pointer whitespace-nowrap",
+              size === "sm"
+                ? "px-2.5 py-1 text-xs gap-1.5 min-h-[28px]"
+                : "px-3.5 py-1.5 text-xs gap-2 min-h-[32px]",
               isActive
-                ? "bg-white text-blue-600 shadow-xs"
-                : "text-slate-600 hover:text-slate-900"
+                ? "bg-white text-blue-600 font-semibold shadow-xs border border-slate-200/60"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 border border-transparent"
             )}
           >
             {opt.icon && <span className="flex-shrink-0">{opt.icon}</span>}

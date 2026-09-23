@@ -10,7 +10,6 @@ import UploadedMarkdownList from "./common/UploadedMarkdownList";
 import MarkdownPreviewModal from "./common/MarkdownPreviewModal";
 import {
   X,
-  Plus,
   Layers,
   Sparkles,
   ArrowRight,
@@ -19,7 +18,6 @@ import {
   FileCode2,
   Check,
   BookOpen,
-  SlidersHorizontal,
   ChevronDown,
   ChevronUp,
   ShieldCheck,
@@ -28,13 +26,17 @@ import {
   FilePlus2,
   UploadCloud,
   Palette,
+  Eye,
+  Settings2,
 } from "lucide-react";
 import {
   WORKSPACE_TEMPLATES,
   getTemplateById,
   DocumentTemplate,
   TemplateCategory,
+  interpolateTemplateContent,
 } from "@/lib/document-templates";
+import { renderMarkdown } from "@/lib/markdown";
 
 interface NewWorkspaceModalProps {
   isOpen: boolean;
@@ -49,12 +51,13 @@ export default function NewWorkspaceModal({
 }: NewWorkspaceModalProps) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
-  const [creationTab, setCreationTab] = useState<"template" | "import">("template");
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [isSlugCustomized, setIsSlugCustomized] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>(
     preselectedTemplateId || "srs-standard"
   );
+  const [previewingTemplate, setPreviewingTemplate] = useState<DocumentTemplate | null>(null);
+  const [previewFileIdx, setPreviewFileIdx] = useState(0);
 
   const {
     register,
@@ -76,7 +79,7 @@ export default function NewWorkspaceModal({
       client: "",
       organization: "TAN TECHNOLOGY SOLUTIONS",
       theme: {
-        primaryColor: "#0f172a",
+        primaryColor: "#0f2b48",
         accentColor: "#2563eb",
       },
     },
@@ -85,7 +88,7 @@ export default function NewWorkspaceModal({
   const watchedName = watch("name");
   const watchedSlug = watch("slug");
   const watchedDocNumber = watch("documentNumber");
-  const primaryColor = watch("theme.primaryColor") || "#0f172a";
+  const primaryColor = watch("theme.primaryColor") || "#0f2b48";
   const accentColor = watch("theme.accentColor") || "#2563eb";
 
   const {
@@ -176,15 +179,15 @@ export default function NewWorkspaceModal({
   const getCategoryIcon = (category: TemplateCategory) => {
     switch (category) {
       case "srs":
-        return <ShieldCheck className="w-4 h-4 text-blue-500" />;
+        return <ShieldCheck className="w-4 h-4 text-blue-600" />;
       case "requirement":
-        return <BookOpen className="w-4 h-4 text-indigo-500" />;
+        return <BookOpen className="w-4 h-4 text-indigo-600" />;
       case "api":
-        return <Server className="w-4 h-4 text-purple-500" />;
+        return <Server className="w-4 h-4 text-purple-600" />;
       case "erp":
-        return <Briefcase className="w-4 h-4 text-emerald-500" />;
+        return <Briefcase className="w-4 h-4 text-emerald-600" />;
       default:
-        return <FilePlus2 className="w-4 h-4 text-slate-500" />;
+        return <FilePlus2 className="w-4 h-4 text-slate-600" />;
     }
   };
 
@@ -198,7 +201,7 @@ export default function NewWorkspaceModal({
           ? `${data.name} ${currentTemplate.title}`
           : `${data.name} Requirement Confirmation & System Specifications`);
 
-      const hasUploadedFiles = creationTab === "import" && files.length > 0;
+      const hasUploadedFiles = files.length > 0;
 
       const payload: CreateWorkspaceInput = {
         ...data,
@@ -235,23 +238,23 @@ export default function NewWorkspaceModal({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-xs animate-fade-in">
         <div
-          className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden flex flex-col max-h-[92vh]"
+          className="bg-theme-surface rounded-retro shadow-retro-lg border-2 border-theme-border w-full max-w-2xl overflow-hidden flex flex-col max-h-[92vh]"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between flex-shrink-0">
+          <div className="px-6 py-4 bg-theme-surface-sunken border-b-2 border-theme-border text-theme-text flex items-center justify-between flex-shrink-0">
             <div className="flex items-center space-x-3">
-              <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/25">
+              <div className="w-9 h-9 rounded-retro bg-theme-primary flex items-center justify-center text-theme-primary-text border border-theme-border shadow-retro-sm">
                 <Layers className="w-4 h-4" />
               </div>
               <div>
-                <h2 className="font-bold text-base tracking-tight flex items-center gap-1.5">
+                <h2 className="font-bold text-base tracking-tight flex items-center gap-1.5 text-theme-text m-0 p-0 border-none font-sans">
                   <span>สร้างเล่มเอกสารสเปกใหม่ (New Workspace)</span>
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <Sparkles className="w-3.5 h-3.5 text-theme-warning" />
                 </h2>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-theme-text-muted m-0 mt-0.5">
                   เลือกแม่แบบและระบุชื่อระบบ เพื่อเริ่มร่างสเปกได้ทันทีใน 1 นาที
                 </p>
               </div>
@@ -259,48 +262,14 @@ export default function NewWorkspaceModal({
             <button
               onClick={handleClose}
               type="button"
-              className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+              className="p-1.5 rounded-retro hover:bg-theme-surface-hover text-theme-text-muted hover:text-theme-text border border-theme-border cursor-pointer transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Mode Switcher Tabs */}
-          <div className="px-6 pt-3 pb-2 bg-slate-50/70 border-b border-slate-200 flex items-center gap-2 flex-shrink-0">
-            <button
-              type="button"
-              onClick={() => setCreationTab("template")}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                creationTab === "template"
-                  ? "bg-blue-600 text-white shadow-xs shadow-blue-500/20"
-                  : "bg-white text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-100"
-              }`}
-            >
-              <BookOpen className="w-3.5 h-3.5" />
-              <span>เลือกแม่แบบเอกสาร (Templates)</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setCreationTab("import")}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                creationTab === "import"
-                  ? "bg-blue-600 text-white shadow-xs shadow-blue-500/20"
-                  : "bg-white text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-100"
-              }`}
-            >
-              <UploadCloud className="w-3.5 h-3.5" />
-              <span>นำเข้าไฟล์ Markdown (.md)</span>
-              {files.length > 0 && (
-                <span className="w-4 h-4 rounded-full bg-emerald-500 text-white text-[10px] flex items-center justify-center font-bold">
-                  {files.length}
-                </span>
-              )}
-            </button>
-          </div>
-
           {serverError && (
-            <div className="px-6 py-2.5 bg-red-50 border-b border-red-200 text-red-700 text-xs flex items-center gap-2 flex-shrink-0">
+            <div className="px-6 py-2.5 bg-theme-danger-light border-b border-theme-danger/40 text-theme-danger text-xs flex items-center gap-2 flex-shrink-0 font-medium">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span>{serverError}</span>
             </div>
@@ -311,158 +280,114 @@ export default function NewWorkspaceModal({
             onSubmit={handleSubmit(onSubmit)}
             className="p-6 space-y-4 overflow-y-auto text-xs flex-1"
           >
-            {/* TAB 1: TEMPLATE MODE */}
-            {creationTab === "template" && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                    <span>1. เลือกแม่แบบเอกสารที่ต้องการ</span>
-                  </span>
-                  <span className="text-[11px] text-slate-400">
-                    คลิกเพื่อเปลี่ยนแม่แบบ
-                  </span>
-                </div>
+            {/* 1. Template Selection Grid */}
+            <div className="space-y-2">
+              <label className="text-slate-800 font-bold block text-xs">
+                1. เลือกแม่แบบเอกสาร (Choose Document Template)
+              </label>
 
-                {/* Template Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {WORKSPACE_TEMPLATES.map((tpl) => {
-                    const isSelected = selectedTemplateId === tpl.id;
-                    return (
-                      <div
-                        key={tpl.id}
-                        onClick={() => handleSelectTemplate(tpl)}
-                        className={`p-3 rounded-xl border text-left cursor-pointer transition-all relative flex flex-col justify-between ${
-                          isSelected
-                            ? "border-blue-600 bg-blue-50/40 shadow-xs ring-2 ring-blue-500/15"
-                            : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70"
-                        }`}
-                      >
-                        <div>
-                          <div className="flex items-center justify-between gap-1 mb-1">
-                            <div className="flex items-center gap-1.5">
-                              {getCategoryIcon(tpl.category)}
-                              <span
-                                className={`text-xs font-bold ${
-                                  isSelected ? "text-blue-950" : "text-slate-800"
-                                }`}
-                              >
-                                {tpl.name}
-                              </span>
-                            </div>
-                            {isSelected && (
-                              <div className="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center flex-shrink-0">
-                                <Check className="w-2.5 h-2.5 stroke-[3]" />
-                              </div>
-                            )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {WORKSPACE_TEMPLATES.map((tpl) => {
+                  const isSelected = selectedTemplateId === tpl.id;
+                  return (
+                    <div
+                      key={tpl.id}
+                      onClick={() => handleSelectTemplate(tpl)}
+                      className={`p-3 rounded-xl border text-left cursor-pointer transition-all relative flex flex-col justify-between ${
+                        isSelected
+                          ? "border-blue-600 bg-blue-50/50 shadow-xs ring-2 ring-blue-500/20"
+                          : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/80"
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-center justify-between gap-1 mb-1">
+                          <div className="flex items-center gap-1.5">
+                            {getCategoryIcon(tpl.category)}
+                            <span
+                              className={`text-xs font-bold leading-tight ${
+                                isSelected ? "text-blue-950" : "text-slate-800"
+                              }`}
+                            >
+                              {tpl.name}
+                            </span>
                           </div>
-                          <p className="text-[11px] text-slate-500 line-clamp-1 leading-normal">
-                            {tpl.description}
-                          </p>
+                          {isSelected && (
+                            <div className="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center flex-shrink-0 shadow-xs">
+                              <Check className="w-2.5 h-2.5 stroke-[3]" />
+                            </div>
+                          )}
                         </div>
+                        <p className="text-[10.5px] text-slate-500 line-clamp-2 leading-relaxed mt-0.5">
+                          {tpl.description}
+                        </p>
+                      </div>
 
-                        <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
+                      <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
+                        <div className="flex items-center gap-2">
                           <span className="font-medium text-slate-600 flex items-center gap-1">
                             <FileCode2 className="w-3 h-3 text-slate-400" />
-                            <span>{tpl.files.length} ไฟล์มาตรฐาน</span>
+                            <span>{tpl.files.length} ไฟล์</span>
                           </span>
-                          <div className="flex items-center -space-x-1">
-                            <span
-                              className="w-2.5 h-2.5 rounded-full border border-white"
-                              style={{ backgroundColor: tpl.theme.primaryColor }}
-                            />
-                            <span
-                              className="w-2.5 h-2.5 rounded-full border border-white"
-                              style={{ backgroundColor: tpl.theme.accentColor }}
-                            />
-                          </div>
+                          {tpl.files.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPreviewingTemplate(tpl);
+                                setPreviewFileIdx(0);
+                              }}
+                              className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold text-blue-600 hover:text-blue-800 bg-blue-50/80 hover:bg-blue-100/80 border border-blue-200/60 transition-colors"
+                              title="ดูตัวอย่างไฟล์และเนื้อหา Markdown"
+                            >
+                              <Eye className="w-2.5 h-2.5" />
+                              <span>ดูตัวอย่าง</span>
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="flex items-center -space-x-1">
+                          <span
+                            className="w-2.5 h-2.5 rounded-full border border-white"
+                            style={{ backgroundColor: tpl.theme.primaryColor }}
+                            title={`Primary Color`}
+                          />
+                          <span
+                            className="w-2.5 h-2.5 rounded-full border border-white"
+                            style={{ backgroundColor: tpl.theme.accentColor }}
+                            title={`Accent Color`}
+                          />
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-
-                {/* Selected Template Files Info Banner */}
-                {currentTemplate && (
-                  <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between gap-2 text-[11px]">
-                    <div className="flex items-center gap-1.5 overflow-hidden">
-                      <Sparkles className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
-                      <span className="font-semibold text-slate-700 flex-shrink-0">
-                        โครงสร้างที่จะสร้าง:
-                      </span>
-                      <span className="truncate font-mono text-[10.5px] text-slate-500">
-                        {currentTemplate.files.map((f) => f.filename).join(", ")}
-                      </span>
                     </div>
-                  </div>
-                )}
+                  );
+                })}
               </div>
-            )}
+            </div>
 
-            {/* TAB 2: IMPORT MARKDOWN MODE */}
-            {creationTab === "import" && (
-              <div className="space-y-3">
-                <div>
-                  <label className="text-slate-700 font-semibold flex items-center gap-1.5">
-                    <FileCode2 className="w-4 h-4 text-blue-600" />
-                    <span>นำเข้าไฟล์ Markdown (.md)</span>
-                  </label>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    ลากไฟล์ .md หรือเลือกหลายไฟล์ ระบบจะนำเข้าเป็นเนื้อหาเริ่มต้นของ Workspace
-                  </p>
-                </div>
+            {/* 2. Essential Project Information */}
+            <div className="space-y-3 pt-1">
+              <label className="text-slate-800 font-bold block text-xs">
+                2. ข้อมูลโครงการ (Project Details)
+              </label>
 
-                <MarkdownDropzone
-                  isDragging={isDragging}
-                  onDragEnter={handleDragEnter}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                  onFileInputChange={handleFileInputChange}
-                />
-
-                {dropzoneError && (
-                  <div className="p-2 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg text-[11px] flex items-center gap-1.5">
-                    <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 text-amber-600" />
-                    <span>{dropzoneError}</span>
-                  </div>
-                )}
-
-                <UploadedMarkdownList
-                  files={files}
-                  onPreview={openPreview}
-                  onRemove={removeFile}
-                  onMove={moveFile}
-                  onClear={clearFiles}
-                />
-              </div>
-            )}
-
-            {/* ESSENTIAL PROJECT INFO (Simple, Easy to use) */}
-            <div className="border-t border-slate-100 pt-3 space-y-3">
-              <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">
-                {creationTab === "template"
-                  ? "2. ข้อมูลโครงการ (Project Information)"
-                  : "ข้อมูลโครงการ"}
-              </span>
-
-              {/* Project Name */}
+              {/* Project Name Input (Hero Focus) */}
               <div>
-                <label className="text-slate-800 font-semibold block mb-1">
+                <label className="text-slate-700 font-semibold block mb-1">
                   ชื่อระบบ / โครงการ (Project Name) *
                 </label>
                 <input
                   type="text"
                   {...register("name", { required: "กรุณาระบุชื่อระบบหรือโครงการ" })}
-                  placeholder="e.g. Loyalty Points System, POS & Billing"
+                  placeholder="เช่น Loyalty Points System, POS & Billing Platform"
                   autoFocus
-                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium placeholder:text-slate-400 shadow-2xs"
+                  className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium placeholder:text-slate-400 shadow-2xs"
                 />
                 {errors.name ? (
-                  <p className="text-red-500 text-[10.5px] mt-1">
+                  <p className="text-red-500 text-[10.5px] mt-1 font-medium">
                     {errors.name.message}
                   </p>
                 ) : (
-                  <div className="flex items-center gap-2 text-[10.5px] text-slate-400 mt-1 font-mono">
+                  <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-1 font-mono">
                     <span>
                       โฟลเดอร์: /workspaces/{watchedSlug || "project-slug"}
                     </span>
@@ -472,24 +397,24 @@ export default function NewWorkspaceModal({
                 )}
               </div>
 
-              {/* Client (Optional) */}
+              {/* Client Name Input (Optional) */}
               <div>
                 <label className="text-slate-700 font-semibold block mb-1">
                   ลูกค้า / ผู้ว่าจ้าง (Client Name)
-                  <span className="text-[10px] text-slate-400 font-normal ml-1">
+                  <span className="text-[10.5px] text-slate-400 font-normal ml-1">
                     (ไม่บังคับ)
                   </span>
                 </label>
                 <input
                   type="text"
                   {...register("client")}
-                  placeholder="e.g. Retail Enterprise Co., Ltd."
+                  placeholder="เช่น บริษัท รีเทล อินเตอร์เนชั่นแนล จำกัด"
                   className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
 
-            {/* COLLAPSIBLE ADVANCED OPTIONS (Keeps UI clean and simple) */}
+            {/* 3. Collapsible Advanced Options & Markdown File Import */}
             <div className="border-t border-slate-100 pt-2">
               <button
                 type="button"
@@ -497,10 +422,10 @@ export default function NewWorkspaceModal({
                 className="w-full py-2 flex items-center justify-between text-slate-600 hover:text-slate-900 transition-colors text-xs font-semibold"
               >
                 <div className="flex items-center gap-1.5">
-                  <SlidersHorizontal className="w-3.5 h-3.5 text-blue-600" />
-                  <span>การตั้งค่าเพิ่มเติม (Advanced Options)</span>
-                  <span className="text-[10.5px] text-slate-400 font-normal">
-                    (Slug, เลขที่เอกสาร, ผู้จัดทำ, สีธีม)
+                  <Settings2 className="w-3.5 h-3.5 text-blue-600" />
+                  <span>ตั้งค่าเพิ่มเติม & นำเข้าไฟล์ Markdown</span>
+                  <span className="text-[10px] text-slate-400 font-normal">
+                    (Slug, เลขที่เอกสาร, ผู้จัดทำ, สีธีม, อัปโหลดไฟล์ .md)
                   </span>
                 </div>
                 {isAdvancedOpen ? (
@@ -511,12 +436,12 @@ export default function NewWorkspaceModal({
               </button>
 
               {isAdvancedOpen && (
-                <div className="p-3.5 bg-slate-50/80 rounded-xl border border-slate-200 mt-1 space-y-3 animate-fade-in">
+                <div className="p-4 bg-slate-50/90 rounded-xl border border-slate-200 mt-1 space-y-4 animate-fade-in">
                   {/* Slug & Document ID */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="text-slate-700 font-semibold block mb-1">
-                        Workspace ID / Slug (โฟลเดอร์)
+                        Workspace Slug (ชื่อโฟลเดอร์)
                       </label>
                       <input
                         type="text"
@@ -613,7 +538,7 @@ export default function NewWorkspaceModal({
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <span className="text-slate-500 text-[10.5px] block mb-1">
-                          Primary Color (สีหลัก)
+                          Primary Color (สีหลัก/หัวข้อ)
                         </span>
                         <div className="flex items-center gap-2">
                           <input
@@ -629,7 +554,7 @@ export default function NewWorkspaceModal({
 
                       <div>
                         <span className="text-slate-500 text-[10.5px] block mb-1">
-                          Accent Color (สีเน้น)
+                          Accent Color (สีเน้น/เส้นคั่น)
                         </span>
                         <div className="flex items-center gap-2">
                           <input
@@ -644,6 +569,37 @@ export default function NewWorkspaceModal({
                       </div>
                     </div>
                   </div>
+
+                  {/* Optional File Upload Dropzone */}
+                  <div className="border-t border-slate-200 pt-3 space-y-2">
+                    <label className="text-slate-700 font-semibold block mb-1 flex items-center gap-1.5">
+                      <UploadCloud className="w-3.5 h-3.5 text-blue-600" />
+                      <span>หรือ นำเข้าไฟล์ Markdown (.md) ภายนอก</span>
+                    </label>
+                    <MarkdownDropzone
+                      isDragging={isDragging}
+                      onDragEnter={handleDragEnter}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                      onFileInputChange={handleFileInputChange}
+                    />
+
+                    {dropzoneError && (
+                      <div className="p-2 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg text-[11px] flex items-center gap-1.5">
+                        <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 text-amber-600" />
+                        <span>{dropzoneError}</span>
+                      </div>
+                    )}
+
+                    <UploadedMarkdownList
+                      files={files}
+                      onPreview={openPreview}
+                      onRemove={removeFile}
+                      onMove={moveFile}
+                      onClear={clearFiles}
+                    />
+                  </div>
                 </div>
               )}
             </div>
@@ -651,13 +607,13 @@ export default function NewWorkspaceModal({
             {/* ACTION BUTTONS */}
             <div className="border-t border-slate-100 pt-4 flex items-center justify-between">
               <div className="text-[11px] text-slate-500">
-                {creationTab === "template" ? (
+                {files.length > 0 ? (
                   <span>
-                    แม่แบบ: <strong>{currentTemplate?.name}</strong>
+                    นำเข้าไฟล์: <strong>{files.length} ไฟล์</strong>
                   </span>
                 ) : (
                   <span>
-                    ไฟล์นำเข้า: <strong>{files.length} ไฟล์</strong>
+                    แม่แบบ: <strong>{currentTemplate?.name}</strong> ({currentTemplate?.files.length} ไฟล์)
                   </span>
                 )}
               </div>
@@ -666,14 +622,14 @@ export default function NewWorkspaceModal({
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="px-4 py-2 text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+                  className="px-4 py-2 text-xs font-semibold text-theme-text hover:bg-theme-surface-hover bg-theme-surface border border-theme-border rounded-retro shadow-retro-sm active:translate-x-[1px] active:translate-y-[1px] transition-all cursor-pointer"
                 >
                   ยกเลิก
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-xl shadow-md shadow-blue-500/20 flex items-center gap-1.5 transition-all hover:scale-[1.01] active:scale-[0.99]"
+                  className="px-5 py-2 text-xs font-bold text-theme-primary-text bg-theme-primary hover:bg-theme-primary-hover border-2 border-theme-border rounded-retro shadow-retro active:translate-x-[1px] active:translate-y-[1px] active:shadow-none disabled:opacity-50 flex items-center gap-1.5 transition-all cursor-pointer"
                 >
                   {isSubmitting ? (
                     <>
@@ -682,12 +638,7 @@ export default function NewWorkspaceModal({
                     </>
                   ) : (
                     <>
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>
-                        {creationTab === "import" && files.length > 0
-                          ? `สร้าง Workspace พร้อม ${files.length} ไฟล์`
-                          : "สร้างเล่มเอกสาร & เข้าสู่ Studio"}
-                      </span>
+                      <span>สร้าง Workspace</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </>
                   )}
@@ -697,6 +648,127 @@ export default function NewWorkspaceModal({
           </form>
         </div>
       </div>
+
+      {/* Quick Template Preview Modal */}
+      {previewingTemplate && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
+          <div
+            className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-4xl h-[85vh] max-h-[800px] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-5 py-3.5 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800 flex-shrink-0">
+              <div className="flex items-center space-x-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold flex-shrink-0">
+                  <Eye className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-sm text-slate-100">
+                      ตัวอย่างแม่แบบ: {previewingTemplate.name}
+                    </h3>
+                    <span className="text-[10px] bg-blue-500/20 text-blue-300 border border-blue-400/30 px-2 py-0.5 rounded-full">
+                      {previewingTemplate.categoryLabel}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 truncate mt-0.5">
+                    {previewingTemplate.description}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleSelectTemplate(previewingTemplate);
+                    setPreviewingTemplate(null);
+                  }}
+                  className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  <span>เลือกแม่แบบนี้</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewingTemplate(null)}
+                  className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* File Switcher Tabs */}
+            {previewingTemplate.files.length > 0 ? (
+              <>
+                <div className="px-5 py-2 bg-slate-100 border-b border-slate-200 flex items-center gap-1.5 overflow-x-auto flex-shrink-0">
+                  <span className="text-[10.5px] font-semibold text-slate-500 mr-1 flex items-center gap-1">
+                    <FileCode2 className="w-3 h-3 text-slate-400" />
+                    <span>ไฟล์ ({previewingTemplate.files.length}):</span>
+                  </span>
+                  {previewingTemplate.files.map((file, idx) => (
+                    <button
+                      key={file.filename}
+                      type="button"
+                      onClick={() => setPreviewFileIdx(idx)}
+                      className={`px-2.5 py-1 rounded-md text-xs font-mono transition-all cursor-pointer ${
+                        previewFileIdx === idx
+                          ? "bg-white text-blue-600 shadow-xs border border-slate-300 font-semibold"
+                          : "text-slate-600 hover:bg-white/60 hover:text-slate-900"
+                      }`}
+                    >
+                      {file.filename}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Markdown Rendered Content */}
+                <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50">
+                  <div className="bg-white rounded-xl border border-slate-200 p-7 shadow-xs max-w-3xl mx-auto">
+                    <div
+                      className="doc-content prose prose-slate max-w-none text-slate-800 text-xs leading-relaxed"
+                      dangerouslySetInnerHTML={{
+                        __html: renderMarkdown(
+                          interpolateTemplateContent(
+                            previewingTemplate.files[previewFileIdx]?.content || "",
+                            {
+                              projectName: watchedName || "ตัวอย่างโครงการ",
+                              title: `${watchedName || "โครงการ"} ${previewingTemplate.title}`,
+                              author: "Tan System Architecture Team",
+                              organization: "TAN TECHNOLOGY SOLUTIONS",
+                              client: "Client Name",
+                              date: new Date().toLocaleDateString("th-TH"),
+                            }
+                          )
+                        ),
+                      }}
+                    />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="flex-1 flex items-center justify-center p-8 text-center text-slate-400 text-xs">
+                แม่แบบเอกสารเปล่า (ไม่มีไฟล์เริ่มต้น)
+              </div>
+            )}
+
+            {/* Footer */}
+            <div className="px-5 py-3 bg-white border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 flex-shrink-0">
+              <span className="text-[11px] text-slate-500">
+                ไฟล์ปัจจุบัน: <code className="font-mono text-slate-700 font-semibold">{previewingTemplate.files[previewFileIdx]?.filename || "-"}</code>
+              </span>
+              <button
+                type="button"
+                onClick={() => setPreviewingTemplate(null)}
+                className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg transition-colors cursor-pointer"
+              >
+                ปิดหน้าต่างตัวอย่าง
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Markdown Preview Modal */}
       <MarkdownPreviewModal

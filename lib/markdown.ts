@@ -88,7 +88,7 @@ export function preprocessRequirementDoc(markdown: string): string {
       }
 
       if (rows.length > 0) {
-        return `${header}\n<table class="header-control-table" style="width:100%; border:1px solid #000; border-collapse:collapse; margin: 10px 0 16px 0;">\n  <tbody>\n${rows.join("\n")}\n  </tbody>\n</table>\n`;
+        return `${header}\n<table class="header-control-table">\n  <tbody>\n${rows.join("\n")}\n  </tbody>\n</table>\n`;
       }
       return `${header}${body}`;
     }
@@ -111,7 +111,7 @@ export function preprocessRequirementDoc(markdown: string): string {
       }
 
       if (rows.length > 0) {
-        return `${header}\n<table style="width:100%; border:1px solid #000; border-collapse:collapse; margin: 10px 0 16px 0;">\n  <thead>\n    <tr>\n      <th style="background-color: #0f3b6c; color: #fff; border: 1px solid #000; padding: 6px 10px;">คำศัพท์ (Term)</th>\n      <th style="background-color: #0f3b6c; color: #fff; border: 1px solid #000; padding: 6px 10px;">คำนิยามและความหมายในระบบ (Definition)</th>\n    </tr>\n  </thead>\n  <tbody>\n${rows.join("\n")}\n  </tbody>\n</table>\n`;
+        return `${header}\n<table class="glossary-table">\n  <thead>\n    <tr>\n      <th>คำศัพท์ (Term)</th>\n      <th>คำนิยามและความหมายในระบบ (Definition)</th>\n    </tr>\n  </thead>\n  <tbody>\n${rows.join("\n")}\n  </tbody>\n</table>\n`;
       }
       return `${header}${body}`;
     }
@@ -163,7 +163,7 @@ ${introText.trim()}
   <tr>
     <td>
       <p style="margin: 0 0 4px 0;"><strong>ลงนาม: ฝั่งผู้ว่าจ้าง (Client Confirmation)</strong></p>
-      <p style="margin: 0 0 16px 0; color: #475569; font-size: 10.5px;">(Enrich Salon)</p>
+      <p style="margin: 0 0 16px 0; color: #64748b; font-size: 11px;">(ผู้แทนที่มีอำนาจลงนาม)</p>
       <div class="signoff-line">ลายเซ็น: ____________________________________</div>
       <div class="signoff-line">ชื่อ-นามสกุล: ________________________________</div>
       <div class="signoff-line">ตำแหน่ง: ___________________________________</div>
@@ -171,7 +171,7 @@ ${introText.trim()}
     </td>
     <td>
       <p style="margin: 0 0 4px 0;"><strong>ลงนาม: ฝั่งผู้พัฒนา (Developer Acknowledgment)</strong></p>
-      <p style="margin: 0 0 16px 0; color: #475569; font-size: 10.5px;">(Syaco Co., Ltd.)</p>
+      <p style="margin: 0 0 16px 0; color: #64748b; font-size: 11px;">(ผู้แทนทีมสถาปัตยกรรมและพัฒนา)</p>
       <div class="signoff-line">ลายเซ็น: ____________________________________</div>
       <div class="signoff-line">ชื่อ-นามสกุล: ________________________________</div>
       <div class="signoff-line">ตำแหน่ง: ___________________________________</div>

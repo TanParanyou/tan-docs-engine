@@ -53,6 +53,7 @@
 ### Component Stack
 | Layer | Technologies | Responsibilities |
 | :--- | :--- | :--- |
+| **Theme & Design System** | CSS Custom Properties, Tailwind Extension | Centralized Theme Tokens (Single Source of Truth: `lib/theme.ts` & `app/globals.css`), Retro Technical Workstation aesthetic, hard tactile shadows |
 | **Framework & UI** | Next.js 15, React 19, Tailwind CSS | App Router, SSR/CSR, Responsive Document UI |
 | **Rich-Text Engine** | `@tiptap/react`, `tiptap-markdown` | Visual WYSIWYG document editing, formatted tables, marks |
 | **Markdown Processing** | `markdown-it`, `highlight.js`, `task-lists` | Markdown parse, code block highlight, task checkboxes, Thai preprocessing |

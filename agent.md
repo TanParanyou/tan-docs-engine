@@ -25,6 +25,7 @@
 | `app/api/` | REST Route Handlers สำหรับจัดการ Workspace, Files, Uploads, และ PDF Generation |
 | `components/studio/` | ส่วนประกอบ UI ของ Document Studio (`StudioLayout`, `MarkdownEditor`, `VisualEditor`, `LivePreview`, `FileManagementDrawer`) |
 | `components/` | คอมโพเนนต์ส่วนกลาง (`WorkspaceDashboard`, `NewWorkspaceModal`, `MermaidRenderer`, `PrintButton`) |
+| `lib/theme.ts` | Single Source of Truth สำหรับ Design Tokens / Theme Presets ของระบบ |
 | `lib/workspaces.ts` | โมดูลกลางสำหรับอ่าน/เขียน/จัดการ Workspace บน Filesystem ทั้งหมด |
 | `lib/markdown.ts` | Custom Markdown Parser (`markdown-it`), Syntax Highlighting, และ Gojo Enrich Preprocessing |
 | `lib/pdf-generator.ts` | Puppeteer Engine สำหรับแปลง HTML เป็น A4 PDF พร้อม Headless Chrome auto-discovery |
@@ -54,6 +55,11 @@
 - บล็อกเนื้อหาสำคัญ เช่น `table`, `pre`, `.mermaid`, และตารางลงนาม ต้องมี CSS `page-break-inside: avoid;` เพื่อป้องกันการถูกตัดแบ่งกลางหน้ากระดาษ
 - การแบ่งหน้าเอกสารระหว่างไฟล์ต้องใช้ `<div class="page-break"></div>` เสมอ
 - หน้าปก (Cover Page) ต้องคงขนาดและระยะขอบ Full-bleed ตามมาตรฐาน A4 Portrait
+
+### 3.4 Zero Emoji & Strict SVG Icon Standard
+- **No Emoji in UI / Templates / Exports:** ห้ามใช้อักขระอีโมจิ (Emoji Pictographs เช่น 🧩, ✂️, ✨, 💻, 📱, 📊) ในส่วนติดต่อผู้ใช้ (UI Components), Live Preview, Print Template หรือโมดูล Export เด็ดขาด เพื่อคงความเป็นมืออาชีพระดับ Enterprise
+- **Lucide Icons / Inline SVG Only:** สัญลักษณ์หรือไอคอนทั้งหมดต้องเรนเดอร์ด้วย SVG เท่านั้น (โดยใช้ไลบรารี `lucide-react` เป็นหลัก หรือ Inline `<svg>` ในกรณี Template HTML สตริง)
+- **Scalability & Cross-Platform Consistency:** การใช้ SVG ช่วยรับประกันว่าไอคอนจะคมชัดในหน้าจอทุกความละเอียด (High-DPI / Retina) และเรนเดอร์ในไฟล์ PDF / Print ได้อย่างแม่นยำ ไม่ขึ้นกับฟอนต์อีโมจิของระบบปฏิบัติการ
 
 ---
 
@@ -91,3 +97,4 @@ npm run generate:all
 - [ ] ไฟล์ PDF ถูกสร้างในไดเรกทอรี `output/` อย่างสมบูรณ์
 - [ ] เอกสารภาษาไทยเรนเดอร์ถูกต้อง สระและวรรณยุกต์ไม่เพี้ยน
 - [ ] แผนภาพ Mermaid เรนเดอร์เป็นภาพ SVG ชัดเจน ไม่แสดง error block
+- [ ] ไม่มีการใช้อีโมจิในโค้ด UI / Template โดยใช้ SVG Icon เสมอ

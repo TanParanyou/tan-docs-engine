@@ -13,13 +13,13 @@ export default function SplitRatioPresets({
   onSelectRatio,
 }: SplitRatioPresetsProps) {
   const presets = [
-    { ratio: 35, label: "35:65", title: "Preview Focus (35:65)" },
-    { ratio: 50, label: "50:50", title: "Balanced (50:50)" },
-    { ratio: 65, label: "65:35", title: "Editor Focus (65:35)" },
+    { ratio: 35, label: "35:65", title: "เน้นดูตัวอย่าง Preview (35:65)" },
+    { ratio: 50, label: "50:50", title: "สมดุลเท่ากัน (50:50)" },
+    { ratio: 65, label: "65:35", title: "เน้นพิมพ์ Editor (65:35)" },
   ];
 
   return (
-    <div className="flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5 text-[11px] font-mono select-none">
+    <div className="flex items-center bg-slate-100 border border-slate-200/90 rounded-lg p-1 gap-1 text-xs font-mono select-none">
       {presets.map((p) => {
         const isActive = currentRatio === p.ratio;
         return (
@@ -29,10 +29,10 @@ export default function SplitRatioPresets({
             onClick={() => onSelectRatio(p.ratio)}
             title={p.title}
             className={cn(
-              "px-1.5 py-0.5 rounded transition-all",
+              "px-2.5 py-1 rounded-md transition-all cursor-pointer font-semibold",
               isActive
-                ? "bg-white text-blue-600 font-bold shadow-xs"
-                : "text-slate-500 hover:text-slate-800"
+                ? "bg-white text-blue-600 shadow-xs border border-slate-200/60"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
             )}
           >
             {p.label}

@@ -9,6 +9,7 @@ import LivePreview, { LivePreviewHandle } from "./LivePreview";
 import StudioHeader from "./header/StudioHeader";
 import StudioRail from "./navigation/StudioRail";
 import StudioDrawerHost from "./drawers/StudioDrawerHost";
+import { ExportFormat } from "@/components/common/ExportDropdown";
 
 interface StudioLayoutProps {
   initialWorkspace: WorkspaceData;
@@ -155,31 +156,62 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
     }
   };
 
-  // Export PDF with actual progress and download handler
-  const handleExportPdf = async () => {
+  // Unified Export Handler (PDF, DOCX, Excel, Markdown)
+  const handleExport = async (format: ExportFormat) => {
     const currentSlug = slug || initialWorkspace.slug;
     setIsExportingPdf(true);
     try {
-      const res = await fetch(`/api/pdf?workspace=${currentSlug}`);
+      if (format === "current-md") {
+        // Direct download of current editor content
+        const blob = new Blob([fileContent], { type: "text/markdown;charset=utf-8" });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${currentSlug}-${selectedFile}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        return;
+      }
+
+      let endpoint = `/api/${format}?workspace=${currentSlug}`;
+      let fallbackExt = `.${format === "excel" ? "xlsx" : format}`;
+
+      const res = await fetch(endpoint);
       if (!res.ok) {
-        const errJson = await res.json();
-        throw new Error(errJson.error || "Failed to generate PDF");
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.error || `Failed to generate ${format.toUpperCase()}`);
       }
 
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      const sanitizedTitle = (config.title || initialWorkspace.config.title)
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-");
-      a.download = `${currentSlug}-${sanitizedTitle}-v${config.version || "1.0.0"}.pdf`;
+
+      let filename = "";
+      const disposition = res.headers.get("Content-Disposition");
+      if (disposition) {
+        const match = disposition.match(/filename="?([^";]+)"?/i);
+        if (match && match[1]) {
+          filename = match[1];
+        }
+      }
+
+      if (!filename) {
+        const sanitizedTitle = (config.title || initialWorkspace.config.title)
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-");
+        filename = `${currentSlug}-${sanitizedTitle}-v${config.version || "1.0.0"}${fallbackExt}`;
+      }
+
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (err: any) {
-      alert(`เกิดข้อผิดพลาดในการสร้าง PDF: ${err.message}`);
+      alert(`เกิดข้อผิดพลาดในการส่งออกไฟล์: ${err.message}`);
     } finally {
       setIsExportingPdf(false);
     }
@@ -320,9 +352,19 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
 
   const activeSlug = slug || initialWorkspace.slug;
   const activeName = config.name || initialWorkspace.config.name;
+  const primaryColor = config.theme?.primaryColor || initialWorkspace.config.theme?.primaryColor || "#0f2b48";
+  const accentColor = config.theme?.accentColor || initialWorkspace.config.theme?.accentColor || "#2563eb";
 
   return (
-    <div className="h-screen flex flex-col bg-slate-100 text-slate-800 overflow-hidden font-sans">
+    <div
+      className="h-screen flex flex-col bg-slate-100 text-slate-800 overflow-hidden font-sans"
+      style={
+        {
+          "--primary-color": primaryColor,
+          "--accent-color": accentColor,
+        } as React.CSSProperties
+      }
+    >
       {/* Studio Global Header */}
       <StudioHeader
         slug={activeSlug}
@@ -337,7 +379,8 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
         isSaving={isSaving}
         isExportingPdf={isExportingPdf}
         onSave={handleSaveFile}
-        onExportPdf={handleExportPdf}
+        onExport={handleExport}
+        onExportPdf={() => handleExport("pdf")}
         onViewModeChange={setViewMode}
         onSplitRatioChange={setSplitRatio}
         onToggleSyncScroll={toggleSyncScroll}

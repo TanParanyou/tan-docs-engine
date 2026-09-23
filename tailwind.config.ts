@@ -31,6 +31,41 @@ export default {
         ],
       },
       colors: {
+        theme: {
+          bg: "var(--theme-bg)",
+          "bg-subtle": "var(--theme-bg-subtle)",
+          surface: "var(--theme-surface)",
+          "surface-hover": "var(--theme-surface-hover)",
+          "surface-sunken": "var(--theme-surface-sunken)",
+          text: "var(--theme-text)",
+          "text-muted": "var(--theme-text-muted)",
+          "text-faint": "var(--theme-text-faint)",
+          border: "var(--theme-border)",
+          "border-subtle": "var(--theme-border-subtle)",
+          primary: {
+            DEFAULT: "var(--theme-primary)",
+            hover: "var(--theme-primary-hover)",
+            text: "var(--theme-primary-text)",
+          },
+          accent: {
+            DEFAULT: "var(--theme-accent)",
+            hover: "var(--theme-accent-hover)",
+            light: "var(--theme-accent-light)",
+            text: "var(--theme-accent-text)",
+          },
+          warning: {
+            DEFAULT: "var(--theme-warning)",
+            light: "var(--theme-warning-light)",
+          },
+          success: {
+            DEFAULT: "var(--theme-success)",
+            light: "var(--theme-success-light)",
+          },
+          danger: {
+            DEFAULT: "var(--theme-danger)",
+            light: "var(--theme-danger-light)",
+          },
+        },
         brand: {
           50: "#f0f7ff",
           100: "#e0effe",
@@ -44,6 +79,14 @@ export default {
           900: "#0c3d6e",
           950: "#082749",
         },
+      },
+      boxShadow: {
+        "retro-sm": "var(--theme-shadow-hard-sm)",
+        "retro": "var(--theme-shadow-hard)",
+        "retro-lg": "var(--theme-shadow-hard-lg)",
+      },
+      borderRadius: {
+        "retro": "var(--theme-radius)",
       },
     },
   },

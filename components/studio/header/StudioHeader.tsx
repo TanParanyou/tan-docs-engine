@@ -6,13 +6,13 @@ import {
   ArrowLeft,
   Save,
   Printer,
-  Download,
   ExternalLink,
   SlidersHorizontal,
   Menu,
 } from "lucide-react";
 import StatusBadge from "@/components/common/StatusBadge";
 import ActionButton from "@/components/common/ActionButton";
+import ExportDropdown, { ExportFormat } from "@/components/common/ExportDropdown";
 import ViewModeToggle from "./ViewModeToggle";
 import SplitRatioPresets from "./SplitRatioPresets";
 import { ViewMode } from "@/lib/store/useStudioStore";
@@ -31,7 +31,8 @@ interface StudioHeaderProps {
   isSaving: boolean;
   isExportingPdf: boolean;
   onSave: () => void;
-  onExportPdf: () => void;
+  onExportPdf?: () => void;
+  onExport?: (format: ExportFormat) => Promise<void> | void;
   onViewModeChange: (mode: ViewMode) => void;
   onSplitRatioChange: (ratio: number) => void;
   onToggleSyncScroll: () => void;
@@ -52,6 +53,7 @@ export default function StudioHeader({
   isExportingPdf,
   onSave,
   onExportPdf,
+  onExport,
   onViewModeChange,
   onSplitRatioChange,
   onToggleSyncScroll,
@@ -60,15 +62,15 @@ export default function StudioHeader({
   const { isMobile } = useResponsive();
 
   return (
-    <header className="h-14 bg-white border-b border-slate-200 px-3 sm:px-4 flex items-center justify-between flex-shrink-0 z-30 shadow-xs select-none">
-      {/* Left: Brand, Back & File Badge */}
-      <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
-        {/* Mobile Drawer Button */}
+    <header className="h-15 sm:h-16 bg-white border-b border-slate-200 px-3 sm:px-5 flex items-center justify-between z-30 select-none shadow-2xs gap-3">
+      {/* Left: Workspace & File Metadata */}
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        {/* Mobile Drawer Toggle */}
         {isMobile && onToggleMobileDrawer && (
           <button
             type="button"
             onClick={onToggleMobileDrawer}
-            className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 border border-slate-200"
+            className="h-9 w-9 flex items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100 border border-slate-200 cursor-pointer shadow-2xs"
             title="เปิดเมนูเอกสาร"
           >
             <Menu className="w-4 h-4" />
@@ -78,28 +80,28 @@ export default function StudioHeader({
         {/* Back to Reader Link */}
         <Link
           href={`/${slug}`}
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 px-2.5 py-1.5 rounded-lg transition-colors border border-slate-200 flex-shrink-0"
+          className="h-9 inline-flex items-center gap-2 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 px-3 rounded-lg transition-colors border border-slate-200 shadow-2xs flex-shrink-0"
           title="Back to Document Reader View"
         >
-          <ArrowLeft className="w-3.5 h-3.5" />
+          <ArrowLeft className="w-4 h-4 text-slate-500" />
           <span className="hidden sm:inline">Reader View</span>
         </Link>
 
-        <div className="h-4 w-px bg-slate-200 hidden sm:block" />
+        <div className="h-5 w-px bg-slate-200 hidden sm:block flex-shrink-0" />
 
         {/* File and Workspace Info */}
-        <div className="flex items-center space-x-1.5 min-w-0">
-          <span className="font-bold text-xs sm:text-sm text-slate-900 truncate max-w-[120px] sm:max-w-xs">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="font-bold text-xs sm:text-sm text-slate-900 truncate max-w-[120px] sm:max-w-[200px]">
             {workspaceName}
           </span>
-          <span className="text-slate-400 font-mono text-xs hidden sm:inline">/</span>
-          <span className="text-xs font-mono text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md font-semibold truncate max-w-[140px] sm:max-w-[180px]">
+          <span className="text-slate-300 font-mono text-xs hidden sm:inline">/</span>
+          <span className="text-xs font-mono text-blue-700 bg-blue-50 border border-blue-200/90 px-2.5 py-1 rounded-md font-semibold truncate max-w-[140px] sm:max-w-[220px]">
             {selectedFile}
           </span>
         </div>
 
         {/* Dirty / Saved Status Badge */}
-        <div className="hidden md:flex items-center space-x-2">
+        <div className="hidden xl:flex items-center gap-2 flex-shrink-0">
           {isDirty ? (
             <StatusBadge status="unsaved" label="Unsaved Changes" pulse />
           ) : (
@@ -118,7 +120,7 @@ export default function StudioHeader({
       </div>
 
       {/* Center: View Mode & Split Presets (Desktop / Tablet only) */}
-      <div className="hidden lg:flex items-center space-x-2">
+      <div className="hidden lg:flex items-center gap-2.5 flex-shrink-0">
         <ViewModeToggle viewMode={viewMode} onChange={onViewModeChange} />
 
         {viewMode === "split" && (
@@ -132,21 +134,21 @@ export default function StudioHeader({
           <button
             type="button"
             onClick={onToggleSyncScroll}
-            className={`px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 border transition-colors ${
+            className={`h-9 px-3 rounded-lg text-xs font-medium flex items-center gap-1.5 border transition-all cursor-pointer shadow-2xs ${
               syncScroll
                 ? "bg-blue-50 border-blue-200 text-blue-700 font-semibold"
-                : "bg-slate-100 border-slate-200 text-slate-500 hover:text-slate-800"
+                : "bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-200/70"
             }`}
             title="Synchronize scrolling between editor and preview"
           >
-            <SlidersHorizontal className="w-3 h-3" />
+            <SlidersHorizontal className="w-3.5 h-3.5" />
             <span>Sync Scroll</span>
           </button>
         )}
       </div>
 
       {/* Right: Actions (Save, Print, Export) */}
-      <div className="flex items-center space-x-1.5 sm:space-x-2 flex-shrink-0">
+      <div className="flex items-center gap-2 flex-shrink-0">
         {/* Quick Save */}
         <ActionButton
           variant="primary"
@@ -154,7 +156,9 @@ export default function StudioHeader({
           disabled={isSaving}
           isLoading={isSaving}
           loadingText="Saving..."
-          icon={<Save className="w-3.5 h-3.5" />}
+          icon={<Save className="w-4 h-4" />}
+          size="md"
+          className="h-9 px-3.5 text-xs font-semibold"
           responsiveText
         >
           Save (⌘S)
@@ -164,26 +168,23 @@ export default function StudioHeader({
         <Link
           href={`/${slug}/print`}
           target="_blank"
-          className="inline-flex items-center gap-1 text-xs font-medium text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 px-2.5 sm:px-3 py-1.5 rounded-lg shadow-xs transition-colors"
+          className="h-9 inline-flex items-center gap-1.5 text-xs font-medium text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 px-3.5 rounded-lg shadow-2xs transition-colors cursor-pointer"
           title="Open Print A4 View"
         >
           <Printer className="w-3.5 h-3.5 text-slate-500" />
           <span className="hidden sm:inline">Print A4</span>
-          <ExternalLink className="w-2.5 h-2.5 text-slate-400 hidden sm:inline" />
+          <ExternalLink className="w-3 h-3 text-slate-400 hidden sm:inline" />
         </Link>
 
-        {/* Export PDF */}
-        <ActionButton
+        {/* Export Dropdown */}
+        <ExportDropdown
+          workspaceSlug={slug}
+          currentFilename={selectedFile}
           variant="secondary"
-          onClick={onExportPdf}
-          disabled={isExportingPdf}
-          isLoading={isExportingPdf}
-          loadingText="Generating..."
-          icon={<Download className="w-3.5 h-3.5 text-slate-500" />}
-          responsiveText
-        >
-          Export PDF
-        </ActionButton>
+          buttonSize="md"
+          className="h-9"
+          onCustomExport={onExport}
+        />
       </div>
     </header>
   );

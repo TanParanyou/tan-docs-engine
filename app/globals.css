@@ -3,10 +3,95 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Ensure preview and print have exact same typography and resets */
+/* ==========================================================================
+   tan-docs-engine: Centralized Theme Tokens (Single Source of Truth)
+   Theme: RETRO TECHNICAL WORKSTATION
+   * กำหนดที่เดียว เปลี่ยนแปลงทั้งระบบ (Web Dashboard, Studio, Modals, Reader)
+   ========================================================================== */
+:root {
+  /* Canvas & Surfaces */
+  --theme-bg: #f5efe6;             /* Warm vintage paper/chassis canvas */
+  --theme-bg-subtle: #ebe3d5;      /* Muted secondary background */
+  --theme-surface: #fdfbf7;        /* Clean card and surface background */
+  --theme-surface-hover: #f7f1e4;  /* Hovered card surface */
+  --theme-surface-sunken: #e5ded0; /* Inputs, code rails, sunken areas */
+
+  /* Inky Typography */
+  --theme-text: #23201b;           /* Deep vintage ink text */
+  --theme-text-muted: #6b6357;     /* Muted descriptive label text */
+  --theme-text-faint: #9c9182;     /* Timestamp and placeholder text */
+
+  /* Crisp Structural Outlines */
+  --theme-border: #2e2a24;         /* Primary crisp ink border */
+  --theme-border-subtle: #d6ccbc;  /* Hairline structural dividers */
+
+  /* Primary Accent: Burnt Amber / Retro Rust */
+  --theme-primary: #c2541a;
+  --theme-primary-hover: #a84410;
+  --theme-primary-text: #ffffff;
+
+  /* Secondary Accent: Vintage Workstation Teal */
+  --theme-accent: #2a6d63;
+  --theme-accent-hover: #1f564e;
+  --theme-accent-light: #e0ece8;
+  --theme-accent-text: #1d5249;
+
+  /* Status Colors */
+  --theme-warning: #b87a14;
+  --theme-warning-light: #faf0d7;
+  --theme-success: #29784b;
+  --theme-success-light: #dfefe6;
+  --theme-danger: #b53228;
+  --theme-danger-light: #fbeae9;
+
+  /* Retro Tactile Geometry & Hard Shadows - คมกริบสไตล์ Retro Industrial Workstation */
+  --theme-radius: 0px;
+  --theme-shadow-hard-sm: 2px 2px 0px var(--theme-border);
+  --theme-shadow-hard: 3px 3px 0px var(--theme-border);
+  --theme-shadow-hard-lg: 5px 5px 0px var(--theme-border);
+
+  /* Document Typography */
+  --font-sans: "Prompt", "Sarabun", "Thonburi", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "SF Mono", "Menlo", "Consolas", "Courier New", monospace;
+}
+
+/* ==========================================================================
+   Retro Sharp Brutalist Architecture
+   * กำหนดให้รูปทรง กล่อง การ์ด ปุ่ม แท็บ อินพุต และโมดอล ทั้งระบบเหลี่ยมคมกริบ
+   * ควบคุมผ่าน --theme-radius ที่จุดเดียว (Single Source of Truth)
+   ========================================================================== */
+.rounded,
+.rounded-sm,
+.rounded-md,
+.rounded-lg,
+.rounded-xl,
+.rounded-2xl,
+.rounded-3xl,
+.rounded-retro {
+  border-radius: var(--theme-radius, 0px) !important;
+}
+
+button, input, select, textarea, [role="button"] {
+  border-radius: var(--theme-radius, 0px);
+}
+
+/* Retro Background Patterns */
+.bg-retro-dots {
+  background-image: radial-gradient(var(--theme-border-subtle) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+.bg-retro-grid {
+  background-size: 24px 24px;
+  background-image: 
+    linear-gradient(to right, rgba(46, 42, 36, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(46, 42, 36, 0.06) 1px, transparent 1px);
+}
+
+/* Global Application Body */
 body {
-  color: var(--text-color, #1e293b);
-  background-color: #f8fafc;
+  color: var(--theme-text);
+  background-color: var(--theme-bg);
   font-family: var(--font-sans);
   word-break: break-word;
   overflow-wrap: break-word;

@@ -26,7 +26,7 @@ export default function RootLayout({
           href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css"
         />
       </head>
-      <body className="min-h-screen bg-slate-50 text-slate-900 antialiased">
+      <body className="min-h-screen bg-theme-bg text-theme-text antialiased selection:bg-theme-primary selection:text-white">
         {children}
         <Script
           src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"

@@ -202,9 +202,9 @@ graph TD
             <button
               type="button"
               onClick={() => onInsertSnippet(snip.content)}
-              className="w-full py-1.5 px-3 bg-slate-50 hover:bg-blue-600 text-slate-700 hover:text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors border border-slate-200 hover:border-blue-600 shadow-xs"
+              className="w-full h-8.5 py-2 px-3 bg-slate-50 hover:bg-blue-600 text-slate-700 hover:text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all border border-slate-200 hover:border-blue-600 shadow-2xs cursor-pointer active:scale-[0.98]"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-4 h-4" />
               <span>แทรกลงในเอกสาร</span>
             </button>
           </div>

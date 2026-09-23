@@ -17,7 +17,9 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
+  Smartphone,
 } from "lucide-react";
+import ExportDropdown from "@/components/common/ExportDropdown";
 
 export interface DocumentViewerProps {
   workspaceSlug: string;
@@ -247,14 +249,7 @@ export default function DocumentViewer({
               <Printer className="w-3.5 h-3.5" />
             </a>
 
-            <a
-              href={pdfDownloadUrl}
-              className="inline-flex items-center gap-1 sm:gap-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 px-2.5 sm:px-3 py-1.5 rounded-lg shadow-sm transition-colors"
-              title="ดาวน์โหลดไฟล์ PDF"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span className="hidden xs:inline">ดาวน์โหลด</span>
-            </a>
+            <ExportDropdown workspaceSlug={workspaceSlug} variant="primary" buttonSize="sm" />
           </div>
         </div>
       )}
@@ -333,7 +328,10 @@ export default function DocumentViewer({
         <div className="w-full bg-slate-900/50 rounded-xl sm:rounded-2xl border border-slate-300 p-1.5 sm:p-2 shadow-xl relative min-h-[70vh] sm:min-h-[85vh] flex flex-col">
           {/* Mobile Notice Bar */}
           <div className="sm:hidden mb-2 bg-blue-500/10 border border-blue-400/30 rounded-lg p-2.5 flex items-center justify-between text-xs text-blue-200">
-            <span className="text-[11px]">📱 เพื่อการอ่านที่ราบรื่นบนมือถือ:</span>
+            <span className="text-[11px] flex items-center gap-1.5">
+              <Smartphone className="w-3.5 h-3.5 text-blue-300 shrink-0" />
+              <span>เพื่อการอ่านที่ราบรื่นบนมือถือ:</span>
+            </span>
             <a
               href={pdfUrl}
               target="_blank"

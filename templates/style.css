@@ -208,90 +208,135 @@ html, body {
    Document Content Headings
    ========================================================================== */
 
-.doc-content h1, .document-content h1, h1,
-.doc-content h2, .document-content h2, h2,
-.doc-content h3, .document-content h3, h3,
-.doc-content h4, .document-content h4, h4,
-.doc-content h5, .document-content h5, h5,
-.doc-content h6, .document-content h6, h6 {
-  color: var(--primary-color);
-  font-weight: 700;
-  break-after: avoid;
-  page-break-after: avoid;
-}
+/* ==========================================================================
+   Document Content Headings (Scoped strictly to document containers)
+   ========================================================================== */
 
-.doc-content h1, .document-content h1, h1 {
+.doc-content h1, .document-content h1, .doc-visual-canvas h1 {
   font-size: 20px;
   line-height: 1.3;
   margin-top: 24px;
   margin-bottom: 12px;
   padding-bottom: 6px;
-  border-bottom: 2px solid var(--accent-color);
+  border-bottom: 2px solid var(--accent-color, #2563eb);
+  color: var(--primary-color, #0f2b48);
+  font-weight: 700;
+  break-after: avoid;
+  page-break-after: avoid;
 }
 
-.doc-content h2, .document-content h2, h2 {
+.doc-content h2, .document-content h2, .doc-visual-canvas h2 {
   font-size: 16px;
   line-height: 1.35;
   margin-top: 20px;
   margin-bottom: 10px;
   padding-bottom: 4px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  color: var(--primary-color, #0f2b48);
+  font-weight: 700;
+  break-after: avoid;
+  page-break-after: avoid;
 }
 
-.doc-content h3, .document-content h3, h3 {
+.doc-content h3, .document-content h3, .doc-visual-canvas h3 {
   font-size: 14px;
   line-height: 1.4;
   margin-top: 18px;
   margin-bottom: 8px;
   color: #0f172a;
+  font-weight: 700;
 }
 
-.doc-content h4, .document-content h4, h4 {
+.doc-content h4, .document-content h4, .doc-visual-canvas h4 {
   font-size: 13px;
   line-height: 1.4;
   margin-top: 14px;
   margin-bottom: 6px;
-  color: var(--accent-color, #1e40af);
+  color: var(--accent-color, #2563eb);
+  font-weight: 700;
 }
 
-.doc-content p, .document-content p, p {
+.doc-content p, .document-content p {
   margin: 0 0 12px 0;
   line-height: 1.7;
+  color: var(--text-color, #1e293b);
 }
 
 /* ==========================================================================
-   Tables (Navy Header, Crisp Borders, Professional Format)
+   Tables (Executive Navy Header, Clean Borders, Professional Format)
    ========================================================================== */
 
-.doc-content table, .document-content table, table {
+.doc-content table, .document-content table, .doc-visual-canvas table {
   width: 100%;
   border-collapse: collapse;
-  margin: 12px 0 16px 0;
-  font-size: 11px;
+  margin: 14px 0 18px 0;
+  font-size: 11.5px;
   line-height: 1.5;
   page-break-inside: avoid;
   break-inside: avoid;
-  border: 1px solid #000000;
+  border: 1px solid var(--border-dark, #cbd5e1);
+  background-color: #ffffff;
 }
 
-.doc-content th, .document-content th, th,
-.doc-content td, .document-content td, td {
-  padding: 6px 10px;
+.doc-content th, .document-content th, .doc-visual-canvas th {
+  padding: 8px 12px;
   text-align: left;
   vertical-align: top;
-  border: 1px solid #000000;
-}
-
-.doc-content th, .document-content th, th {
-  background-color: var(--primary-color, #0f3b6c) !important;
+  border: 1px solid var(--border-dark, #cbd5e1);
+  background-color: var(--primary-color, #0f2b48) !important;
   color: #ffffff !important;
   font-weight: 700;
-  font-size: 11px;
+  font-size: 11.5px;
   letter-spacing: 0.02em;
 }
 
-.doc-content td, .document-content td, td {
+.doc-content td, .document-content td, .doc-visual-canvas td {
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: top;
+  border: 1px solid var(--border-color, #e2e8f0);
   background-color: #ffffff;
+  color: var(--text-color, #1e293b);
+}
+
+.doc-content tr:nth-child(even) td, .document-content tr:nth-child(even) td {
+  background-color: var(--table-row-odd, #f8fafc);
+}
+
+/* Header Control Table (Section 1) */
+.header-control-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0 18px 0;
+  border: 1px solid var(--border-dark, #cbd5e1);
+}
+
+.header-control-table td {
+  border: 1px solid var(--border-color, #e2e8f0);
+  padding: 8px 12px;
+  font-size: 11.5px;
+}
+
+/* Glossary Table (Section 2) */
+.glossary-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0 18px 0;
+  border: 1px solid var(--border-dark, #cbd5e1);
+}
+
+.glossary-table th {
+  background-color: var(--primary-color, #0f2b48) !important;
+  color: #ffffff !important;
+  border: 1px solid var(--border-dark, #cbd5e1);
+  padding: 8px 12px;
+  font-size: 11.5px;
+}
+
+.glossary-table td {
+  border: 1px solid var(--border-color, #e2e8f0);
+  padding: 8px 12px;
+  font-size: 11.5px;
 }
 
 /* ==========================================================================
@@ -299,36 +344,44 @@ html, body {
    ========================================================================== */
 
 .review-box {
-  margin: 16px 0 24px 0;
+  margin: 18px 0 24px 0;
   page-break-inside: avoid;
   break-inside: avoid;
+  border: 1px solid var(--border-dark, #cbd5e1);
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: #ffffff;
 }
 
 .review-box-title {
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 700;
-  color: #0f172a;
-  margin-bottom: 4px;
+  color: var(--primary-color, #0f2b48);
+  background-color: #f1f5f9;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
 }
 
 .review-box-table {
   width: 100%;
   border-collapse: collapse;
-  border: 1px solid #000000;
+  border: none;
   margin: 0;
 }
 
 .review-box-table td {
-  border: 1px solid #000000;
-  padding: 6px 10px;
-  font-size: 11px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  padding: 8px 12px;
+  font-size: 11.5px;
   background-color: #ffffff;
 }
 
 .review-box-table td.label-cell {
-  width: 30%;
+  width: 25%;
   font-weight: 600;
   vertical-align: top;
+  background-color: #f8fafc;
+  color: #475569;
 }
 
 .review-box-table td.notes-cell {
@@ -338,8 +391,8 @@ html, body {
 .review-status-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 4px 16px;
-  font-size: 11px;
+  gap: 6px 16px;
+  font-size: 11.5px;
 }
 
 /* ==========================================================================
@@ -349,7 +402,7 @@ html, body {
 .signoff-table {
   width: 100%;
   border-collapse: collapse;
-  border: 1px solid #000000;
+  border: 1px solid var(--border-dark, #cbd5e1);
   margin-top: 14px;
   page-break-inside: avoid;
   break-inside: avoid;
@@ -357,16 +410,17 @@ html, body {
 
 .signoff-table td {
   width: 50%;
-  border: 1px solid #000000;
-  padding: 14px 16px;
+  border: 1px solid var(--border-dark, #cbd5e1);
+  padding: 16px 20px;
   vertical-align: top;
-  font-size: 11px;
+  font-size: 11.5px;
   line-height: 1.6;
   background-color: #ffffff;
 }
 
 .signoff-line {
   margin-top: 10px;
+  color: #334155;
 }
 
 /* ==========================================================================
@@ -402,8 +456,8 @@ li.task-list-item input[type="checkbox"] {
 }
 
 li.task-list-item input[type="checkbox"]:checked {
-  background-color: var(--accent-color);
-  border-color: var(--accent-color);
+  background-color: var(--accent-color, #2563eb);
+  border-color: var(--accent-color, #2563eb);
 }
 
 li.task-list-item input[type="checkbox"]:checked::after {
@@ -419,19 +473,19 @@ li.task-list-item input[type="checkbox"]:checked::after {
 }
 
 /* Standard Lists */
-.doc-content ul, .document-content ul, ul {
+.doc-content ul, .document-content ul {
   list-style-type: disc;
   padding-left: 24px;
   margin: 10px 0 16px 0;
 }
 
-.doc-content ol, .document-content ol, ol {
+.doc-content ol, .document-content ol {
   list-style-type: decimal;
   padding-left: 24px;
   margin: 10px 0 16px 0;
 }
 
-.doc-content li, .document-content li, li {
+.doc-content li, .document-content li {
   margin-bottom: 6px;
   line-height: 1.6;
 }
@@ -440,18 +494,18 @@ li.task-list-item input[type="checkbox"]:checked::after {
    Blockquotes, Callouts, and Alerts
    ========================================================================== */
 
-.doc-content blockquote, .document-content blockquote, blockquote {
+.doc-content blockquote, .document-content blockquote {
   margin: 16px 0;
   padding: 12px 18px;
-  background-color: var(--bg-subtle);
-  border-left: 4px solid var(--accent-color);
-  color: var(--text-color);
+  background-color: var(--bg-subtle, #f8fafc);
+  border-left: 4px solid var(--accent-color, #2563eb);
+  color: var(--text-color, #1e293b);
   border-radius: 0 4px 4px 0;
   page-break-inside: avoid;
   break-inside: avoid;
 }
 
-.doc-content blockquote p:last-child, .document-content blockquote p:last-child, blockquote p:last-child {
+.doc-content blockquote p:last-child, .document-content blockquote p:last-child {
   margin-bottom: 0;
 }
 
@@ -459,18 +513,18 @@ li.task-list-item input[type="checkbox"]:checked::after {
    Code Blocks & Inline Code
    ========================================================================== */
 
-.doc-content code, .document-content code, code {
+.doc-content code, .document-content code {
   font-family: var(--font-mono);
   font-size: 12px;
-  background-color: var(--code-bg);
-  border: 1px solid var(--border-color);
+  background-color: var(--code-bg, #f1f5f9);
+  border: 1px solid var(--border-color, #e2e8f0);
   padding: 2px 6px;
   border-radius: 4px;
   color: #b91c1c;
 }
 
-.doc-content pre, .document-content pre, pre {
-  background-color: #1e293b;
+.doc-content pre, .document-content pre {
+  background-color: #0f172a;
   color: #f8fafc;
   padding: 14px 16px;
   border-radius: 6px;
@@ -483,7 +537,7 @@ li.task-list-item input[type="checkbox"]:checked::after {
   break-inside: avoid;
 }
 
-.doc-content pre code, .document-content pre code, pre code {
+.doc-content pre code, .document-content pre code {
   background-color: transparent;
   border: none;
   padding: 0;
@@ -512,7 +566,7 @@ li.task-list-item input[type="checkbox"]:checked::after {
   height: auto !important;
 }
 
-img {
+.doc-content img, .document-content img {
   max-width: 100%;
   height: auto;
   border-radius: 4px;

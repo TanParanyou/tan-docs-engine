@@ -76,16 +76,16 @@ export default function DocumentOutline({
         </span>
       </div>
 
-      {/* Filter Input */}
-      <div className="p-2.5 border-b border-slate-200 bg-white">
+      {/* Search Filter */}
+      <div className="p-3 border-b border-slate-200 bg-white">
         <div className="relative">
-          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={filterQuery}
             onChange={(e) => setFilterQuery(e.target.value)}
             placeholder="ค้นหาหัวข้อ เช่น REQ-POS-001..."
-            className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            className="w-full h-9 pl-9 pr-3.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
           />
         </div>
       </div>
@@ -102,23 +102,23 @@ export default function DocumentOutline({
           filteredHeadings.map((h) => {
             const indentClass =
               h.level === 1
-                ? "pl-2 font-bold text-slate-900 bg-slate-50/50"
+                ? "pl-3 font-bold text-slate-900 bg-slate-50/70"
                 : h.level === 2
-                ? "pl-4 text-slate-800 font-semibold"
+                ? "pl-5 text-slate-800 font-semibold"
                 : h.level === 3
-                ? "pl-6 text-slate-600 font-medium"
-                : "pl-8 text-slate-500 text-[11px]";
+                ? "pl-7 text-slate-600 font-medium"
+                : "pl-9 text-slate-500 text-xs";
 
             return (
               <button
                 key={h.id}
                 type="button"
                 onClick={() => onJumpToHeading(h)}
-                className={`w-full group text-left py-1.5 pr-2 rounded-lg hover:bg-blue-50 hover:text-blue-700 transition-colors flex items-center justify-between text-xs ${indentClass}`}
+                className={`w-full group text-left py-2 pr-2.5 rounded-lg hover:bg-blue-50 hover:text-blue-700 transition-colors flex items-center justify-between text-xs min-h-[36px] cursor-pointer ${indentClass}`}
               >
-                <div className="flex items-center gap-1.5 truncate">
+                <div className="flex items-center gap-2 truncate">
                   <Hash
-                    className={`w-3 h-3 flex-shrink-0 ${
+                    className={`w-3.5 h-3.5 flex-shrink-0 ${
                       h.level === 1
                         ? "text-blue-600"
                         : h.level === 2
@@ -128,11 +128,11 @@ export default function DocumentOutline({
                   />
                   <span className="truncate">{h.text}</span>
                 </div>
-                <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="text-[10px] font-mono text-slate-400 group-hover:text-blue-600">
+                <div className="flex items-center gap-1.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="text-[11px] font-mono text-slate-400 group-hover:text-blue-600">
                     L{h.lineNumber}
                   </span>
-                  <ChevronRight className="w-3 h-3 text-slate-400 group-hover:text-blue-600" />
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600" />
                 </div>
               </button>
             );

@@ -85,25 +85,25 @@ export default function TemplateGalleryModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/65 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-xs animate-fade-in">
       <div
-        className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-5xl h-[88vh] max-h-[850px] overflow-hidden flex flex-col"
+        className="bg-theme-surface rounded-retro shadow-retro-lg border-2 border-theme-border w-full max-w-5xl h-[88vh] max-h-[850px] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between flex-shrink-0">
+        <div className="px-6 py-4 bg-theme-surface-sunken border-b-2 border-theme-border text-theme-text flex items-center justify-between flex-shrink-0">
           <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/25">
+            <div className="w-9 h-9 rounded-retro bg-theme-primary flex items-center justify-center text-theme-primary-text border border-theme-border shadow-retro-sm">
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="font-bold text-base tracking-tight flex items-center gap-2">
+              <h2 className="font-bold text-base tracking-tight flex items-center gap-2 font-sans text-theme-text m-0">
                 <span>คลังแม่แบบเอกสาร (Documentation Templates)</span>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30">
+                <span className="text-[10px] font-mono uppercase font-bold tracking-wider px-2 py-0.5 rounded-retro bg-theme-accent-light text-theme-accent-text border border-theme-accent/40">
                   Ready to Use
                 </span>
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-theme-text-muted m-0 mt-0.5">
                 เลือกแม่แบบสเปกระดับมืออาชีพ โครงสร้างมาตรฐาน พร้อมใช้งานและปรับแต่งได้ทันที
               </p>
             </div>
@@ -111,16 +111,16 @@ export default function TemplateGalleryModal({
           <button
             onClick={onClose}
             type="button"
-            className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+            className="p-1.5 rounded-retro hover:bg-theme-surface-hover text-theme-text-muted hover:text-theme-text border border-theme-border cursor-pointer transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Search & Categories Bar */}
-        <div className="px-6 py-3 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 flex-shrink-0">
+        <div className="px-6 py-3 bg-theme-surface-sunken border-b border-theme-border-subtle flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 flex-shrink-0">
           {/* Category Tabs */}
-          <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0 scrollbar-none text-xs">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none text-xs">
             {categories.map((cat) => {
               const active = selectedCategory === cat.id;
               return (
@@ -128,10 +128,10 @@ export default function TemplateGalleryModal({
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
                   type="button"
-                  className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-all ${
+                  className={`px-3 py-1.5 rounded-retro font-medium whitespace-nowrap transition-all cursor-pointer ${
                     active
-                      ? "bg-blue-600 text-white shadow-sm shadow-blue-500/20"
-                      : "bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-200/70 border border-slate-200"
+                      ? "bg-theme-primary text-theme-primary-text border border-theme-border shadow-retro-sm"
+                      : "bg-theme-surface text-theme-text hover:bg-theme-surface-hover border border-theme-border-subtle hover:border-theme-border"
                   }`}
                 >
                   {cat.label}

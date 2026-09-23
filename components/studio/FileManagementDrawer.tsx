@@ -184,7 +184,7 @@ export default function FileManagementDrawer({
               handleStartCreate();
             }
           }}
-          className="p-1 rounded-lg hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors"
+          className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
           title="Add new Markdown file"
         >
           <Plus className="w-4 h-4" />
@@ -357,23 +357,23 @@ export default function FileManagementDrawer({
                   </div>
                 </div>
               ) : (
-                <div className="p-2 flex items-center justify-between">
+                <div className="p-2.5 flex items-center justify-between min-h-[44px]">
                   <button
                     type="button"
                     onClick={() => onSelectFile(file.filename)}
-                    className="flex-1 flex items-center gap-2 text-left min-w-0"
+                    className="flex-1 flex items-center gap-2.5 text-left min-w-0 cursor-pointer"
                   >
                     <FileText
-                      className={`w-3.5 h-3.5 flex-shrink-0 ${
+                      className={`w-4 h-4 flex-shrink-0 ${
                         isSelected ? "text-blue-600" : "text-slate-400"
                       }`}
                     />
                     <div className="truncate">
-                      <span className="font-mono block truncate font-medium">
+                      <span className="font-mono block truncate font-medium text-xs">
                         {file.filename}
                       </span>
                       {file.title && file.title !== file.filename && (
-                        <span className="text-[10px] text-slate-400 truncate block">
+                        <span className="text-[11px] text-slate-400 truncate block">
                           {file.title}
                         </span>
                       )}
@@ -381,44 +381,44 @@ export default function FileManagementDrawer({
                   </button>
 
                   {/* Actions (Move, Rename, Delete) */}
-                  <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 transition-opacity">
+                  <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-opacity">
                     <button
                       type="button"
-                      title="Move Up"
+                      title="Move Up (เลื่อนขึ้น)"
                       disabled={idx === 0 || isLoading}
                       onClick={() => handleMove(idx, "up")}
-                      className="p-1 hover:bg-slate-200 rounded text-slate-500 hover:text-slate-900 disabled:opacity-20"
+                      className="h-7 w-7 flex items-center justify-center hover:bg-slate-200 rounded-md text-slate-500 hover:text-slate-900 disabled:opacity-20 cursor-pointer"
                     >
-                      <ArrowUp className="w-3 h-3" />
+                      <ArrowUp className="w-3.5 h-3.5" />
                     </button>
                     <button
                       type="button"
-                      title="Move Down"
+                      title="Move Down (เลื่อนลง)"
                       disabled={idx === files.length - 1 || isLoading}
                       onClick={() => handleMove(idx, "down")}
-                      className="p-1 hover:bg-slate-200 rounded text-slate-500 hover:text-slate-900 disabled:opacity-20"
+                      className="h-7 w-7 flex items-center justify-center hover:bg-slate-200 rounded-md text-slate-500 hover:text-slate-900 disabled:opacity-20 cursor-pointer"
                     >
-                      <ArrowDown className="w-3 h-3" />
+                      <ArrowDown className="w-3.5 h-3.5" />
                     </button>
                     <button
                       type="button"
-                      title="Rename"
+                      title="Rename (เปลี่ยนชื่อ)"
                       onClick={() => {
                         setEditingFile(file.filename);
                         setRenameValue(file.filename);
                       }}
-                      className="p-1 hover:bg-slate-200 rounded text-slate-500 hover:text-slate-900"
+                      className="h-7 w-7 flex items-center justify-center hover:bg-slate-200 rounded-md text-slate-500 hover:text-slate-900 cursor-pointer"
                     >
-                      <Edit2 className="w-3 h-3" />
+                      <Edit2 className="w-3.5 h-3.5" />
                     </button>
                     <button
                       type="button"
-                      title="Delete"
+                      title="Delete (ลบไฟล์)"
                       disabled={files.length <= 1}
                       onClick={() => setDeletingFile(file.filename)}
-                      className="p-1 hover:bg-red-100 rounded text-slate-400 hover:text-red-600 disabled:opacity-20"
+                      className="h-7 w-7 flex items-center justify-center hover:bg-red-100 rounded-md text-slate-400 hover:text-red-600 disabled:opacity-20 cursor-pointer"
                     >
-                      <Trash2 className="w-3 h-3" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>

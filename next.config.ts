@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
     "puppeteer-core",
     "@puppeteer/browsers",
     "chromium-bidi",
+    "highlight.js",
+    "markdown-it",
   ],
   images: {
     unoptimized: true,

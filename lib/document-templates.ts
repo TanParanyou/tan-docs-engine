@@ -107,7 +107,7 @@ export const WORKSPACE_TEMPLATES: DocumentTemplate[] = [
       "แม่แบบสเปกระบบมาตรฐานระดับสากล ครอบคลุมบทนำ ขอบเขตงาน ตาราง Functional Requirements แผนภาพสถาปัตยกรรมระบบ และ Data Model",
     documentNumberPrefix: "DOC-SRS",
     theme: {
-      primaryColor: "#0f172a",
+      primaryColor: "#0f2b48",
       accentColor: "#2563eb",
     },
     files: [

@@ -9,7 +9,6 @@ import {
   Heading1,
   Heading2,
   Heading3,
-  Pilcrow,
   List,
   ListOrdered,
   Quote,
@@ -17,11 +16,12 @@ import {
   Image as ImageIcon,
   Undo2,
   Redo2,
-  Plus,
   Trash2,
-  Columns,
-  Rows,
+  Plus,
+  Minus,
+  Code,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface VisualToolbarProps {
   editor: Editor | null;
@@ -44,168 +44,185 @@ export default function VisualToolbar({
     if (e.target.files && e.target.files[0] && onUploadImage) {
       onUploadImage(e.target.files[0]);
     }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const isTableActive = editor.isActive("table");
 
+  // Reusable button styles
+  const btnBase =
+    "h-8 min-w-[32px] px-2 flex items-center justify-center rounded-lg text-slate-700 transition-all cursor-pointer font-medium text-xs select-none";
+  const btnNormal =
+    "hover:bg-slate-200/80 active:bg-slate-300 text-slate-700 hover:text-slate-900 border border-transparent";
+  const btnActive =
+    "bg-blue-600 text-white font-semibold shadow-xs hover:bg-blue-700 border border-blue-600";
+  const btnDisabled = "opacity-30 cursor-not-allowed hover:bg-transparent";
+
   return (
-    <div className="border-b border-slate-200 bg-slate-50 px-3 py-1.5 flex flex-wrap items-center gap-1 text-slate-700 text-xs select-none">
-      {/* Undo / Redo */}
-      <div className="flex items-center space-x-0.5 pr-1.5 border-r border-slate-200">
+    <div className="border-b border-slate-200 bg-slate-50/90 px-3 py-2 flex flex-wrap items-center gap-1.5 text-slate-700 text-xs select-none">
+      {/* Group 1: Undo / Redo */}
+      <div className="flex items-center gap-1">
         <button
           type="button"
           onClick={() => editor.chain().focus().undo().run()}
           disabled={!editor.can().undo()}
-          className="p-1.5 rounded hover:bg-slate-200 disabled:opacity-30 text-slate-600 transition-colors"
-          title="Undo (⌘Z)"
+          className={cn(
+            btnBase,
+            !editor.can().undo() ? btnDisabled : btnNormal
+          )}
+          title="Undo ย้อนกลับ (⌘Z)"
         >
-          <Undo2 className="w-3.5 h-3.5" />
+          <Undo2 className="w-4 h-4" />
         </button>
         <button
           type="button"
           onClick={() => editor.chain().focus().redo().run()}
           disabled={!editor.can().redo()}
-          className="p-1.5 rounded hover:bg-slate-200 disabled:opacity-30 text-slate-600 transition-colors"
-          title="Redo (⌘⇧Z)"
+          className={cn(
+            btnBase,
+            !editor.can().redo() ? btnDisabled : btnNormal
+          )}
+          title="Redo ทำซ้ำ (⌘⇧Z)"
         >
-          <Redo2 className="w-3.5 h-3.5" />
+          <Redo2 className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Headings */}
-      <div className="flex items-center space-x-0.5 pr-1.5 border-r border-slate-200">
+      <div className="h-5 w-px bg-slate-300 mx-1 flex-shrink-0" />
+
+      {/* Group 2: Headings & Paragraph */}
+      <div className="flex items-center gap-1">
         <button
           type="button"
           onClick={() => editor.chain().focus().setParagraph().run()}
-          className={`px-1.5 py-1 rounded text-[11px] font-medium transition-colors ${
-            editor.isActive("paragraph")
-              ? "bg-blue-600 text-white"
-              : "hover:bg-slate-200 text-slate-600"
-          }`}
-          title="Normal Text (Paragraph)"
+          className={cn(
+            btnBase,
+            "px-2.5 font-bold font-serif",
+            editor.isActive("paragraph") ? btnActive : btnNormal
+          )}
+          title="ข้อความธรรมดา (Paragraph)"
         >
           P
         </button>
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-          className={`p-1.5 rounded font-bold transition-colors ${
-            editor.isActive("heading", { level: 1 })
-              ? "bg-blue-600 text-white"
-              : "hover:bg-slate-200 text-slate-600"
-          }`}
-          title="Heading 1 (หัวข้อใหญ่ระดับ 1)"
+          className={cn(
+            btnBase,
+            editor.isActive("heading", { level: 1 }) ? btnActive : btnNormal
+          )}
+          title="หัวข้อใหญ่ระดับ 1 (H1)"
         >
-          <Heading1 className="w-3.5 h-3.5" />
+          <Heading1 className="w-4 h-4" />
         </button>
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          className={`p-1.5 rounded font-bold transition-colors ${
-            editor.isActive("heading", { level: 2 })
-              ? "bg-blue-600 text-white"
-              : "hover:bg-slate-200 text-slate-600"
-          }`}
-          title="Heading 2 (หัวข้อระดับ 2)"
+          className={cn(
+            btnBase,
+            editor.isActive("heading", { level: 2 }) ? btnActive : btnNormal
+          )}
+          title="หัวข้อระดับ 2 (H2)"
         >
-          <Heading2 className="w-3.5 h-3.5" />
+          <Heading2 className="w-4 h-4" />
         </button>
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          className={`p-1.5 rounded font-bold transition-colors ${
-            editor.isActive("heading", { level: 3 })
-              ? "bg-blue-600 text-white"
-              : "hover:bg-slate-200 text-slate-600"
-          }`}
-          title="Heading 3 (หัวข้อย่อยระดับ 3)"
+          className={cn(
+            btnBase,
+            editor.isActive("heading", { level: 3 }) ? btnActive : btnNormal
+          )}
+          title="หัวข้อย่อยระดับ 3 (H3)"
         >
-          <Heading3 className="w-3.5 h-3.5" />
+          <Heading3 className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Formatting Marks */}
-      <div className="flex items-center space-x-0.5 pr-1.5 border-r border-slate-200">
+      <div className="h-5 w-px bg-slate-300 mx-1 flex-shrink-0" />
+
+      {/* Group 3: Formatting */}
+      <div className="flex items-center gap-1">
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleBold().run()}
-          className={`p-1.5 rounded transition-colors ${
-            editor.isActive("bold")
-              ? "bg-blue-600 text-white"
-              : "hover:bg-slate-200 text-slate-600"
-          }`}
-          title="Bold (ตัวหนา ⌘B)"
+          className={cn(
+            btnBase,
+            editor.isActive("bold") ? btnActive : btnNormal
+          )}
+          title="ตัวหนา (⌘B)"
         >
-          <Bold className="w-3.5 h-3.5" />
+          <Bold className="w-4 h-4" />
         </button>
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={`p-1.5 rounded transition-colors ${
-            editor.isActive("italic")
-              ? "bg-blue-600 text-white"
-              : "hover:bg-slate-200 text-slate-600"
-          }`}
-          title="Italic (ตัวเอียง ⌘I)"
+          className={cn(
+            btnBase,
+            editor.isActive("italic") ? btnActive : btnNormal
+          )}
+          title="ตัวเอียง (⌘I)"
         >
-          <Italic className="w-3.5 h-3.5" />
+          <Italic className="w-4 h-4" />
         </button>
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleStrike().run()}
-          className={`p-1.5 rounded transition-colors ${
-            editor.isActive("strike")
-              ? "bg-blue-600 text-white"
-              : "hover:bg-slate-200 text-slate-600"
-          }`}
-          title="Strikethrough (ขีดฆ่า)"
+          className={cn(
+            btnBase,
+            editor.isActive("strike") ? btnActive : btnNormal
+          )}
+          title="ขีดฆ่า (Strikethrough)"
         >
-          <Strikethrough className="w-3.5 h-3.5" />
+          <Strikethrough className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Lists & Quote */}
-      <div className="flex items-center space-x-0.5 pr-1.5 border-r border-slate-200">
+      <div className="h-5 w-px bg-slate-300 mx-1 flex-shrink-0" />
+
+      {/* Group 4: Lists & Quotes */}
+      <div className="flex items-center gap-1">
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={`p-1.5 rounded transition-colors ${
-            editor.isActive("bulletList")
-              ? "bg-blue-600 text-white"
-              : "hover:bg-slate-200 text-slate-600"
-          }`}
-          title="Bullet List (รายการลำดับจุด)"
+          className={cn(
+            btnBase,
+            editor.isActive("bulletList") ? btnActive : btnNormal
+          )}
+          title="รายการแบบจุด (Bullet List)"
         >
-          <List className="w-3.5 h-3.5" />
+          <List className="w-4 h-4" />
         </button>
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={`p-1.5 rounded transition-colors ${
-            editor.isActive("orderedList")
-              ? "bg-blue-600 text-white"
-              : "hover:bg-slate-200 text-slate-600"
-          }`}
-          title="Numbered List (รายการตัวเลข)"
+          className={cn(
+            btnBase,
+            editor.isActive("orderedList") ? btnActive : btnNormal
+          )}
+          title="รายการแบบตัวเลข (Numbered List)"
         >
-          <ListOrdered className="w-3.5 h-3.5" />
+          <ListOrdered className="w-4 h-4" />
         </button>
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          className={`p-1.5 rounded transition-colors ${
-            editor.isActive("blockquote")
-              ? "bg-blue-600 text-white"
-              : "hover:bg-slate-200 text-slate-600"
-          }`}
-          title="Blockquote (กล่องคำพูด/อ้างอิง)"
+          className={cn(
+            btnBase,
+            editor.isActive("blockquote") ? btnActive : btnNormal
+          )}
+          title="กล่องข้อความอ้างอิง (Quote)"
         >
-          <Quote className="w-3.5 h-3.5" />
+          <Quote className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Table Controls */}
-      <div className="flex items-center space-x-0.5 pr-1.5 border-r border-slate-200">
+      <div className="h-5 w-px bg-slate-300 mx-1 flex-shrink-0" />
+
+      {/* Group 5: Table & Media */}
+      <div className="flex items-center gap-1.5">
         {!isTableActive ? (
           <button
             type="button"
@@ -216,80 +233,83 @@ export default function VisualToolbar({
                 .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
                 .run()
             }
-            className="flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded font-medium text-[11px] transition-colors"
-            title="สร้างตารางใหม่ (3x3)"
+            className="h-8 px-3 flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 rounded-lg font-medium text-xs transition-all shadow-2xs cursor-pointer active:scale-95"
+            title="แทรกตารางใหม่ (3 แถว x 3 คอลัมน์)"
           >
-            <TableIcon className="w-3.5 h-3.5" />
-            <span>ตาราง</span>
+            <TableIcon className="w-4 h-4 text-emerald-600" />
+            <span>สร้างตาราง</span>
           </button>
         ) : (
-          <div className="flex items-center space-x-1 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5">
-            <span className="text-[10px] font-semibold text-emerald-800">ตาราง:</span>
+          /* Table Sub-Toolbar when Table is active */
+          <div className="flex items-center gap-1 bg-emerald-50/90 border border-emerald-300 rounded-lg p-1 text-emerald-900 shadow-2xs">
+            <span className="text-[11px] font-bold text-emerald-800 px-1 hidden sm:inline">
+              ตาราง:
+            </span>
             <button
               type="button"
               onClick={() => editor.chain().focus().addRowAfter().run()}
-              className="px-1 py-0.5 hover:bg-emerald-200 rounded text-[10px] text-emerald-800 font-medium"
+              className="h-7 px-2 bg-white hover:bg-emerald-100 rounded text-xs text-emerald-800 font-medium border border-emerald-200 transition-colors"
               title="เพิ่มแถวด้านล่าง (+Row)"
             >
-              +แถว
+              + แถว
             </button>
             <button
               type="button"
               onClick={() => editor.chain().focus().addColumnAfter().run()}
-              className="px-1 py-0.5 hover:bg-emerald-200 rounded text-[10px] text-emerald-800 font-medium"
+              className="h-7 px-2 bg-white hover:bg-emerald-100 rounded text-xs text-emerald-800 font-medium border border-emerald-200 transition-colors"
               title="เพิ่มคอลัมน์ด้านขวา (+Col)"
             >
-              +คอลัมน์
+              + คอลัมน์
             </button>
             <button
               type="button"
               onClick={() => editor.chain().focus().deleteRow().run()}
-              className="px-1 py-0.5 hover:bg-rose-100 rounded text-[10px] text-rose-700 font-medium"
-              title="ลบแถวนี้"
+              className="h-7 px-2 bg-white hover:bg-rose-50 rounded text-xs text-rose-700 font-medium border border-rose-200 transition-colors"
+              title="ลบแถวที่เลือก"
             >
-              -แถว
+              - แถว
             </button>
             <button
               type="button"
               onClick={() => editor.chain().focus().deleteColumn().run()}
-              className="px-1 py-0.5 hover:bg-rose-100 rounded text-[10px] text-rose-700 font-medium"
-              title="ลบคอลัมน์นี้"
+              className="h-7 px-2 bg-white hover:bg-rose-50 rounded text-xs text-rose-700 font-medium border border-rose-200 transition-colors"
+              title="ลบคอลัมน์ที่เลือก"
             >
-              -คอลัมน์
+              - คอลัมน์
             </button>
             <button
               type="button"
               onClick={() => editor.chain().focus().deleteTable().run()}
-              className="p-0.5 hover:bg-rose-200 rounded text-rose-700"
+              className="h-7 w-7 flex items-center justify-center bg-white hover:bg-rose-100 rounded text-rose-700 border border-rose-200 transition-colors"
               title="ลบตารางทั้งหมด"
             >
-              <Trash2 className="w-3 h-3" />
+              <Trash2 className="w-3.5 h-3.5" />
             </button>
           </div>
         )}
-      </div>
 
-      {/* Image Upload */}
-      {onUploadImage && (
-        <div className="flex items-center">
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            accept="image/*"
-            className="hidden"
-          />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-            className="p-1.5 rounded hover:bg-slate-200 text-slate-600 transition-colors"
-            title="อัปโหลดรูปภาพ"
-          >
-            <ImageIcon className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
+        {/* Image Upload */}
+        {onUploadImage && (
+          <>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept="image/*"
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className={cn(btnBase, btnNormal)}
+              title="อัปโหลดรูปภาพ"
+            >
+              <ImageIcon className="w-4 h-4" />
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 }

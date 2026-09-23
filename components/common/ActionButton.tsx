@@ -29,21 +29,21 @@ export default function ActionButton({
 }: ActionButtonProps) {
   const variantStyles: Record<ButtonVariant, string> = {
     primary:
-      "bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-xs disabled:opacity-50",
+      "bg-theme-primary hover:bg-theme-primary-hover text-theme-primary-text font-semibold border border-theme-border shadow-retro-sm active:translate-x-[1px] active:translate-y-[1px] active:shadow-none disabled:opacity-50",
     secondary:
-      "bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border border-slate-200 shadow-xs disabled:opacity-50",
+      "bg-theme-surface hover:bg-theme-surface-hover text-theme-text border border-theme-border shadow-retro-sm active:translate-x-[1px] active:translate-y-[1px] active:shadow-none disabled:opacity-50",
     outline:
-      "bg-transparent hover:bg-slate-100 text-slate-700 border border-slate-200 disabled:opacity-50",
+      "bg-transparent hover:bg-theme-surface-sunken text-theme-text border border-theme-border-subtle hover:border-theme-border active:translate-x-[1px] active:translate-y-[1px] disabled:opacity-50",
     ghost:
-      "bg-transparent hover:bg-slate-100 text-slate-600 hover:text-slate-900 disabled:opacity-50",
+      "bg-transparent hover:bg-theme-surface-hover text-theme-text-muted hover:text-theme-text disabled:opacity-50",
     danger:
-      "bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 shadow-xs disabled:opacity-50",
+      "bg-theme-danger-light hover:bg-theme-danger/20 text-theme-danger border border-theme-danger/40 shadow-retro-sm active:translate-x-[1px] active:translate-y-[1px] active:shadow-none disabled:opacity-50",
   };
 
   const sizeStyles = {
-    sm: "px-2.5 py-1 text-xs gap-1 rounded-md",
-    md: "px-3.5 py-1.5 text-xs gap-1.5 rounded-lg",
-    lg: "px-4 py-2 text-sm gap-2 rounded-xl",
+    sm: "px-2.5 py-1 text-xs gap-1 rounded-retro",
+    md: "px-3.5 py-1.5 text-xs gap-1.5 rounded-retro",
+    lg: "px-4 py-2 text-sm gap-2 rounded-retro",
   };
 
   return (
@@ -51,7 +51,7 @@ export default function ActionButton({
       type="button"
       disabled={disabled || isLoading}
       className={cn(
-        "inline-flex items-center justify-center font-medium transition-all select-none active:scale-[0.98]",
+        "inline-flex items-center justify-center font-medium transition-all select-none cursor-pointer",
         variantStyles[variant],
         sizeStyles[size],
         className
