@@ -36,7 +36,7 @@ export function getWorkspaceConfig(slug: string): DocsConfig | null {
   }
 }
 
-export function getWorkspaceData(slug: string): WorkspaceData | null {
+export function getWorkspaceData(slug: string, specificFilename?: string): WorkspaceData | null {
   const workspacePath = path.join(WORKSPACES_DIR, slug);
   const config = getWorkspaceConfig(slug);
 
@@ -55,6 +55,12 @@ export function getWorkspaceData(slug: string): WorkspaceData | null {
       .readdirSync(srcDir)
       .filter((file) => file.endsWith(".md"))
       .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }));
+  }
+
+  if (specificFilename && specificFilename !== "all") {
+    if (fileList.includes(specificFilename)) {
+      fileList = [specificFilename];
+    }
   }
 
   const markdownFiles: MarkdownFileItem[] = [];
@@ -430,4 +436,17 @@ export function writeWorkspaceFileContent(slug: string, filename: string, conten
 
   const filePath = path.join(srcDir, filename);
   fs.writeFileSync(filePath, content, "utf-8");
+}
+
+export function deleteWorkspace(slug: string): void {
+  if (!isValidSlug(slug)) {
+    throw new Error("Invalid workspace slug.");
+  }
+
+  const workspacePath = path.join(WORKSPACES_DIR, slug);
+  if (!fs.existsSync(workspacePath)) {
+    throw new Error(`Workspace "${slug}" not found.`);
+  }
+
+  fs.rmSync(workspacePath, { recursive: true, force: true });
 }

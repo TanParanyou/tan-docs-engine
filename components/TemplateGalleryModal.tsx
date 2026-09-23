@@ -1,27 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
+import { Sparkles, Search } from "lucide-react";
 import {
-  X,
-  Search,
-  BookOpen,
-  Sparkles,
-  FileCode2,
-  ArrowRight,
-  Check,
-  Layers,
-  ChevronRight,
-  Code2,
-  ShieldCheck,
-  Server,
-  Briefcase,
-  FilePlus2,
-} from "lucide-react";
-import {
-  DocumentTemplate,
   WORKSPACE_TEMPLATES,
+  DocumentTemplate,
   TemplateCategory,
 } from "@/lib/document-templates";
+import Modal from "./common/Modal";
+import TemplateCard from "./common/TemplateCard";
+import TemplatePreviewPane from "./common/TemplatePreviewPane";
 
 interface TemplateGalleryModalProps {
   isOpen: boolean;
@@ -39,45 +27,27 @@ export default function TemplateGalleryModal({
   const [previewTemplate, setPreviewTemplate] = useState<DocumentTemplate | null>(
     WORKSPACE_TEMPLATES[0] || null
   );
-  const [selectedPreviewFileIdx, setSelectedPreviewFileIdx] = useState<number>(0);
-
-  if (!isOpen) return null;
 
   const categories = [
-    { id: "all", label: "ทั้งหมด (All Templates)" },
-    { id: "srs", label: "SRS มาตรฐาน" },
-    { id: "requirement", label: "ยืนยันความต้องการ (Gojo)" },
-    { id: "api", label: "API & เชื่อมต่อ" },
-    { id: "erp", label: "ERP / POS Module" },
-    { id: "general", label: "เอกสารเปล่า" },
+    { id: "all", label: "ทั้งหมด" },
+    { id: "srs", label: "SRS / Tech Spec" },
+    { id: "requirement", label: "BRD / Requirements" },
+    { id: "api", label: "API Specification" },
+    { id: "erp", label: "ERP Blueprint" },
+    { id: "general", label: "เอกสารทั่วไป" },
   ];
 
   const filteredTemplates = WORKSPACE_TEMPLATES.filter((tpl) => {
-    const matchCat =
+    const matchCategory =
       selectedCategory === "all" || tpl.category === selectedCategory;
     const q = searchQuery.toLowerCase().trim();
     const matchQuery =
       !q ||
       tpl.name.toLowerCase().includes(q) ||
-      tpl.title.toLowerCase().includes(q) ||
-      tpl.description.toLowerCase().includes(q);
-    return matchCat && matchQuery;
+      tpl.description.toLowerCase().includes(q) ||
+      tpl.categoryLabel.toLowerCase().includes(q);
+    return matchCategory && matchQuery;
   });
-
-  const getCategoryIcon = (category: TemplateCategory) => {
-    switch (category) {
-      case "srs":
-        return <ShieldCheck className="w-4 h-4 text-blue-500" />;
-      case "requirement":
-        return <BookOpen className="w-4 h-4 text-indigo-500" />;
-      case "api":
-        return <Server className="w-4 h-4 text-purple-500" />;
-      case "erp":
-        return <Briefcase className="w-4 h-4 text-emerald-500" />;
-      default:
-        return <FilePlus2 className="w-4 h-4 text-slate-500" />;
-    }
-  };
 
   const handleUseTemplate = (template: DocumentTemplate) => {
     onSelectTemplate(template);
@@ -85,246 +55,87 @@ export default function TemplateGalleryModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-xs animate-fade-in">
-      <div
-        className="bg-theme-surface rounded-retro shadow-retro-lg border-2 border-theme-border w-full max-w-5xl h-[88vh] max-h-[850px] overflow-hidden flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="px-6 py-4 bg-theme-surface-sunken border-b-2 border-theme-border text-theme-text flex items-center justify-between flex-shrink-0">
-          <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-retro bg-theme-primary flex items-center justify-center text-theme-primary-text border border-theme-border shadow-retro-sm">
-              <Sparkles className="w-4 h-4" />
-            </div>
-            <div>
-              <h2 className="font-bold text-base tracking-tight flex items-center gap-2 font-sans text-theme-text m-0">
-                <span>คลังแม่แบบเอกสาร (Documentation Templates)</span>
-                <span className="text-[10px] font-mono uppercase font-bold tracking-wider px-2 py-0.5 rounded-retro bg-theme-accent-light text-theme-accent-text border border-theme-accent/40">
-                  Ready to Use
-                </span>
-              </h2>
-              <p className="text-xs text-theme-text-muted m-0 mt-0.5">
-                เลือกแม่แบบสเปกระดับมืออาชีพ โครงสร้างมาตรฐาน พร้อมใช้งานและปรับแต่งได้ทันที
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            type="button"
-            className="p-1.5 rounded-retro hover:bg-theme-surface-hover text-theme-text-muted hover:text-theme-text border border-theme-border cursor-pointer transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      maxWidth="5xl"
+      className="h-[88vh] max-h-[850px]"
+      bodyClassName="flex flex-col p-0 overflow-hidden"
+      icon={<Sparkles className="w-4 h-4" />}
+      title="คลังแม่แบบเอกสาร (Documentation Templates)"
+      badge={
+        <span className="text-[10px] font-mono uppercase font-bold tracking-wider px-2 py-0.5 rounded-retro bg-theme-accent-light text-theme-accent-text border border-theme-accent/40">
+          Ready to Use
+        </span>
+      }
+      subtitle="เลือกแม่แบบสเปกระดับมืออาชีพ โครงสร้างมาตรฐาน พร้อมใช้งานและปรับแต่งได้ทันที"
+    >
+      {/* Search & Categories Bar */}
+      <div className="px-6 py-2.5 bg-theme-surface-sunken border-b-2 border-theme-border flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 flex-shrink-0">
+        {/* Category Tabs */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none text-xs">
+          {categories.map((cat) => {
+            const active = selectedCategory === cat.id;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.id)}
+                type="button"
+                className={`h-8 px-3 rounded-retro font-mono text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
+                  active
+                    ? "bg-theme-primary text-theme-primary-text border border-theme-border shadow-retro-sm font-bold"
+                    : "bg-theme-surface text-theme-text hover:bg-theme-surface-hover border border-theme-border-subtle hover:border-theme-border"
+                }`}
+              >
+                {cat.label}
+              </button>
+            );
+          })}
         </div>
 
-        {/* Search & Categories Bar */}
-        <div className="px-6 py-3 bg-theme-surface-sunken border-b border-theme-border-subtle flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 flex-shrink-0">
-          {/* Category Tabs */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none text-xs">
-            {categories.map((cat) => {
-              const active = selectedCategory === cat.id;
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
-                  type="button"
-                  className={`px-3 py-1.5 rounded-retro font-medium whitespace-nowrap transition-all cursor-pointer ${
-                    active
-                      ? "bg-theme-primary text-theme-primary-text border border-theme-border shadow-retro-sm"
-                      : "bg-theme-surface text-theme-text hover:bg-theme-surface-hover border border-theme-border-subtle hover:border-theme-border"
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Search Box */}
-          <div className="relative w-full sm:w-64 flex-shrink-0">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="ค้นหาแม่แบบ..."
-              className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-        </div>
-
-        {/* Main Content: Split into Template Cards & Live Details Preview */}
-        <div className="flex-1 overflow-hidden grid grid-cols-1 md:grid-cols-12 divide-y md:divide-y-0 md:divide-x divide-slate-200">
-          {/* Left Column: Template Cards Grid (5 cols on md+) */}
-          <div className="md:col-span-6 lg:col-span-5 overflow-y-auto p-4 space-y-3 bg-slate-50/50">
-            {filteredTemplates.length === 0 ? (
-              <div className="p-8 text-center bg-white rounded-xl border border-dashed border-slate-300">
-                <p className="text-xs text-slate-500">ไม่พบแม่แบบที่ตรงกับคำค้นหา</p>
-              </div>
-            ) : (
-              filteredTemplates.map((tpl) => {
-                const isSelected = previewTemplate?.id === tpl.id;
-                return (
-                  <div
-                    key={tpl.id}
-                    onClick={() => {
-                      setPreviewTemplate(tpl);
-                      setSelectedPreviewFileIdx(0);
-                    }}
-                    className={`cursor-pointer rounded-xl p-4 transition-all border text-left flex flex-col justify-between ${
-                      isSelected
-                        ? "bg-white border-blue-500 shadow-md ring-2 ring-blue-500/10"
-                        : "bg-white border-slate-200 hover:border-slate-300 hover:shadow-xs"
-                    }`}
-                  >
-                    <div>
-                      {/* Card Top: Category Icon + Badge */}
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
-                          {getCategoryIcon(tpl.category)}
-                          <span className="text-[11px] text-slate-500">
-                            {tpl.categoryLabel}
-                          </span>
-                        </div>
-                        {tpl.badge && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                            {tpl.badge}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Title & Desc */}
-                      <h3 className="font-bold text-slate-900 text-sm leading-snug">
-                        {tpl.name}
-                      </h3>
-                      <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
-                        {tpl.description}
-                      </p>
-                    </div>
-
-                    {/* Card Bottom: File count & Theme Palette indicator */}
-                    <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
-                        <FileCode2 className="w-3.5 h-3.5 text-slate-400" />
-                        <span>{tpl.files.length} ไฟล์ในแม่แบบ</span>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center -space-x-1">
-                          <span
-                            className="w-3.5 h-3.5 rounded-full border border-white shadow-xs"
-                            style={{ backgroundColor: tpl.theme.primaryColor }}
-                            title={`Primary: ${tpl.theme.primaryColor}`}
-                          />
-                          <span
-                            className="w-3.5 h-3.5 rounded-full border border-white shadow-xs"
-                            style={{ backgroundColor: tpl.theme.accentColor }}
-                            title={`Accent: ${tpl.theme.accentColor}`}
-                          />
-                        </div>
-                        <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-
-          {/* Right Column: Template Preview & Action (7 cols on md+) */}
-          <div className="md:col-span-6 lg:col-span-7 flex flex-col h-full bg-white overflow-hidden">
-            {previewTemplate ? (
-              <>
-                {/* Preview Header */}
-                <div className="p-5 border-b border-slate-100 bg-white flex-shrink-0">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[11px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
-                          {previewTemplate.categoryLabel}
-                        </span>
-                        {previewTemplate.badge && (
-                          <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                            {previewTemplate.badge}
-                          </span>
-                        )}
-                      </div>
-                      <h3 className="text-lg font-bold text-slate-900 leading-snug">
-                        {previewTemplate.name}
-                      </h3>
-                      <p className="text-xs text-slate-500 mt-1">
-                        {previewTemplate.description}
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => handleUseTemplate(previewTemplate)}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-md shadow-blue-500/20 flex items-center gap-1.5 transition-all flex-shrink-0 hover:scale-[1.02] active:scale-[0.98]"
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                      <span>ใช้แม่แบบนี้</span>
-                      <ArrowRight className="w-3.5 h-3.5 ml-0.5" />
-                    </button>
-                  </div>
-
-                  {/* Included Files Tabs */}
-                  <div className="mt-4">
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-2">
-                      โครงสร้างไฟล์ในแม่แบบ ({previewTemplate.files.length} ไฟล์):
-                    </span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {previewTemplate.files.map((file, idx) => {
-                        const isFileActive = selectedPreviewFileIdx === idx;
-                        return (
-                          <button
-                            key={file.filename}
-                            type="button"
-                            onClick={() => setSelectedPreviewFileIdx(idx)}
-                            className={`px-2.5 py-1 rounded-lg text-xs font-mono transition-all flex items-center gap-1.5 ${
-                              isFileActive
-                                ? "bg-slate-900 text-white font-medium shadow-xs"
-                                : "bg-slate-100 hover:bg-slate-200 text-slate-700"
-                            }`}
-                          >
-                            <FileCode2 className="w-3 h-3 text-blue-400" />
-                            <span>{file.filename}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-
-                {/* File Preview Content */}
-                <div className="flex-1 overflow-y-auto p-5 bg-slate-50 font-mono text-[11.5px] leading-relaxed text-slate-800">
-                  {previewTemplate.files[selectedPreviewFileIdx] ? (
-                    <div>
-                      <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-200 text-slate-400 text-[11px]">
-                        <span>
-                          {previewTemplate.files[selectedPreviewFileIdx].title}
-                        </span>
-                        <span>Markdown Preview</span>
-                      </div>
-                      <pre className="whitespace-pre-wrap font-sans text-xs text-slate-700 bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
-                        {previewTemplate.files[selectedPreviewFileIdx].content}
-                      </pre>
-                    </div>
-                  ) : (
-                    <div className="text-center py-10 text-slate-400">
-                      ไม่พบเนื้อหาไฟล์
-                    </div>
-                  )}
-                </div>
-              </>
-            ) : (
-              <div className="flex items-center justify-center h-full text-slate-400 text-xs">
-                เลือกแม่แบบจากรายการด้านซ้ายเพื่อดูตัวอย่าง
-              </div>
-            )}
-          </div>
+        {/* Search Box */}
+        <div className="relative w-full sm:w-64 flex-shrink-0">
+          <Search className="w-3.5 h-3.5 text-theme-text-muted absolute left-2.5 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="ค้นหาแม่แบบ..."
+            className="w-full h-8 pl-8 pr-3 bg-theme-surface border border-theme-border rounded-retro text-xs text-theme-text placeholder-theme-text-faint focus:outline-none focus:border-theme-primary font-mono shadow-retro-sm"
+          />
         </div>
       </div>
-    </div>
+
+      {/* Main Content: Split into Template Cards & Live Details Preview */}
+      <div className="flex-1 overflow-hidden grid grid-cols-1 md:grid-cols-12 divide-y md:divide-y-0 md:divide-x-2 divide-theme-border">
+        {/* Left Column: Template Cards Grid */}
+        <div className="md:col-span-5 lg:col-span-5 overflow-y-auto p-4 space-y-3 bg-theme-bg/60">
+          {filteredTemplates.length === 0 ? (
+            <div className="p-8 text-center bg-theme-surface rounded-retro border-2 border-dashed border-theme-border text-theme-text-muted text-xs font-mono">
+              ไม่พบแม่แบบที่ตรงกับคำค้นหา
+            </div>
+          ) : (
+            filteredTemplates.map((tpl) => (
+              <TemplateCard
+                key={tpl.id}
+                template={tpl}
+                isSelected={previewTemplate?.id === tpl.id}
+                onSelect={(selected) => setPreviewTemplate(selected)}
+                variant="detailed"
+              />
+            ))
+          )}
+        </div>
+
+        {/* Right Column: Template Preview & Action */}
+        <div className="md:col-span-7 lg:col-span-7 flex flex-col h-full overflow-hidden bg-theme-surface">
+          <TemplatePreviewPane
+            template={previewTemplate}
+            onUseTemplate={handleUseTemplate}
+            useButtonText="ใช้แม่แบบนี้สร้าง Workspace"
+          />
+        </div>
+      </div>
+    </Modal>
   );
 }

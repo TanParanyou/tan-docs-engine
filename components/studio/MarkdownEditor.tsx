@@ -32,16 +32,27 @@ interface MarkdownEditorProps {
   filename: string;
   onScroll?: (scrollPercentage: number) => void;
   syncScroll?: boolean;
+  onSearchQueryChange?: (query: string) => void;
 }
 
 const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
   (
-    { content, onChange, onSave, slug, filename, onScroll, syncScroll },
+    {
+      content,
+      onChange,
+      onSave,
+      slug,
+      filename,
+      onScroll,
+      syncScroll,
+      onSearchQueryChange,
+    },
     ref
   ) => {
     const { inputMode, setInputMode, savedContent } = useStudioStore();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const lineGutterRef = useRef<HTMLDivElement>(null);
+    const highlightBackdropRef = useRef<HTMLDivElement>(null);
     const visualEditorRef = useRef<VisualEditorHandle>(null);
     const [editorTheme, setEditorTheme] = useState<"light" | "dark">("light");
     const [isUploading, setIsUploading] = useState(false);
@@ -52,6 +63,8 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
 
     // Search state
     const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const [activeSearchQuery, setActiveSearchQuery] = useState("");
+    const [activeMatchCase, setActiveMatchCase] = useState(false);
     const [searchMatches, setSearchMatches] = useState<number[]>([]);
     const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
 
@@ -408,7 +421,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
       }
     };
 
-    // Synchronize scrolling with preview and line numbers gutter
+    // Synchronize scrolling with preview, line numbers gutter, and highlight backdrop
     const handleScroll = () => {
       const textarea = textareaRef.current;
       if (!textarea) return;
@@ -416,6 +429,11 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
       // Sync gutter scroll
       if (lineGutterRef.current) {
         lineGutterRef.current.scrollTop = textarea.scrollTop;
+      }
+
+      // Sync highlight backdrop scroll
+      if (highlightBackdropRef.current) {
+        highlightBackdropRef.current.scrollTop = textarea.scrollTop;
       }
 
       if (syncScroll && onScroll) {
@@ -427,10 +445,134 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
       }
     };
 
-    // Search Operations
-    const handleFindNext = (query: string, matchCase: boolean) => {
-      if (!query) {
+    // Render Search Match Highlights inside Backdrop Layer
+    const renderHighlightedContent = () => {
+      if (!activeSearchQuery || !isSearchOpen) {
+        return content;
+      }
+
+      try {
+        const escaped = activeSearchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const regex = new RegExp(`(${escaped})`, activeMatchCase ? "g" : "gi");
+        const parts = content.split(regex);
+        let matchCount = 0;
+
+        return parts.map((part, index) => {
+          const isMatch = activeMatchCase
+            ? part === activeSearchQuery
+            : part.toLowerCase() === activeSearchQuery.toLowerCase();
+
+          if (isMatch) {
+            const isCurrent = matchCount === currentMatchIndex;
+            matchCount++;
+            return (
+              <mark
+                key={index}
+                className={`rounded-xs text-transparent font-mono inline ${
+                  isCurrent
+                    ? "bg-amber-400 dark:bg-amber-400 ring-2 ring-amber-600 shadow-sm"
+                    : "bg-yellow-300/60 dark:bg-yellow-400/50"
+                }`}
+              >
+                {part}
+              </mark>
+            );
+          }
+          return <span key={index}>{part}</span>;
+        });
+      } catch {
+        return content;
+      }
+    };
+
+    // Global Key Listener for Cmd+F / Ctrl+F across entire editor
+    useEffect(() => {
+      const handleGlobalKeyDown = (e: KeyboardEvent) => {
+        const isCmdOrCtrl = e.metaKey || e.ctrlKey;
+        if (isCmdOrCtrl && e.key.toLowerCase() === "f") {
+          e.preventDefault();
+          setIsSearchOpen(true);
+        }
+      };
+
+      window.addEventListener("keydown", handleGlobalKeyDown);
+      return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+    }, []);
+
+    // Search Operations: Calculate matches without stealing focus from input
+    const handleSearchChange = (query: string, matchCase: boolean) => {
+      setActiveSearchQuery(query);
+      setActiveMatchCase(matchCase);
+      onSearchQueryChange?.(query);
+
+      if (!query.trim()) {
         setSearchMatches([]);
+        setCurrentMatchIndex(0);
+        return;
+      }
+
+      const text = content;
+      const flags = matchCase ? "g" : "gi";
+      try {
+        const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const regex = new RegExp(escapedQuery, flags);
+        const matches: number[] = [];
+        let m: RegExpExecArray | null;
+
+        while ((m = regex.exec(text)) !== null) {
+          matches.push(m.index);
+        }
+
+        setSearchMatches(matches);
+        setCurrentMatchIndex(0);
+      } catch {
+        setSearchMatches([]);
+      }
+    };
+
+    const scrollTextareaToMatch = (
+      textarea: HTMLTextAreaElement,
+      matchPos: number,
+      queryLength: number
+    ) => {
+      const text = textarea.value;
+      const textBefore = text.substring(0, matchPos);
+      const lines = textBefore.split("\n");
+      const lineNumber = lines.length;
+      const totalLines = Math.max(1, text.split("\n").length);
+      const lineHeight = textarea.scrollHeight / totalLines;
+      const targetScrollTop = (lineNumber - 1) * lineHeight;
+      const viewportHeight = textarea.clientHeight;
+
+      if (
+        targetScrollTop < textarea.scrollTop + 40 ||
+        targetScrollTop > textarea.scrollTop + viewportHeight - 80
+      ) {
+        textarea.scrollTop = Math.max(0, targetScrollTop - viewportHeight / 3);
+      }
+
+      textarea.setSelectionRange(matchPos, matchPos + queryLength);
+      setCursorPos({
+        line: lineNumber,
+        col: lines[lines.length - 1].length + 1,
+      });
+
+      if (syncScroll && onScroll) {
+        const maxScroll = textarea.scrollHeight - textarea.clientHeight;
+        if (maxScroll > 0) {
+          onScroll(textarea.scrollTop / maxScroll);
+        }
+      }
+    };
+
+    const handleFindNext = (query: string, matchCase: boolean) => {
+      if (!query) return;
+
+      if (inputMode === "visual") {
+        const found = visualEditorRef.current?.findText(query, matchCase, "next");
+        if (found && searchMatches.length > 0) {
+          setCurrentMatchIndex((prev) => (prev + 1) % searchMatches.length);
+        }
         return;
       }
 
@@ -457,23 +599,32 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
 
         setCurrentMatchIndex(nextIndex);
         const matchPos = matches[nextIndex];
-        textarea.focus();
-        textarea.setSelectionRange(matchPos, matchPos + query.length);
+        scrollTextareaToMatch(textarea, matchPos, query.length);
       }
     };
 
     const handleFindPrev = (query: string, matchCase: boolean) => {
-      if (searchMatches.length === 0) return;
+      if (!query) return;
+
+      if (inputMode === "visual") {
+        const found = visualEditorRef.current?.findText(query, matchCase, "prev");
+        if (found && searchMatches.length > 0) {
+          setCurrentMatchIndex(
+            (prev) => (prev - 1 + searchMatches.length) % searchMatches.length
+          );
+        }
+        return;
+      }
+
+      const textarea = textareaRef.current;
+      if (!textarea || searchMatches.length === 0) return;
+
       const prevIndex =
         (currentMatchIndex - 1 + searchMatches.length) % searchMatches.length;
       setCurrentMatchIndex(prevIndex);
 
-      const textarea = textareaRef.current;
-      if (!textarea) return;
-
       const matchPos = searchMatches[prevIndex];
-      textarea.focus();
-      textarea.setSelectionRange(matchPos, matchPos + query.length);
+      scrollTextareaToMatch(textarea, matchPos, query.length);
     };
 
     const handleReplace = (
@@ -481,37 +632,48 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
       replacement: string,
       matchCase: boolean
     ) => {
-      if (searchMatches.length === 0) return;
+      if (!query) return;
       const textarea = textareaRef.current;
-      if (!textarea) return;
 
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const selectedText = textarea.value.substring(start, end);
+      if (inputMode === "markdown" && textarea) {
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selectedText = textarea.value.substring(start, end);
 
-      const isMatch = matchCase
-        ? selectedText === query
-        : selectedText.toLowerCase() === query.toLowerCase();
+        const isMatch = matchCase
+          ? selectedText === query
+          : selectedText.toLowerCase() === query.toLowerCase();
 
-      if (isMatch) {
-        const newContent =
-          textarea.value.substring(0, start) +
-          replacement +
-          textarea.value.substring(end);
-        history.pushChange(
-          newContent,
-          {
-            start: start + replacement.length,
-            end: start + replacement.length,
-          },
-          true
-        );
+        if (isMatch) {
+          const newContent =
+            textarea.value.substring(0, start) +
+            replacement +
+            textarea.value.substring(end);
+          history.pushChange(
+            newContent,
+            {
+              start: start + replacement.length,
+              end: start + replacement.length,
+            },
+            true
+          );
+          onChange(newContent);
+          setTimeout(() => {
+            handleFindNext(query, matchCase);
+          }, 0);
+        } else {
+          handleFindNext(query, matchCase);
+        }
+      } else {
+        // Visual or direct content replace
+        const flags = matchCase ? "" : "i";
+        const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const regex = new RegExp(escapedQuery, flags);
+        const newContent = content.replace(regex, replacement);
         onChange(newContent);
         setTimeout(() => {
-          handleFindNext(query, matchCase);
-        }, 0);
-      } else {
-        handleFindNext(query, matchCase);
+          handleSearchChange(query, matchCase);
+        }, 50);
       }
     };
 
@@ -525,9 +687,12 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
       const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       const regex = new RegExp(escapedQuery, flags);
       const newContent = content.replace(regex, replacement);
-      history.pushChange(newContent, { start: 0, end: 0 }, true);
+      if (inputMode === "markdown") {
+        history.pushChange(newContent, { start: 0, end: 0 }, true);
+      }
       onChange(newContent);
       setSearchMatches([]);
+      setCurrentMatchIndex(0);
     };
 
     // Calculate document statistics
@@ -549,6 +714,24 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
         {/* Editor Mode Header */}
         <EditorModeSwitcher inputMode={inputMode} onChange={setInputMode} />
 
+        {/* In-Editor Search Overlay (Works across both Visual and Markdown modes) */}
+        <EditorSearch
+          isOpen={isSearchOpen}
+          onClose={() => {
+            setIsSearchOpen(false);
+            setActiveSearchQuery("");
+            onSearchQueryChange?.("");
+          }}
+          content={content}
+          onSearchChange={handleSearchChange}
+          onFindNext={handleFindNext}
+          onFindPrev={handleFindPrev}
+          onReplace={handleReplace}
+          onReplaceAll={handleReplaceAll}
+          currentMatchIndex={currentMatchIndex}
+          totalMatches={searchMatches.length}
+        />
+
         {/* Visual Mode View */}
         {inputMode === "visual" ? (
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
@@ -559,7 +742,12 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
               onSave={onSave}
               onUploadImage={handleUploadImage}
               isUploading={isUploading}
-              onScroll={onScroll}
+              onScroll={(pct) => {
+                if (syncScroll && onScroll) {
+                  onScroll(pct);
+                }
+              }}
+              onOpenSearch={() => setIsSearchOpen(true)}
             />
           </div>
         ) : (
@@ -582,19 +770,6 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
               onPrettifyTables={handlePrettifyTables}
               isDirty={isDirty}
               onRevert={() => setIsRevertModalOpen(true)}
-            />
-
-            {/* In-Editor Search Overlay */}
-            <EditorSearch
-              isOpen={isSearchOpen}
-              onClose={() => setIsSearchOpen(false)}
-              content={content}
-              onFindNext={handleFindNext}
-              onFindPrev={handleFindPrev}
-              onReplace={handleReplace}
-              onReplaceAll={handleReplaceAll}
-              currentMatchIndex={currentMatchIndex}
-              totalMatches={searchMatches.length}
             />
 
             {uploadStatus && (
@@ -628,21 +803,43 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
                 })}
               </div>
 
-              {/* Textarea */}
-              <textarea
-                ref={textareaRef}
-                value={content}
-                onChange={handleTextareaChange}
-                onKeyDown={handleKeyDown}
-                onKeyUp={handleSelectOrClick}
-                onClick={handleSelectOrClick}
-                onScroll={handleScroll}
-                onPaste={handlePaste}
-                onDrop={handleDrop}
-                placeholder="เริ่มเขียนเอกสาร Markdown ที่นี่..."
-                className="w-full h-full p-6 sm:p-8 font-mono text-[13.5px] leading-relaxed resize-none overflow-y-auto focus:outline-none selection:bg-theme-primary selection:text-white bg-theme-surface text-theme-text"
-                spellCheck={false}
-              />
+              {/* Editor Workspace with Synchronized Highlight Backdrop */}
+              <div className="relative flex-1 h-full overflow-hidden bg-theme-surface">
+                {/* Search Matches Highlight Backdrop */}
+                {activeSearchQuery && isSearchOpen && (
+                  <div
+                    ref={highlightBackdropRef}
+                    aria-hidden="true"
+                    className="absolute inset-0 p-6 sm:p-8 font-mono text-[13.5px] leading-relaxed whitespace-pre-wrap break-words pointer-events-none overflow-hidden select-none z-0"
+                    style={{
+                      wordBreak: "break-word",
+                      color: "transparent",
+                    }}
+                  >
+                    {renderHighlightedContent()}
+                  </div>
+                )}
+
+                {/* Textarea */}
+                <textarea
+                  ref={textareaRef}
+                  value={content}
+                  onChange={handleTextareaChange}
+                  onKeyDown={handleKeyDown}
+                  onKeyUp={handleSelectOrClick}
+                  onClick={handleSelectOrClick}
+                  onScroll={handleScroll}
+                  onPaste={handlePaste}
+                  onDrop={handleDrop}
+                  placeholder="เริ่มเขียนเอกสาร Markdown ที่นี่..."
+                  className={`w-full h-full p-6 sm:p-8 font-mono text-[13.5px] leading-relaxed resize-none overflow-y-auto focus:outline-none selection:bg-theme-primary/30 selection:text-current ${
+                    activeSearchQuery && isSearchOpen
+                      ? "bg-transparent relative z-10"
+                      : "bg-theme-surface"
+                  } text-theme-text`}
+                  spellCheck={false}
+                />
+              </div>
             </div>
           </div>
         )}

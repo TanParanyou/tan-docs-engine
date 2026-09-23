@@ -17,6 +17,7 @@ import {
   Undo2,
   Redo2,
   Trash2,
+  Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -24,12 +25,14 @@ interface VisualToolbarProps {
   editor: Editor | null;
   onUploadImage?: (file: File) => void;
   isUploading?: boolean;
+  onOpenSearch?: () => void;
 }
 
 export default function VisualToolbar({
   editor,
   onUploadImage,
   isUploading,
+  onOpenSearch,
 }: VisualToolbarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -305,6 +308,22 @@ export default function VisualToolbar({
               <ImageIcon className="w-4 h-4" />
             </button>
           </>
+        )}
+
+        {/* Search */}
+        {onOpenSearch && (
+          <button
+            type="button"
+            onClick={onOpenSearch}
+            className="h-8 px-2 flex items-center gap-1.5 text-xs text-theme-text-muted hover:text-theme-text hover:bg-theme-surface-sunken rounded-retro transition-colors border border-transparent hover:border-theme-border cursor-pointer select-none"
+            title="ค้นหาและแทนที่ (⌘F)"
+          >
+            <Search className="w-3.5 h-3.5 text-theme-text-muted flex-shrink-0" />
+            <span className="hidden sm:inline font-mono">ค้นหา</span>
+            <kbd className="hidden md:inline text-[9px] bg-theme-surface border border-theme-border px-1 py-0.2 rounded text-theme-text-faint font-mono">
+              ⌘F
+            </kbd>
+          </button>
         )}
       </div>
     </div>

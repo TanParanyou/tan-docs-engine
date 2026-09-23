@@ -151,7 +151,7 @@ export function preprocessRequirementDoc(markdown: string): string {
 `;
 
     // Match both bold markdown pattern (**ผลการพิจารณา:**) and plain text pattern from OCR/NotebookLM
-    const reviewPattern = /(?:\*\*ผลการพิจารณา:\*\*[\s\S]*?(?:\*\*หมายเหตุลูกค้า:\*\*|\n---\s*\n|\n#{2,3}|\s*$)|(?:^|\n)ผลการพิจารณา(?:สำหรับ[^\n:]*)?:[\s\S]*?(?:ข้อคิดเห็น\s*\/\s*หมายเหตุ[^\n]*|\n---\s*\n|\n#{2,3}|\s*$))/i;
+    const reviewPattern = /(?:\*\*ผลการพิจารณา:\*\*[\s\S]*?(?:\*\*หมายเหตุลูกค้า:\*\*[^\n]*|\n---\s*\n|\n#{2,3}|\s*$)|(?:^|\n)ผลการพิจารณา(?:สำหรับ[^\n:]*)?:[\s\S]*?(?:ข้อคิดเห็น\s*\/\s*หมายเหตุ[^\n]*|\n---\s*\n|\n#{2,3}|\s*$))/i;
 
     if (reviewPattern.test(sec)) {
       return sec.replace(reviewPattern, reviewBoxHtml);

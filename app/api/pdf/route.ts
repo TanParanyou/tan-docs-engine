@@ -16,7 +16,8 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const workspace = getWorkspaceData(workspaceSlug);
+  const specificFile = searchParams.get("file") || undefined;
+  const workspace = getWorkspaceData(workspaceSlug, specificFile);
   if (!workspace) {
     return NextResponse.json(
       { error: `Workspace '${workspaceSlug}' not found.` },
@@ -27,7 +28,8 @@ export async function GET(request: NextRequest) {
   try {
     const { buffer } = await renderWorkspacePdf(workspace);
     const sanitizedTitle = workspace.config.title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    const filename = `${workspace.slug}-${sanitizedTitle}-v${workspace.config.version}.pdf`;
+    const fileSuffix = specificFile && specificFile !== "all" ? `-${specificFile.replace(/\.md$/i, "")}` : "";
+    const filename = `${workspace.slug}${fileSuffix}-${sanitizedTitle}-v${workspace.config.version}.pdf`;
     const isInline = searchParams.get("inline") === "true" || searchParams.get("inline") === "1";
     const dispositionType = isInline ? "inline" : "attachment";
 

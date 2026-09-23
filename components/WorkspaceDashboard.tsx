@@ -18,10 +18,12 @@ import {
   ArrowRight,
   ChevronRight,
   Zap,
+  Trash2,
 } from "lucide-react";
 import TemplateGalleryModal from "./TemplateGalleryModal";
 import { DocumentTemplate, WORKSPACE_TEMPLATES } from "@/lib/document-templates";
 import ExportDropdown from "@/components/common/ExportDropdown";
+import SafetyConfirmationModal from "@/components/common/SafetyConfirmationModal";
 
 interface WorkspaceDashboardProps {
   initialWorkspaces: WorkspaceData[];
@@ -30,12 +32,16 @@ interface WorkspaceDashboardProps {
 export default function WorkspaceDashboard({
   initialWorkspaces,
 }: WorkspaceDashboardProps) {
+  const [workspaces, setWorkspaces] = useState<WorkspaceData[]>(initialWorkspaces);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("srs-standard");
   const [searchQuery, setSearchQuery] = useState("");
+  const [deletingWorkspace, setDeletingWorkspace] = useState<WorkspaceData | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const filteredWorkspaces = initialWorkspaces.filter((ws) => {
+  const filteredWorkspaces = workspaces.filter((ws) => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return true;
     return (
@@ -47,6 +53,27 @@ export default function WorkspaceDashboard({
       (ws.config.client && ws.config.client.toLowerCase().includes(q))
     );
   });
+
+  const handleConfirmDelete = async () => {
+    if (!deletingWorkspace) return;
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      const res = await fetch(`/api/workspaces/${deletingWorkspace.slug}`, {
+        method: "DELETE",
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || "Failed to delete workspace");
+      }
+      setWorkspaces((prev) => prev.filter((w) => w.slug !== deletingWorkspace.slug));
+      setDeletingWorkspace(null);
+    } catch (err: any) {
+      setDeleteError(err.message || "เกิดข้อผิดพลาดในการลบ Workspace");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <>
@@ -303,6 +330,15 @@ export default function WorkspaceDashboard({
                     </Link>
 
                     <ExportDropdown workspaceSlug={ws.slug} variant="primary" />
+
+                    <button
+                      type="button"
+                      onClick={() => setDeletingWorkspace(ws)}
+                      className="p-1.5 text-theme-text-muted hover:text-theme-danger hover:bg-theme-danger-light border border-theme-border shadow-retro-sm rounded-retro transition-all cursor-pointer active:translate-x-[1px] active:translate-y-[1px] active:shadow-none bg-theme-surface"
+                      title="ลบ Workspace"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
               </div>
@@ -310,6 +346,36 @@ export default function WorkspaceDashboard({
           })}
         </div>
       )}
+
+      {/* Safety Confirmation Modal: Delete Workspace */}
+      <SafetyConfirmationModal
+        isOpen={!!deletingWorkspace}
+        onClose={() => {
+          if (!isDeleting) {
+            setDeletingWorkspace(null);
+            setDeleteError(null);
+          }
+        }}
+        onConfirm={handleConfirmDelete}
+        isLoading={isDeleting}
+        title={`ยืนยันการลบ Workspace "${deletingWorkspace?.config.title || deletingWorkspace?.slug}"?`}
+        confirmText="ลบ Workspace ถาวร"
+        description={
+          <div className="space-y-2">
+            <p className="font-semibold text-theme-danger">
+              การกระทำนี้เป็นการลบข้อมูลอย่างถาวรและไม่สามารถกู้คืนได้!
+            </p>
+            <p>
+              ระบบจะลบโฟลเดอร์ <code className="font-mono font-bold bg-theme-surface px-1 py-0.5 border border-theme-border-subtle">/workspaces/{deletingWorkspace?.slug}</code> พร้อมไฟล์ Markdown ทั้งหมด ({deletingWorkspace?.files.length || 0} ไฟล์) และ Assets รูปภาพทั้งหมด
+            </p>
+            {deleteError && (
+              <p className="text-theme-danger font-semibold text-xs mt-2 p-2 bg-theme-danger-light border border-theme-danger rounded-retro">
+                {deleteError}
+              </p>
+            )}
+          </div>
+        }
+      />
     </>
   );
 }

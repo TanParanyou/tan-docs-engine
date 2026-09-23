@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { UploadedMarkdownFile, formatFileSize } from "@/hooks/useMarkdownDropzone";
 import { renderMarkdown } from "@/lib/markdown";
 import {
-  X,
   FileText,
   Eye,
   Code,
@@ -12,6 +11,8 @@ import {
   Maximize2,
   Minimize2,
 } from "lucide-react";
+import Modal from "./Modal";
+import ActionButton from "./ActionButton";
 
 interface MarkdownPreviewModalProps {
   file: UploadedMarkdownFile | null;
@@ -33,142 +34,104 @@ export default function MarkdownPreviewModal({
       const html = renderMarkdown(file.content);
       setRenderedHtml(html);
     } catch {
-      setRenderedHtml(`<p class="text-red-500">ไม่สามารถแปลงเนื้อหา Markdown ได้</p>`);
+      setRenderedHtml(`<p class="text-theme-danger">ไม่สามารถแปลงเนื้อหา Markdown ได้</p>`);
     }
   }, [file]);
-
-  // Handle ESC key to close
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
 
   if (!file) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
-      <div
-        className={`bg-white rounded-2xl shadow-2xl border border-slate-200 w-full overflow-hidden flex flex-col transition-all duration-200 ${
-          isFullscreen ? "max-w-[96vw] h-[94vh]" : "max-w-3xl h-[85vh]"
-        }`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Modal Header */}
-        <div className="px-5 py-3.5 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800 flex-shrink-0">
-          <div className="flex items-center space-x-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-blue-600/90 flex items-center justify-center text-white font-bold flex-shrink-0">
-              <FileText className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-sm truncate font-mono text-slate-100">
-                  {file.filename}
-                </h3>
-                <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full font-mono">
-                  {formatFileSize(file.size)}
-                </span>
-              </div>
-              {file.previewTitle && (
-                <p className="text-xs text-slate-400 truncate">
-                  {file.previewTitle}
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2 flex-shrink-0">
-            {/* View Mode Toggle */}
-            <div className="flex items-center bg-slate-800 rounded-lg p-0.5 border border-slate-700">
-              <button
-                type="button"
-                onClick={() => setViewMode("rendered")}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-                  viewMode === "rendered"
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "text-slate-400 hover:text-slate-200"
-                }`}
-              >
-                <Eye className="w-3.5 h-3.5" />
-                <span>พรีวิว (Rendered)</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode("raw")}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-                  viewMode === "raw"
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "text-slate-400 hover:text-slate-200"
-                }`}
-              >
-                <Code className="w-3.5 h-3.5" />
-                <span>ซอร์สโค้ด (Raw)</span>
-              </button>
-            </div>
-
-            {/* Toggle Fullscreen */}
+    <Modal
+      isOpen={Boolean(file)}
+      onClose={onClose}
+      maxWidth={isFullscreen ? "full" : "4xl"}
+      className={isFullscreen ? "h-[94vh]" : "h-[85vh]"}
+      bodyClassName="flex flex-col p-0 overflow-hidden bg-theme-bg"
+      icon={<FileText className="w-4 h-4" />}
+      title={file.filename}
+      badge={
+        <span className="text-[10px] font-mono px-2 py-0.5 rounded-retro bg-theme-surface border border-theme-border text-theme-text-muted">
+          {formatFileSize(file.size)}
+        </span>
+      }
+      subtitle={file.previewTitle || "พรีวิวเนื้อหาไฟล์ Markdown ก่อนนำเข้า"}
+      headerActions={
+        <div className="flex items-center gap-2 mr-1">
+          {/* View Mode Toggle */}
+          <div className="flex items-center bg-theme-surface border border-theme-border rounded-retro p-0.5 shadow-retro-sm">
             <button
               type="button"
-              onClick={() => setIsFullscreen(!isFullscreen)}
-              className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
-              title={isFullscreen ? "ย่อขนาด" : "ขยายเต็มจอ"}
+              onClick={() => setViewMode("rendered")}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-retro text-xs font-mono font-medium transition-colors cursor-pointer ${
+                viewMode === "rendered"
+                  ? "bg-theme-primary text-theme-primary-text font-bold shadow-retro-sm"
+                  : "text-theme-text-muted hover:text-theme-text"
+              }`}
             >
-              {isFullscreen ? (
-                <Minimize2 className="w-4 h-4" />
-              ) : (
-                <Maximize2 className="w-4 h-4" />
-              )}
+              <Eye className="w-3.5 h-3.5" />
+              <span>Rendered</span>
             </button>
-
-            {/* Close Button */}
             <button
               type="button"
-              onClick={onClose}
-              className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
-              title="ปิดหน้าต่าง (Esc)"
+              onClick={() => setViewMode("raw")}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-retro text-xs font-mono font-medium transition-colors cursor-pointer ${
+                viewMode === "raw"
+                  ? "bg-theme-primary text-theme-primary-text font-bold shadow-retro-sm"
+                  : "text-theme-text-muted hover:text-theme-text"
+              }`}
             >
-              <X className="w-4 h-4" />
+              <Code className="w-3.5 h-3.5" />
+              <span>Raw</span>
             </button>
           </div>
-        </div>
 
-        {/* Modal Body */}
-        <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50">
-          {viewMode === "rendered" ? (
-            <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm max-w-4xl mx-auto min-h-full">
-              <div
-                className="doc-content prose prose-slate max-w-none text-slate-800 leading-relaxed text-sm"
-                dangerouslySetInnerHTML={{ __html: renderedHtml }}
-              />
-            </div>
-          ) : (
-            <div className="max-w-4xl mx-auto">
-              <pre className="font-mono text-xs p-5 bg-slate-900 text-slate-100 rounded-xl overflow-x-auto whitespace-pre-wrap leading-relaxed shadow-inner border border-slate-800">
-                {file.content || "(ไฟล์ว่างเปล่า)"}
-              </pre>
-            </div>
-          )}
-        </div>
-
-        {/* Modal Footer */}
-        <div className="px-6 py-3 bg-white border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 flex-shrink-0">
-          <div className="flex items-center gap-1.5">
-            <FileCheck className="w-4 h-4 text-emerald-600" />
-            <span>พร้อมนำเข้าเป็นส่วนหนึ่งของ Workspace เมื่อสร้าง</span>
-          </div>
+          {/* Toggle Fullscreen */}
           <button
             type="button"
-            onClick={onClose}
-            className="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg transition-colors"
+            onClick={() => setIsFullscreen(!isFullscreen)}
+            className="p-1.5 rounded-retro hover:bg-theme-surface text-theme-text-muted hover:text-theme-text border border-theme-border transition-colors shadow-retro-sm cursor-pointer"
+            title={isFullscreen ? "ย่อขนาด" : "ขยายเต็มจอ"}
           >
-            ปิดตัวอย่าง
+            {isFullscreen ? (
+              <Minimize2 className="w-3.5 h-3.5" />
+            ) : (
+              <Maximize2 className="w-3.5 h-3.5" />
+            )}
           </button>
         </div>
+      }
+      footer={
+        <div className="flex items-center justify-between text-xs text-theme-text-muted">
+          <div className="flex items-center gap-1.5 font-mono text-[11px]">
+            <FileCheck className="w-4 h-4 text-theme-success" />
+            <span>พร้อมนำเข้าเป็นส่วนหนึ่งของ Workspace เมื่อสร้าง</span>
+          </div>
+          <ActionButton
+            variant="secondary"
+            size="sm"
+            onClick={onClose}
+          >
+            ปิดตัวอย่าง
+          </ActionButton>
+        </div>
+      }
+    >
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+        {viewMode === "rendered" ? (
+          <div className="bg-theme-surface rounded-retro border-2 border-theme-border p-6 shadow-retro max-w-4xl mx-auto min-h-full">
+            <div
+              className="doc-content prose prose-stone max-w-none text-theme-text leading-relaxed text-xs"
+              dangerouslySetInnerHTML={{ __html: renderedHtml }}
+            />
+          </div>
+        ) : (
+          <div className="max-w-4xl mx-auto">
+            <pre className="font-mono text-xs p-5 bg-theme-surface-sunken text-theme-text rounded-retro overflow-x-auto whitespace-pre-wrap leading-relaxed border-2 border-theme-border shadow-retro">
+              {file.content || "(ไฟล์ว่างเปล่า)"}
+            </pre>
+          </div>
+        )}
       </div>
-    </div>
+    </Modal>
   );
 }

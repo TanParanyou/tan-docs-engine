@@ -53,6 +53,12 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
 
   const isDirty = fileContent !== savedContent;
   const isDraggingSplitterRef = useRef(false);
+  const isScrollingFromEditorRef = useRef(false);
+  const isScrollingFromPreviewRef = useRef(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Active search query propagated across Editor and Preview
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Cross-component imperative handles
   const editorRef = useRef<MarkdownEditorHandle>(null);
@@ -336,9 +342,24 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
 
   // Handle Sync Scroll from Editor to Preview
   const handleEditorScroll = (percentage: number) => {
-    if (syncScroll) {
-      previewRef.current?.scrollToPercentage(percentage);
-    }
+    if (!syncScroll || isScrollingFromPreviewRef.current) return;
+    isScrollingFromEditorRef.current = true;
+    previewRef.current?.scrollToPercentage(percentage);
+    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    scrollTimeoutRef.current = setTimeout(() => {
+      isScrollingFromEditorRef.current = false;
+    }, 150);
+  };
+
+  // Handle Sync Scroll from Preview to Editor
+  const handlePreviewScroll = (percentage: number) => {
+    if (!syncScroll || isScrollingFromEditorRef.current) return;
+    isScrollingFromPreviewRef.current = true;
+    editorRef.current?.scrollToPercentage?.(percentage);
+    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    scrollTimeoutRef.current = setTimeout(() => {
+      isScrollingFromPreviewRef.current = false;
+    }, 150);
   };
 
   // Draggable Splitter mouse event handlers
@@ -457,6 +478,7 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
                 filename={selectedFile}
                 onScroll={handleEditorScroll}
                 syncScroll={syncScroll}
+                onSearchQueryChange={setSearchQuery}
               />
             </div>
           )}
@@ -491,6 +513,8 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
                 documentNumber={config.documentNumber}
                 version={config.version}
                 slug={activeSlug}
+                onScroll={handlePreviewScroll}
+                searchQuery={searchQuery}
               />
             </div>
           )}

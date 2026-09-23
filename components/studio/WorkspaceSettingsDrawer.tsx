@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { DocsConfig } from "@/lib/types";
-import { Settings, Save, CheckCircle2, AlertCircle, RotateCcw } from "lucide-react";
+import { Settings, Save, CheckCircle2, AlertCircle, RotateCcw, Trash2, Loader2 } from "lucide-react";
+import SafetyConfirmationModal from "@/components/common/SafetyConfirmationModal";
 
 interface WorkspaceSettingsDrawerProps {
   slug: string;
@@ -12,7 +13,7 @@ interface WorkspaceSettingsDrawerProps {
 }
 
 export default function WorkspaceSettingsDrawer({
-  slug: _slug,
+  slug,
   config,
   onUpdateConfig,
 }: WorkspaceSettingsDrawerProps) {
@@ -20,6 +21,9 @@ export default function WorkspaceSettingsDrawer({
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Initialize react-hook-form
   const {
@@ -295,7 +299,74 @@ export default function WorkspaceSettingsDrawer({
             </span>
           </button>
         </div>
+
+        {/* Danger Zone: Delete Workspace */}
+        <div className="pt-6 mt-6 border-t-2 border-theme-danger/30">
+          <div className="p-3 bg-theme-danger-light border-2 border-theme-danger/40 rounded-retro space-y-2">
+            <div className="flex items-center gap-1.5 text-theme-danger">
+              <Trash2 className="w-4 h-4 flex-shrink-0" />
+              <span className="font-bold text-xs uppercase tracking-wide">Danger Zone</span>
+            </div>
+            <p className="text-[11px] text-theme-text-muted leading-relaxed">
+              การลบ Workspace จะลบโฟลเดอร์ <code className="font-mono font-bold text-theme-text">/workspaces/{slug}</code> และไฟล์ Markdown ทั้งหมดอย่างถาวร
+            </p>
+            <button
+              type="button"
+              onClick={() => setIsDeleteModalOpen(true)}
+              className="w-full py-2 px-3 bg-theme-danger hover:bg-theme-danger/90 text-white rounded-retro text-xs font-bold border border-theme-border shadow-retro-sm flex items-center justify-center gap-1.5 active:translate-x-[1px] active:translate-y-[1px] transition-all cursor-pointer"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>ลบ Workspace นี้ถาวร</span>
+            </button>
+          </div>
+        </div>
       </form>
+
+      {/* Safety Confirmation Modal: Delete Workspace */}
+      <SafetyConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          if (!isDeleting) {
+            setIsDeleteModalOpen(false);
+            setDeleteError(null);
+          }
+        }}
+        onConfirm={async () => {
+          setIsDeleting(true);
+          setDeleteError(null);
+          try {
+            const res = await fetch(`/api/workspaces/${slug}`, {
+              method: "DELETE",
+            });
+            const json = await res.json();
+            if (!res.ok || !json.success) {
+              throw new Error(json.error || "Failed to delete workspace");
+            }
+            window.location.href = "/";
+          } catch (err: any) {
+            setDeleteError(err.message || "เกิดข้อผิดพลาดในการลบ Workspace");
+            setIsDeleting(false);
+          }
+        }}
+        isLoading={isDeleting}
+        title={`ยืนยันการลบ Workspace "${config.title || slug}"?`}
+        confirmText="ลบ Workspace ถาวร"
+        description={
+          <div className="space-y-2">
+            <p className="font-semibold text-theme-danger">
+              การกระทำนี้เป็นการลบข้อมูลอย่างถาวรและไม่สามารถกู้คืนได้!
+            </p>
+            <p>
+              ระบบจะลบโฟลเดอร์ <code className="font-mono font-bold bg-theme-surface px-1 py-0.5 border border-theme-border-subtle">/workspaces/{slug}</code> พร้อมไฟล์ Markdown และรูปภาพทั้งหมด
+            </p>
+            {deleteError && (
+              <p className="text-theme-danger font-semibold text-xs mt-2 p-2 bg-theme-danger-light border border-theme-danger rounded-retro">
+                {deleteError}
+              </p>
+            )}
+          </div>
+        }
+      />
     </div>
   );
 }

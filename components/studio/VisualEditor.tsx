@@ -14,6 +14,7 @@ export interface VisualEditorHandle {
   insertSnippet: (snippet: string) => void;
   jumpToHeading: (text: string) => void;
   scrollToPercentage: (percentage: number) => void;
+  findText: (query: string, matchCase: boolean, direction?: "next" | "prev") => boolean;
 }
 
 interface VisualEditorProps {
@@ -23,10 +24,22 @@ interface VisualEditorProps {
   onUploadImage?: (file: File) => void;
   isUploading?: boolean;
   onScroll?: (scrollPercentage: number) => void;
+  onOpenSearch?: () => void;
 }
 
 const VisualEditor = forwardRef<VisualEditorHandle, VisualEditorProps>(
-  ({ content, onChange, onSave, onUploadImage, isUploading, onScroll }, ref) => {
+  (
+    {
+      content,
+      onChange,
+      onSave,
+      onUploadImage,
+      isUploading,
+      onScroll,
+      onOpenSearch,
+    },
+    ref
+  ) => {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const isExternalScrollingRef = useRef(false);
 
@@ -61,6 +74,11 @@ const VisualEditor = forwardRef<VisualEditorHandle, VisualEditorProps>(
           if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
             event.preventDefault();
             onSave();
+            return true;
+          }
+          if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "f") {
+            event.preventDefault();
+            onOpenSearch?.();
             return true;
           }
           return false;
@@ -127,6 +145,49 @@ const VisualEditor = forwardRef<VisualEditorHandle, VisualEditorProps>(
           isExternalScrollingRef.current = false;
         }, 100);
       },
+      findText: (query: string, matchCase: boolean, direction: "next" | "prev" = "next") => {
+        if (!editor || !query) return false;
+        const doc = editor.state.doc;
+        const currentPos = editor.state.selection.from;
+        const matches: { from: number; to: number }[] = [];
+
+        doc.descendants((node, pos) => {
+          if (node.isText && node.text) {
+            const text = matchCase ? node.text : node.text.toLowerCase();
+            const q = matchCase ? query : query.toLowerCase();
+            let index = text.indexOf(q);
+            while (index !== -1) {
+              matches.push({
+                from: pos + index,
+                to: pos + index + query.length,
+              });
+              index = text.indexOf(q, index + 1);
+            }
+          }
+        });
+
+        if (matches.length === 0) return false;
+
+        let targetMatch: { from: number; to: number };
+        if (direction === "next") {
+          const next = matches.find((m) => m.from > currentPos);
+          targetMatch = next || matches[0];
+        } else {
+          const prevMatches = matches.filter((m) => m.from < currentPos);
+          targetMatch =
+            prevMatches.length > 0
+              ? prevMatches[prevMatches.length - 1]
+              : matches[matches.length - 1];
+        }
+
+        editor
+          .chain()
+          .focus()
+          .setTextSelection({ from: targetMatch.from, to: targetMatch.to })
+          .scrollIntoView()
+          .run();
+        return true;
+      },
     }));
 
     return (
@@ -136,6 +197,7 @@ const VisualEditor = forwardRef<VisualEditorHandle, VisualEditorProps>(
           editor={editor}
           onUploadImage={onUploadImage}
           isUploading={isUploading}
+          onOpenSearch={onOpenSearch}
         />
 
         {/* Scrollable Canvas for ProseMirror - Seamless continuous document surface */}

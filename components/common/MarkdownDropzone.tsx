@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useRef } from "react";
-import { UploadCloud, FileText, Plus } from "lucide-react";
+import { UploadCloud, FileText } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface MarkdownDropzoneProps {
   isDragging: boolean;
@@ -38,11 +39,14 @@ export default function MarkdownDropzone({
       onDragLeave={onDragLeave}
       onDrop={onDrop}
       onClick={handleClick}
-      className={`relative group cursor-pointer transition-all duration-200 rounded-xl border-2 border-dashed p-4 flex flex-col items-center justify-center text-center select-none ${
+      className={cn(
+        "relative group cursor-pointer transition-all rounded-retro border-2 border-dashed p-4 flex flex-col items-center justify-center text-center select-none",
         isDragging
-          ? "border-blue-500 bg-blue-50/80 scale-[1.01] shadow-md shadow-blue-500/10 ring-2 ring-blue-400/30"
-          : "border-slate-200 hover:border-blue-400 bg-slate-50/60 hover:bg-blue-50/30"
-      } ${disabled ? "opacity-50 cursor-not-allowed" : ""} ${className}`}
+          ? "border-theme-primary bg-theme-primary/10 shadow-retro"
+          : "border-theme-border hover:border-theme-primary bg-theme-surface hover:bg-theme-surface-hover shadow-retro-sm",
+        disabled ? "opacity-50 cursor-not-allowed" : "",
+        className
+      )}
     >
       <input
         ref={fileInputRef}
@@ -55,25 +59,24 @@ export default function MarkdownDropzone({
       />
 
       <div
-        className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-transform duration-200 ${
+        className={cn(
+          "w-9 h-9 rounded-retro flex items-center justify-center mb-2 transition-transform border border-theme-border",
           isDragging
-            ? "bg-blue-600 text-white scale-110 shadow-md shadow-blue-500/30"
-            : "bg-blue-100/80 group-hover:bg-blue-600 text-blue-600 group-hover:text-white"
-        }`}
-      >
-        {isDragging ? (
-          <FileText className="w-5 h-5 animate-bounce" />
-        ) : (
-          <UploadCloud className="w-5 h-5" />
+            ? "bg-theme-primary text-theme-primary-text shadow-retro-sm"
+            : "bg-theme-surface-sunken text-theme-text group-hover:bg-theme-primary group-hover:text-theme-primary-text"
         )}
+      >
+        <UploadCloud className="w-4 h-4" />
       </div>
 
-      <p className="text-xs font-semibold text-slate-700 group-hover:text-blue-600 transition-colors">
-        {isDragging ? "ปล่อยไฟล์ที่นี่เพื่ออัปโหลด..." : "ลากไฟล์ .md มาวาง หรือคลิกเลือกไฟล์"}
-      </p>
-      <p className="text-[11px] text-slate-400 mt-0.5">
-        รองรับไฟล์ Markdown หลายไฟล์พร้อมกัน (.md)
-      </p>
+      <div className="space-y-0.5">
+        <p className="text-xs font-semibold text-theme-text">
+          ลากและวางไฟล์ <span className="font-mono text-theme-primary">.md</span> ลงที่นี่ หรือคลิกเพื่อเลือกไฟล์
+        </p>
+        <p className="text-[11px] text-theme-text-muted">
+          รองรับไฟล์ Markdown หลายไฟล์พร้อมกัน ลำดับไฟล์ตามลำดับที่เลือก
+        </p>
+      </div>
     </div>
   );
 }

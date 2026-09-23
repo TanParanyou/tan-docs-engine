@@ -31,11 +31,14 @@ export interface DocumentViewerProps {
   config: DocsConfig;
   coverPageHtml?: string;
   files?: MarkdownFileItem[];
+  selectedFile?: string | "all";
   liveHtml?: string;
   primaryColor?: string;
   accentColor?: string;
   initialMode?: DocumentViewMode;
   showToolbar?: boolean;
+  stickyClassName?: string;
+  contentClassName?: string;
   className?: string;
 }
 
@@ -43,6 +46,8 @@ interface PageItem {
   pageNumber: number;
   type: "cover" | "content";
   filename?: string;
+  fileIndex?: number;
+  isFirstPageOfFile?: boolean;
   html: string;
 }
 
@@ -53,11 +58,14 @@ const DocumentViewer = React.forwardRef<DocumentViewerHandle, DocumentViewerProp
       config,
       coverPageHtml,
       files = [],
+      selectedFile = "all",
       liveHtml,
       primaryColor = "#0f3b6c",
       accentColor = "#1d4ed8",
       initialMode = "paged",
       showToolbar = true,
+      stickyClassName = "sticky top-14 sm:top-16 z-30",
+      contentClassName = "",
       className = "",
     },
     ref
@@ -105,6 +113,15 @@ const DocumentViewer = React.forwardRef<DocumentViewerHandle, DocumentViewerProp
       },
     }));
 
+  // Filter active files based on selectedFile
+  const activeFiles = useMemo(() => {
+    if (!selectedFile || selectedFile === "all") {
+      return files;
+    }
+    const matched = files.filter((f) => f.filename === selectedFile);
+    return matched.length > 0 ? matched : files;
+  }, [files, selectedFile]);
+
   // Divide document into distinct A4 pages based on cover and page-break tags
   const pages = useMemo<PageItem[]>(() => {
     const list: PageItem[] = [];
@@ -136,8 +153,10 @@ const DocumentViewer = React.forwardRef<DocumentViewerHandle, DocumentViewerProp
     }
 
     // Subsequent Pages: Markdown files split by <div class="page-break"></div>
-    for (const file of files) {
+    for (let fIdx = 0; fIdx < activeFiles.length; fIdx++) {
+      const file = activeFiles[fIdx];
       const parts = file.html.split(/<div class="page-break"><\/div>/gi);
+      let isFirstPageOfFile = true;
       for (const part of parts) {
         const trimmed = part.trim();
         if (trimmed.length > 0) {
@@ -145,14 +164,17 @@ const DocumentViewer = React.forwardRef<DocumentViewerHandle, DocumentViewerProp
             pageNumber: pageCounter++,
             type: "content",
             filename: file.filename,
+            fileIndex: fIdx,
+            isFirstPageOfFile,
             html: trimmed,
           });
+          isFirstPageOfFile = false;
         }
       }
     }
 
     return list;
-  }, [coverPageHtml, files, liveHtml]);
+  }, [coverPageHtml, activeFiles, liveHtml]);
 
   const totalPages = pages.length;
 
@@ -161,63 +183,65 @@ const DocumentViewer = React.forwardRef<DocumentViewerHandle, DocumentViewerProp
     setPdfKey((prev) => prev + 1);
   };
 
-  const pdfUrl = `/api/pdf?workspace=${workspaceSlug}&inline=true`;
-  const pdfDownloadUrl = `/api/pdf?workspace=${workspaceSlug}`;
+  const fileParam = selectedFile && selectedFile !== "all" ? `&file=${encodeURIComponent(selectedFile)}` : "";
+  const fileQueryParam = selectedFile && selectedFile !== "all" ? `?file=${encodeURIComponent(selectedFile)}` : "";
+  const pdfUrl = `/api/pdf?workspace=${workspaceSlug}${fileParam}&inline=true`;
+  const pdfDownloadUrl = `/api/pdf?workspace=${workspaceSlug}${fileParam}`;
+  const printUrl = `/${workspaceSlug}/print${fileQueryParam}`;
 
   return (
     <div className={`flex flex-col w-full ${className}`}>
-      {/* Viewer Floating/Sticky Toolbar */}
+      {/* Viewer Floating/Sticky Toolbar matching Light Clean Retro Theme */}
       {showToolbar && (
-        <div className="sticky top-14 sm:top-16 z-30 bg-slate-900/95 backdrop-blur-md text-white border-b border-slate-700/80 px-2.5 sm:px-4 py-2 sm:py-2.5 shadow-md flex flex-wrap items-center justify-between gap-2 sm:gap-3 mb-4 sm:mb-6 rounded-xl">
+        <div className={`${stickyClassName} bg-theme-surface/95 backdrop-blur-sm text-theme-text border border-theme-border px-2.5 sm:px-4 py-1.5 sm:py-2 shadow-retro-sm flex items-center justify-between gap-1.5 sm:gap-2.5 rounded-retro select-none transition-colors overflow-x-auto scrollbar-none`}>
           {/* View Mode Switcher Pills */}
-          <div className="flex items-center bg-slate-800 p-0.5 sm:p-1 rounded-lg border border-slate-700 max-w-full overflow-x-auto">
+          <div className="flex items-center bg-theme-surface-sunken p-0.5 rounded-retro border border-theme-border flex-shrink-0">
             <button
               onClick={() => setViewMode("paged")}
-              className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-[11px] sm:text-xs font-medium transition-all whitespace-nowrap ${
+              className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-retro text-[11px] sm:text-xs font-medium transition-all whitespace-nowrap ${
                 viewMode === "paged"
-                  ? "bg-blue-600 text-white shadow-sm font-semibold"
-                  : "text-slate-300 hover:text-white hover:bg-slate-700/60"
+                  ? "bg-theme-accent-light text-theme-accent-text shadow-retro-sm border border-theme-accent font-bold"
+                  : "text-theme-text-muted hover:text-theme-text hover:bg-theme-surface border border-transparent"
               }`}
               title="A4 Paged View (แบ่งหน้า 1, 2, 3...)"
             >
-              <FileText className="w-3.5 h-3.5" />
-              <span>A4<span className="hidden sm:inline"> แยกหน้า</span></span>
-              <span className="ml-0.5 sm:ml-1 px-1 sm:px-1.5 py-0.2 text-[9px] sm:text-[10px] rounded bg-white/20 font-mono">
+              <FileText className="w-3.5 h-3.5 text-theme-accent" />
+              <span>A4<span className="hidden md:inline"> แยกหน้า</span></span>
+              <span className="ml-0.5 px-1 py-0.2 text-[9px] sm:text-[10px] rounded-retro bg-theme-surface text-theme-accent-text border border-theme-accent/40 font-mono font-bold">
                 {totalPages}
               </span>
             </button>
 
             <button
               onClick={() => setViewMode("pdf")}
-              className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-[11px] sm:text-xs font-medium transition-all whitespace-nowrap ${
+              className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-retro text-[11px] sm:text-xs font-medium transition-all whitespace-nowrap ${
                 viewMode === "pdf"
-                  ? "bg-blue-600 text-white shadow-sm font-semibold"
-                  : "text-slate-300 hover:text-white hover:bg-slate-700/60"
+                  ? "bg-theme-accent-light text-theme-accent-text shadow-retro-sm border border-theme-accent font-bold"
+                  : "text-theme-text-muted hover:text-theme-text hover:bg-theme-surface border border-transparent"
               }`}
               title="PDF ตัวจริง (Puppeteer Engine Preview)"
             >
-              <FileCode2 className="w-3.5 h-3.5" />
-              <span>PDF<span className="hidden sm:inline"> ตัวจริง</span></span>
+              <FileCode2 className="w-3.5 h-3.5 text-theme-accent" />
+              <span>PDF<span className="hidden md:inline"> ตัวจริง</span></span>
             </button>
 
             <button
               onClick={() => setViewMode("continuous")}
-              className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-[11px] sm:text-xs font-medium transition-all whitespace-nowrap ${
+              className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-retro text-[11px] sm:text-xs font-medium transition-all whitespace-nowrap ${
                 viewMode === "continuous"
-                  ? "bg-blue-600 text-white shadow-sm font-semibold"
-                  : "text-slate-300 hover:text-white hover:bg-slate-700/60"
+                  ? "bg-theme-accent-light text-theme-accent-text shadow-retro-sm border border-theme-accent font-bold"
+                  : "text-theme-text-muted hover:text-theme-text hover:bg-theme-surface border border-transparent"
               }`}
               title="เว็บต่อเนื่อง (Continuous Web View)"
             >
-              <ScrollText className="w-3.5 h-3.5" />
-              <span>เว็บ<span className="hidden sm:inline">ต่อเนื่อง</span></span>
+              <ScrollText className="w-3.5 h-3.5 text-theme-accent" />
+              <span>เว็บ<span className="hidden md:inline">ต่อเนื่อง</span></span>
             </button>
           </div>
 
           {/* Quick Page Jump (Only in Paged Mode) */}
           {viewMode === "paged" && totalPages > 1 && (
-            <div className="flex items-center gap-1 text-[11px] sm:text-xs text-slate-300 bg-slate-800 px-2 py-1 rounded-lg border border-slate-700">
-              <span className="hidden xs:inline">หน้า</span>
+            <div className="flex items-center gap-0.5 sm:gap-1 text-[11px] sm:text-xs text-theme-text bg-theme-surface-sunken px-1.5 sm:px-2 py-1 rounded-retro border border-theme-border shadow-retro-sm flex-shrink-0">
               <button
                 disabled={activePage <= 1}
                 onClick={() => {
@@ -225,12 +249,13 @@ const DocumentViewer = React.forwardRef<DocumentViewerHandle, DocumentViewerProp
                   setActivePage(target);
                   document.getElementById(`page-${target}`)?.scrollIntoView({ behavior: "smooth" });
                 }}
-                className="p-1 hover:bg-slate-700 disabled:opacity-30 rounded"
+                className="p-0.5 sm:p-1 hover:bg-theme-surface hover:text-theme-text disabled:opacity-30 rounded-retro transition-colors"
+                title="หน้าก่อนหน้า"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
               </button>
-              <span className="font-mono font-bold text-white px-0.5">
-                {activePage} / {totalPages}
+              <span className="font-mono font-bold text-theme-text px-0.5 whitespace-nowrap">
+                {activePage}/{totalPages}
               </span>
               <button
                 disabled={activePage >= totalPages}
@@ -239,7 +264,8 @@ const DocumentViewer = React.forwardRef<DocumentViewerHandle, DocumentViewerProp
                   setActivePage(target);
                   document.getElementById(`page-${target}`)?.scrollIntoView({ behavior: "smooth" });
                 }}
-                className="p-1 hover:bg-slate-700 disabled:opacity-30 rounded"
+                className="p-0.5 sm:p-1 hover:bg-theme-surface hover:text-theme-text disabled:opacity-30 rounded-retro transition-colors"
+                title="หน้าถัดไป"
               >
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
@@ -247,26 +273,26 @@ const DocumentViewer = React.forwardRef<DocumentViewerHandle, DocumentViewerProp
           )}
 
           {/* Zoom and Actions */}
-          <div className="flex items-center gap-1.5 sm:gap-2 ml-auto">
+          <div className="flex items-center gap-1 sm:gap-1.5 ml-auto flex-shrink-0">
             {viewMode !== "pdf" && (
-              <div className="hidden md:flex items-center bg-slate-800 rounded-lg border border-slate-700 p-0.5">
+              <div className="hidden sm:flex items-center bg-theme-surface-sunken rounded-retro border border-theme-border p-0.5 shadow-retro-sm">
                 <button
                   onClick={zoomOut}
-                  className="p-1.5 text-slate-300 hover:text-white hover:bg-slate-700 rounded transition-colors"
+                  className="p-1 sm:p-1.5 text-theme-text-muted hover:text-theme-text hover:bg-theme-surface rounded-retro transition-colors"
                   title="Zoom Out"
                 >
                   <ZoomOut className="w-3.5 h-3.5" />
                 </button>
                 <button
                   onClick={resetZoom}
-                  className="px-2 py-1 text-[11px] font-mono font-medium text-slate-300 hover:text-white"
+                  className="px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-[11px] font-mono font-semibold text-theme-text hover:text-theme-primary"
                   title="Reset Zoom"
                 >
                   {zoom}%
                 </button>
                 <button
                   onClick={zoomIn}
-                  className="p-1.5 text-slate-300 hover:text-white hover:bg-slate-700 rounded transition-colors"
+                  className="p-1 sm:p-1.5 text-theme-text-muted hover:text-theme-text hover:bg-theme-surface rounded-retro transition-colors"
                   title="Zoom In"
                 >
                   <ZoomIn className="w-3.5 h-3.5" />
@@ -277,11 +303,11 @@ const DocumentViewer = React.forwardRef<DocumentViewerHandle, DocumentViewerProp
             {viewMode === "pdf" && (
               <button
                 onClick={handleRefreshPdf}
-                className="inline-flex items-center gap-1 text-xs text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2 sm:px-2.5 py-1.5 rounded-lg transition-colors"
+                className="inline-flex items-center gap-1 text-xs text-theme-text hover:text-theme-primary bg-theme-surface hover:bg-theme-surface-hover border border-theme-border px-2 sm:px-2.5 py-1.5 rounded-retro shadow-retro-sm transition-colors active:translate-x-[0.5px] active:translate-y-[0.5px]"
                 title="รีเฟรช PDF"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${isPdfLoading ? "animate-spin" : ""}`} />
-                <span className="hidden sm:inline">รีเฟรช</span>
+                <RefreshCw className={`w-3.5 h-3.5 ${isPdfLoading ? "animate-spin text-theme-accent" : ""}`} />
+                <span className="hidden lg:inline font-medium">รีเฟรช</span>
               </button>
             )}
 
@@ -289,27 +315,37 @@ const DocumentViewer = React.forwardRef<DocumentViewerHandle, DocumentViewerProp
               href={pdfUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2 sm:px-2.5 py-1.5 rounded-lg transition-colors"
+              className="inline-flex items-center gap-1 text-xs text-theme-text hover:text-theme-primary bg-theme-surface hover:bg-theme-surface-hover border border-theme-border px-2 sm:px-2.5 py-1.5 rounded-retro shadow-retro-sm transition-colors active:translate-x-[0.5px] active:translate-y-[0.5px]"
               title="เปิด PDF ในแท็บใหม่เต็มจอ"
             >
-              <ExternalLink className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">เต็มจอ</span>
+              <ExternalLink className="w-3.5 h-3.5 text-theme-text-muted" />
+              <span className="hidden lg:inline font-medium">เต็มจอ</span>
             </a>
 
             <a
-              href={`/${workspaceSlug}/print`}
+              href={printUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:inline-flex items-center gap-1.5 text-xs text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2.5 py-1.5 rounded-lg transition-colors"
+              className="hidden md:inline-flex items-center gap-1.5 text-xs text-theme-text hover:text-theme-primary bg-theme-surface hover:bg-theme-surface-hover border border-theme-border px-2 sm:px-2.5 py-1.5 rounded-retro shadow-retro-sm transition-colors active:translate-x-[0.5px] active:translate-y-[0.5px]"
               title="พิมพ์เอกสาร (Print Window)"
             >
-              <Printer className="w-3.5 h-3.5" />
+              <Printer className="w-3.5 h-3.5 text-theme-text-muted" />
             </a>
 
-            <ExportDropdown workspaceSlug={workspaceSlug} variant="primary" buttonSize="sm" />
+            <a
+              href={pdfDownloadUrl}
+              className="inline-flex items-center gap-1 sm:gap-1.5 text-xs font-semibold text-theme-primary-text bg-theme-primary hover:bg-theme-primary-hover border border-theme-border px-2 sm:px-3 py-1.5 rounded-retro shadow-retro-sm transition-colors active:translate-x-[0.5px] active:translate-y-[0.5px]"
+              title="ดาวน์โหลดไฟล์ PDF"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span className="hidden lg:inline">ดาวน์โหลด</span>
+            </a>
           </div>
         </div>
       )}
+
+      {/* Main Document Content Area */}
+      <div className={`w-full ${contentClassName}`}>
 
       {/* VIEW MODE 1: A4 PAGED VIEW (แยกหน้า 1, 2, 3...) */}
       {viewMode === "paged" && (
@@ -321,17 +357,26 @@ const DocumentViewer = React.forwardRef<DocumentViewerHandle, DocumentViewerProp
             <div
               key={`paged-${page.pageNumber}`}
               id={`page-${page.pageNumber}`}
-              className="relative group w-full max-w-[210mm]"
+              className="relative group w-full max-w-[210mm] scroll-mt-20 sm:scroll-mt-24"
               onMouseEnter={() => setActivePage(page.pageNumber)}
             >
+              {/* Anchor for Section/File navigation */}
+              {page.isFirstPageOfFile && page.fileIndex !== undefined && (
+                <span
+                  id={`section-${page.fileIndex}`}
+                  className="absolute -top-20 sm:-top-24 left-0 block pointer-events-none"
+                  aria-hidden="true"
+                />
+              )}
+
               {/* Floating Page Badge on top right of sheet */}
-              <div className="absolute -top-3 right-3 sm:right-6 z-10 flex items-center gap-1.5 bg-slate-800 text-white text-[10px] sm:text-[11px] font-mono px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full shadow-md border border-slate-700/80">
-                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400"></span>
+              <div className="absolute -top-3 right-3 sm:right-6 z-10 flex items-center gap-1.5 bg-theme-surface text-theme-text text-[10px] sm:text-[11px] font-mono px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-retro shadow-retro-sm border border-theme-border">
+                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500"></span>
                 <span>
                   หน้า {page.pageNumber} / {totalPages}
                 </span>
                 {page.type === "cover" && (
-                  <span className="text-[9px] sm:text-[10px] bg-blue-500/30 text-blue-300 px-1 py-0.2 rounded font-sans">
+                  <span className="text-[9px] sm:text-[10px] bg-theme-accent-light text-theme-accent-text border border-theme-accent/40 px-1 py-0.2 rounded-retro font-sans">
                     หน้าปก
                   </span>
                 )}
@@ -446,13 +491,17 @@ const DocumentViewer = React.forwardRef<DocumentViewerHandle, DocumentViewerProp
                 />
               </article>
             ) : (
-              files.map((file, idx) => (
-                <article key={file.filename} id={`section-${idx}`} className="relative">
+              activeFiles.map((file, idx) => (
+                <article
+                  key={file.filename}
+                  id={`section-${idx}`}
+                  className="relative scroll-mt-20 sm:scroll-mt-24"
+                >
                   <div
                     dangerouslySetInnerHTML={{ __html: file.html }}
                     className="markdown-rendered-body"
                   />
-                  {idx < files.length - 1 && (
+                  {idx < activeFiles.length - 1 && (
                     <div className="my-10 border-t border-dashed border-slate-200 flex items-center justify-center">
                       <span className="bg-white px-3 text-[11px] font-mono uppercase text-slate-400 tracking-wider">
                         Page Break / Next Section
@@ -465,6 +514,7 @@ const DocumentViewer = React.forwardRef<DocumentViewerHandle, DocumentViewerProp
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 });

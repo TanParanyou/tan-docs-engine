@@ -8,6 +8,9 @@ interface PrintPageProps {
   params: Promise<{
     workspace: string;
   }>;
+  searchParams: Promise<{
+    file?: string;
+  }>;
 }
 
 export async function generateStaticParams() {
@@ -15,9 +18,10 @@ export async function generateStaticParams() {
   return slugs.map((workspace) => ({ workspace }));
 }
 
-export default async function WorkspacePrintPage({ params }: PrintPageProps) {
+export default async function WorkspacePrintPage({ params, searchParams }: PrintPageProps) {
   const { workspace: slug } = await params;
-  const workspace = getWorkspaceData(slug);
+  const { file: specificFile } = await searchParams;
+  const workspace = getWorkspaceData(slug, specificFile);
 
   if (!workspace) {
     notFound();
