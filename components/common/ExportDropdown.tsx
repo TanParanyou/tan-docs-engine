@@ -192,8 +192,8 @@ export default function ExportDropdown({
   // Button styles based on variant
   const sizeClasses =
     buttonSize === "sm"
-      ? "px-2.5 py-1.5 text-xs gap-1.5"
-      : "px-3 py-1.5 text-xs sm:text-sm gap-1.5";
+      ? "h-8 px-2.5 text-xs gap-1.5"
+      : "h-9 px-3 text-xs gap-1.5";
 
   let buttonStyle = "";
   if (variant === "primary") {

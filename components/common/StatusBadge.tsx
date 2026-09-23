@@ -61,7 +61,7 @@ export default function StatusBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 text-[11px] font-mono font-medium px-2 py-0.5 rounded-retro border transition-all select-none shadow-[1px_1px_0px_rgba(0,0,0,0.06)]",
+        "h-7.5 inline-flex items-center gap-1.5 text-[11px] font-mono font-medium px-2.5 rounded-retro border transition-all select-none shadow-[1px_1px_0px_rgba(0,0,0,0.06)]",
         badgeStyle,
         pulse && "animate-pulse",
         className

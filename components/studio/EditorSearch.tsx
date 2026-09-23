@@ -62,11 +62,11 @@ export default function EditorSearch({
   };
 
   return (
-    <div className="absolute top-12 right-6 z-30 bg-slate-900 border border-slate-700/80 rounded-xl shadow-2xl p-2.5 text-xs text-slate-200 flex flex-col gap-2 w-80 animate-fade-in backdrop-blur-md">
+    <div className="absolute top-12 right-6 z-30 bg-theme-surface border-2 border-theme-border rounded-retro shadow-retro p-3 text-xs text-theme-text flex flex-col gap-2.5 w-84 animate-fade-in select-none">
       {/* Search Row */}
       <div className="flex items-center gap-1.5">
         <div className="relative flex-1">
-          <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-3.5 h-3.5 text-theme-text-muted absolute left-2.5 top-1/2 -translate-y-1/2" />
           <input
             ref={searchInputRef}
             type="text"
@@ -76,10 +76,10 @@ export default function EditorSearch({
               onFindNext(e.target.value, matchCase);
             }}
             onKeyDown={handleKeyDown}
-            placeholder="Find in document..."
-            className="w-full pl-8 pr-16 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
+            placeholder="ค้นหาข้อความ (⌘F)..."
+            className="w-full h-8 pl-8 pr-16 bg-theme-surface-sunken border border-theme-border rounded-retro text-xs text-theme-text placeholder-theme-text-faint focus:outline-none focus:bg-theme-surface focus:border-theme-primary font-mono transition-colors"
           />
-          <div className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-mono">
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-theme-text-muted font-mono font-semibold">
             {totalMatches > 0
               ? `${currentMatchIndex + 1}/${totalMatches}`
               : searchQuery
@@ -92,7 +92,7 @@ export default function EditorSearch({
           type="button"
           onClick={() => onFindPrev(searchQuery, matchCase)}
           disabled={totalMatches === 0}
-          className="p-1.5 hover:bg-slate-800 rounded disabled:opacity-30 text-slate-400 hover:text-white"
+          className="h-8 w-8 flex items-center justify-center hover:bg-theme-surface-sunken border border-transparent hover:border-theme-border rounded-retro disabled:opacity-30 text-theme-text-muted hover:text-theme-text cursor-pointer transition-colors active:translate-x-[0.5px] active:translate-y-[0.5px]"
           title="Previous Match (Shift+Enter)"
         >
           <ChevronUp className="w-4 h-4" />
@@ -102,7 +102,7 @@ export default function EditorSearch({
           type="button"
           onClick={() => onFindNext(searchQuery, matchCase)}
           disabled={totalMatches === 0}
-          className="p-1.5 hover:bg-slate-800 rounded disabled:opacity-30 text-slate-400 hover:text-white"
+          className="h-8 w-8 flex items-center justify-center hover:bg-theme-surface-sunken border border-transparent hover:border-theme-border rounded-retro disabled:opacity-30 text-theme-text-muted hover:text-theme-text cursor-pointer transition-colors active:translate-x-[0.5px] active:translate-y-[0.5px]"
           title="Next Match (Enter)"
         >
           <ChevronDown className="w-4 h-4" />
@@ -111,10 +111,10 @@ export default function EditorSearch({
         <button
           type="button"
           onClick={() => setShowReplace(!showReplace)}
-          className={`p-1.5 rounded transition-colors ${
+          className={`h-8 w-8 flex items-center justify-center rounded-retro transition-colors cursor-pointer border ${
             showReplace
-              ? "bg-blue-600 text-white"
-              : "hover:bg-slate-800 text-slate-400 hover:text-white"
+              ? "bg-theme-primary text-theme-primary-text border-theme-border font-bold shadow-retro-sm"
+              : "hover:bg-theme-surface-sunken border-transparent hover:border-theme-border text-theme-text-muted hover:text-theme-text"
           }`}
           title="Toggle Replace"
         >
@@ -124,7 +124,7 @@ export default function EditorSearch({
         <button
           type="button"
           onClick={onClose}
-          className="p-1.5 hover:bg-slate-800 rounded text-slate-400 hover:text-white"
+          className="h-8 w-8 flex items-center justify-center hover:bg-theme-surface-sunken border border-transparent hover:border-theme-border rounded-retro text-theme-text-muted hover:text-theme-text cursor-pointer transition-colors"
           title="Close (Esc)"
         >
           <X className="w-4 h-4" />
@@ -133,20 +133,20 @@ export default function EditorSearch({
 
       {/* Replace Row */}
       {showReplace && (
-        <div className="flex items-center gap-1.5 pt-1 border-t border-slate-800">
+        <div className="flex items-center gap-1.5 pt-2 border-t border-theme-border-subtle">
           <input
             type="text"
             value={replaceQuery}
             onChange={(e) => setReplaceQuery(e.target.value)}
-            placeholder="Replace with..."
-            className="flex-1 px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
+            placeholder="แทนที่ด้วย..."
+            className="flex-1 h-8 px-2.5 bg-theme-surface-sunken border border-theme-border rounded-retro text-xs text-theme-text placeholder-theme-text-faint focus:outline-none focus:bg-theme-surface focus:border-theme-primary font-mono transition-colors"
           />
 
           <button
             type="button"
             onClick={() => onReplace(searchQuery, replaceQuery, matchCase)}
             disabled={totalMatches === 0}
-            className="px-2 py-1 bg-slate-800 hover:bg-slate-700 disabled:opacity-30 rounded text-[11px] font-medium text-slate-200"
+            className="h-8 px-2.5 bg-theme-surface hover:bg-theme-surface-hover border border-theme-border shadow-retro-sm disabled:opacity-30 rounded-retro text-xs font-medium text-theme-text cursor-pointer transition-all active:translate-x-[0.5px] active:translate-y-[0.5px]"
             title="Replace Current"
           >
             Replace
@@ -156,27 +156,27 @@ export default function EditorSearch({
             type="button"
             onClick={() => onReplaceAll(searchQuery, replaceQuery, matchCase)}
             disabled={totalMatches === 0}
-            className="px-2 py-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-30 rounded text-[11px] font-medium text-white flex items-center gap-1"
+            className="h-8 px-2.5 bg-theme-primary hover:bg-theme-primary-hover border border-theme-border shadow-retro-sm disabled:opacity-30 rounded-retro text-xs font-medium text-theme-primary-text flex items-center gap-1 cursor-pointer transition-all active:translate-x-[0.5px] active:translate-y-[0.5px]"
             title="Replace All"
           >
-            <ReplaceAll className="w-3 h-3" />
+            <ReplaceAll className="w-3.5 h-3.5" />
             <span>All</span>
           </button>
         </div>
       )}
 
       {/* Match Case Option */}
-      <div className="flex items-center justify-between text-[11px] text-slate-400 px-1">
+      <div className="flex items-center justify-between text-[11px] text-theme-text-muted px-1">
         <label className="flex items-center gap-1.5 cursor-pointer">
           <input
             type="checkbox"
             checked={matchCase}
             onChange={(e) => setMatchCase(e.target.checked)}
-            className="rounded bg-slate-950 border-slate-700 text-blue-600"
+            className="rounded-retro border-theme-border text-theme-primary focus:ring-0 cursor-pointer"
           />
-          <span>Match case (ตรงตามตัวพิมพ์)</span>
+          <span className="font-mono">Match case (ตรงตามตัวพิมพ์)</span>
         </label>
-        <span className="text-[10px] text-slate-500">Esc to close</span>
+        <span className="text-[10px] text-theme-text-faint font-mono">Esc to close</span>
       </div>
     </div>
   );

@@ -35,7 +35,7 @@ export default function PreviewToolbar({
           </span>
         </div>
         {documentNumber && (
-          <span className="text-xs font-mono px-2.5 py-0.5 rounded-retro bg-theme-surface-sunken text-theme-text border border-theme-border hidden sm:inline font-semibold">
+          <span className="h-8 inline-flex items-center text-xs font-mono px-2.5 rounded-retro bg-theme-surface-sunken text-theme-text border border-theme-border hidden sm:inline-flex font-semibold shadow-retro-sm">
             {documentNumber} {version ? `v${version}` : ""}
           </span>
         )}
@@ -61,7 +61,7 @@ export default function PreviewToolbar({
         <div className="h-5 w-px bg-theme-border-subtle" />
 
         {/* Zoom Buttons Group */}
-        <div className="flex items-center bg-theme-surface-sunken border border-theme-border rounded-retro p-0.5 gap-1 shadow-retro-sm">
+        <div className="h-8 flex items-center bg-theme-surface-sunken border border-theme-border rounded-retro p-0.5 gap-1 shadow-retro-sm">
           <button
             type="button"
             onClick={onZoomOut}

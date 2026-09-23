@@ -41,9 +41,9 @@ export default function ActionButton({
   };
 
   const sizeStyles = {
-    sm: "px-2.5 py-1 text-xs gap-1.5 rounded-retro",
-    md: "px-3.5 py-1.5 text-xs gap-2 rounded-retro",
-    lg: "px-4 py-2 text-sm gap-2.5 rounded-retro",
+    sm: "h-8 px-2.5 text-xs gap-1.5 rounded-retro",
+    md: "h-9 px-3.5 text-xs gap-2 rounded-retro",
+    lg: "h-10 px-4 text-sm gap-2.5 rounded-retro",
   };
 
   return (

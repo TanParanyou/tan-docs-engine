@@ -8,9 +8,7 @@ import {
   Check,
   Copy,
   Plus,
-  Layers,
   ChevronRight,
-  Code2,
 } from "lucide-react";
 import {
   EDITOR_SNIPPET_TEMPLATES,
@@ -68,22 +66,22 @@ export default function TemplateSnippetModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/65 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/50 backdrop-blur-xs animate-fade-in select-none">
       <div
-        className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-4xl h-[82vh] max-h-[720px] overflow-hidden flex flex-col"
+        className="bg-theme-surface rounded-retro shadow-retro-lg border-2 border-theme-border w-full max-w-4xl h-[82vh] max-h-[720px] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-5 py-3.5 bg-slate-900 text-white flex items-center justify-between flex-shrink-0">
+        <div className="px-5 py-3.5 bg-theme-surface-sunken border-b-2 border-theme-border text-theme-text flex items-center justify-between flex-shrink-0 shadow-retro-sm">
           <div className="flex items-center space-x-2.5">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
-              <Sparkles className="w-4 h-4 text-amber-300" />
+            <div className="w-8 h-8 rounded-retro bg-theme-primary flex items-center justify-center text-white border border-theme-border shadow-retro-sm">
+              <Sparkles className="w-4 h-4 text-theme-primary-text" />
             </div>
             <div>
-              <h2 className="font-bold text-sm tracking-tight flex items-center gap-1.5">
+              <h2 className="font-bold text-sm tracking-tight text-theme-text font-mono flex items-center gap-1.5">
                 <span>คลังแม่แบบและบล็อกข้อความ (Snippet Blocks)</span>
               </h2>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-theme-text-muted">
                 เลือกแม่แบบบล็อกเนื้อหา ตารางพิจารณา REQ และ Mermaid เพื่อแทรกลงในเอกสารทันที
               </p>
             </div>
@@ -91,15 +89,15 @@ export default function TemplateSnippetModal({
           <button
             onClick={onClose}
             type="button"
-            className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+            className="h-8 w-8 rounded-retro hover:bg-theme-surface text-theme-text-muted hover:text-theme-text border border-transparent hover:border-theme-border transition-colors flex items-center justify-center cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Categories & Search */}
-        <div className="px-5 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 flex-shrink-0">
-          <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0 scrollbar-none text-xs">
+        <div className="px-5 py-2.5 bg-theme-surface border-b border-theme-border flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 flex-shrink-0">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none text-xs">
             {categories.map((cat) => {
               const active = selectedCategory === cat.id;
               return (
@@ -107,10 +105,10 @@ export default function TemplateSnippetModal({
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
                   type="button"
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${
+                  className={`h-8 px-3 rounded-retro text-xs font-mono font-medium transition-all cursor-pointer whitespace-nowrap ${
                     active
-                      ? "bg-blue-600 text-white shadow-xs"
-                      : "bg-white text-slate-600 hover:text-slate-900 border border-slate-200"
+                      ? "bg-theme-primary text-theme-primary-text border border-theme-border shadow-retro-sm font-bold"
+                      : "bg-theme-surface-sunken text-theme-text-muted hover:text-theme-text hover:bg-theme-surface border border-theme-border"
                   }`}
                 >
                   {cat.label}
@@ -119,24 +117,24 @@ export default function TemplateSnippetModal({
             })}
           </div>
 
-          <div className="relative w-full sm:w-56 flex-shrink-0">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+          <div className="relative w-full sm:w-60 flex-shrink-0">
+            <Search className="w-3.5 h-3.5 text-theme-text-muted absolute left-2.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="ค้นหาแม่แบบ..."
-              className="w-full pl-7 pr-3 py-1 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full h-8 pl-8 pr-3 bg-theme-surface-sunken border border-theme-border rounded-retro text-xs text-theme-text placeholder-theme-text-faint focus:outline-none focus:bg-theme-surface focus:border-theme-primary font-mono transition-colors"
             />
           </div>
         </div>
 
         {/* Content Body: Left Snippet List, Right Preview */}
-        <div className="flex-1 overflow-hidden grid grid-cols-1 md:grid-cols-12 divide-y md:divide-y-0 md:divide-x divide-slate-200">
+        <div className="flex-1 overflow-hidden grid grid-cols-1 md:grid-cols-12 divide-y md:divide-y-0 md:divide-x-2 divide-theme-border">
           {/* Left: Snippets list */}
-          <div className="md:col-span-5 overflow-y-auto p-3 space-y-1.5 bg-slate-50/60">
+          <div className="md:col-span-5 overflow-y-auto p-3 space-y-2 bg-theme-bg/60">
             {filteredSnippets.length === 0 ? (
-              <div className="p-6 text-center text-xs text-slate-400">
+              <div className="p-6 text-center text-xs text-theme-text-muted font-mono">
                 ไม่พบแม่แบบที่ค้นหา
               </div>
             ) : (
@@ -147,26 +145,26 @@ export default function TemplateSnippetModal({
                     key={snip.id}
                     type="button"
                     onClick={() => setSelectedSnippet(snip)}
-                    className={`w-full p-2.5 rounded-xl border text-left transition-all flex items-center justify-between gap-2 ${
+                    className={`w-full p-2.5 rounded-retro border-2 text-left transition-all flex items-center justify-between gap-2 cursor-pointer ${
                       isSelected
-                        ? "bg-white border-blue-500 shadow-xs ring-2 ring-blue-500/15"
-                        : "bg-white border-slate-200 hover:border-slate-300"
+                        ? "bg-theme-surface border-theme-primary shadow-retro-sm"
+                        : "bg-theme-surface border-theme-border hover:border-theme-border-subtle"
                     }`}
                   >
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5 mb-0.5">
-                        <span className="text-[10px] font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className="text-[10px] font-semibold text-theme-accent-text bg-theme-accent-light px-1.5 py-0.5 rounded-retro border border-theme-accent/40 font-mono">
                           {snip.categoryLabel}
                         </span>
                       </div>
-                      <h4 className="text-xs font-bold text-slate-800 truncate">
+                      <h4 className="text-xs font-bold text-theme-text truncate font-sans">
                         {snip.title}
                       </h4>
-                      <p className="text-[10.5px] text-slate-500 truncate mt-0.5">
+                      <p className="text-[11px] text-theme-text-muted truncate mt-0.5 font-sans">
                         {snip.description}
                       </p>
                     </div>
-                    <ChevronRight className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-theme-text-muted flex-shrink-0" />
                   </button>
                 );
               })
@@ -174,34 +172,34 @@ export default function TemplateSnippetModal({
           </div>
 
           {/* Right: Snippet Code Preview & Actions */}
-          <div className="md:col-span-7 flex flex-col h-full bg-white overflow-hidden">
+          <div className="md:col-span-7 flex flex-col h-full bg-theme-surface overflow-hidden">
             {selectedSnippet ? (
               <>
-                <div className="p-4 border-b border-slate-100 flex items-center justify-between gap-3 flex-shrink-0 bg-white">
+                <div className="p-4 border-b border-theme-border flex items-center justify-between gap-3 flex-shrink-0 bg-theme-surface shadow-retro-sm">
                   <div>
-                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">
+                    <span className="text-[10px] font-semibold text-theme-text-muted uppercase tracking-wider block font-mono">
                       {selectedSnippet.categoryLabel}
                     </span>
-                    <h3 className="text-sm font-bold text-slate-900 mt-0.5">
+                    <h3 className="text-sm font-bold text-theme-text mt-0.5 font-sans">
                       {selectedSnippet.title}
                     </h3>
                   </div>
 
-                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <button
                       type="button"
                       onClick={() => handleCopy(selectedSnippet.snippet)}
-                      className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium flex items-center gap-1 transition-colors"
+                      className="h-8 px-3 bg-theme-surface hover:bg-theme-surface-hover text-theme-text border border-theme-border rounded-retro text-xs font-medium flex items-center gap-1.5 transition-all shadow-retro-sm cursor-pointer active:translate-x-[0.5px] active:translate-y-[0.5px]"
                       title="คัดลอก Markdown"
                     >
                       {copied ? (
                         <>
-                          <Check className="w-3.5 h-3.5 text-emerald-600" />
-                          <span className="text-emerald-700">คัดลอกแล้ว</span>
+                          <Check className="w-3.5 h-3.5 text-theme-success" />
+                          <span className="text-theme-success font-semibold">คัดลอกแล้ว</span>
                         </>
                       ) : (
                         <>
-                          <Copy className="w-3.5 h-3.5" />
+                          <Copy className="w-3.5 h-3.5 text-theme-text-muted" />
                           <span>คัดลอก</span>
                         </>
                       )}
@@ -210,7 +208,7 @@ export default function TemplateSnippetModal({
                     <button
                       type="button"
                       onClick={() => handleInsert(selectedSnippet)}
-                      className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-xs flex items-center gap-1 transition-all"
+                      className="h-8 px-3.5 bg-theme-primary hover:bg-theme-primary-hover text-theme-primary-text border border-theme-border rounded-retro text-xs font-semibold shadow-retro-sm flex items-center gap-1.5 transition-all cursor-pointer active:translate-x-[0.5px] active:translate-y-[0.5px]"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>แทรกลงในเอกสาร</span>
@@ -219,14 +217,14 @@ export default function TemplateSnippetModal({
                 </div>
 
                 {/* Markdown snippet raw view */}
-                <div className="flex-1 overflow-y-auto p-4 bg-slate-900 text-slate-200 font-mono text-[11.5px] leading-relaxed">
+                <div className="flex-1 overflow-y-auto p-4 bg-theme-surface-sunken text-theme-text font-mono text-[12px] leading-relaxed">
                   <pre className="whitespace-pre-wrap select-all">
                     {selectedSnippet.snippet.trim()}
                   </pre>
                 </div>
               </>
             ) : (
-              <div className="flex items-center justify-center h-full text-slate-400 text-xs">
+              <div className="flex items-center justify-center h-full text-theme-text-muted text-xs font-mono">
                 เลือกแม่แบบจากรายการด้านซ้าย
               </div>
             )}

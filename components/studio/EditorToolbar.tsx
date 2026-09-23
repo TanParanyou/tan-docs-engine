@@ -21,6 +21,10 @@ import {
   FileCheck2,
   BookOpen,
   Puzzle,
+  Undo2,
+  Redo2,
+  RotateCcw,
+  AlignJustify,
 } from "lucide-react";
 import TemplateSnippetModal from "./TemplateSnippetModal";
 import { cn } from "@/lib/utils";
@@ -32,6 +36,15 @@ interface EditorToolbarProps {
   onOpenSearch?: () => void;
   editorTheme: "light" | "dark";
   onToggleTheme: () => void;
+  // History Undo / Redo controls
+  canUndo?: boolean;
+  canRedo?: boolean;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  // Formatting & Safety controls
+  onPrettifyTables?: () => void;
+  isDirty?: boolean;
+  onRevert?: () => void;
 }
 
 export default function EditorToolbar({
@@ -41,6 +54,13 @@ export default function EditorToolbar({
   onOpenSearch,
   editorTheme,
   onToggleTheme,
+  canUndo = false,
+  canRedo = false,
+  onUndo,
+  onRedo,
+  onPrettifyTables,
+  isDirty = false,
+  onRevert,
 }: EditorToolbarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isSnippetModalOpen, setIsSnippetModalOpen] = useState(false);
@@ -54,24 +74,62 @@ export default function EditorToolbar({
     }
   };
 
-  const isLight = editorTheme === "light";
-  const bgClass = isLight ? "bg-slate-50/90 border-slate-200 text-slate-700" : "bg-slate-900 border-slate-800 text-slate-300";
-  const btnHover = isLight ? "hover:bg-slate-200/80 hover:text-slate-900" : "hover:bg-slate-800 hover:text-white";
-  const dividerClass = isLight ? "bg-slate-300" : "bg-slate-700";
-
-  const btnBase = "h-8 min-w-[32px] px-2 flex items-center justify-center rounded-lg transition-all cursor-pointer font-medium text-xs select-none";
+  // Retro Sharp Industrial Design Button Tokens
+  const btnBase =
+    "h-8 min-w-[32px] px-2 flex items-center justify-center rounded-retro text-theme-text transition-all cursor-pointer font-medium text-xs select-none";
+  const btnNormal =
+    "hover:bg-theme-surface-sunken text-theme-text hover:text-theme-text border border-transparent active:translate-x-[0.5px] active:translate-y-[0.5px]";
+  const btnDisabled = "opacity-30 cursor-not-allowed hover:bg-transparent pointer-events-none";
 
   return (
-    <div className={`${bgClass} border-b px-3 py-2 flex flex-wrap items-center justify-between gap-1.5 text-xs select-none transition-colors`}>
+    <div className="bg-theme-surface border-b border-theme-border px-3 py-1.5 flex items-center justify-between gap-2 text-xs select-none shadow-retro-sm transition-colors overflow-x-auto scrollbar-none">
       {/* Left: Tools Group */}
-      <div className="flex flex-wrap items-center gap-1">
-        {/* Headings */}
-        <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 flex-shrink-0">
+        {/* Group 1: Undo / Redo / Revert */}
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <button
+            type="button"
+            title="ย้อนกลับ Undo (⌘Z)"
+            disabled={!canUndo}
+            onClick={onUndo}
+            className={cn(btnBase, "flex-shrink-0", !canUndo ? btnDisabled : btnNormal)}
+          >
+            <Undo2 className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            title="ทำซ้ำ Redo (⌘⇧Z หรือ ⌘Y)"
+            disabled={!canRedo}
+            onClick={onRedo}
+            className={cn(btnBase, "flex-shrink-0", !canRedo ? btnDisabled : btnNormal)}
+          >
+            <Redo2 className="w-4 h-4" />
+          </button>
+          {isDirty && onRevert && (
+            <button
+              type="button"
+              title="คืนค่าต้นฉบับล่าสุด (Revert to Saved)"
+              onClick={onRevert}
+              className={cn(
+                btnBase,
+                "flex-shrink-0 whitespace-nowrap text-theme-warning hover:bg-theme-warning/10 border border-theme-warning/40 shadow-retro-sm"
+              )}
+            >
+              <RotateCcw className="w-3.5 h-3.5 mr-1 flex-shrink-0" />
+              <span className="hidden sm:inline whitespace-nowrap">คืนค่าเดิม</span>
+            </button>
+          )}
+        </div>
+
+        <div className="h-5 w-px bg-theme-border-subtle mx-1 flex-shrink-0" />
+
+        {/* Group 2: Headings */}
+        <div className="flex items-center gap-1 flex-shrink-0">
           <button
             type="button"
             title="Heading 1 (#)"
             onClick={() => onInsertText("# ", "", "หัวข้อระดับ 1")}
-            className={cn(btnBase, btnHover)}
+            className={cn(btnBase, "flex-shrink-0", btnNormal)}
           >
             <Heading1 className="w-4 h-4" />
           </button>
@@ -79,7 +137,7 @@ export default function EditorToolbar({
             type="button"
             title="Heading 2 (##)"
             onClick={() => onInsertText("## ", "", "หัวข้อระดับ 2")}
-            className={cn(btnBase, btnHover)}
+            className={cn(btnBase, "flex-shrink-0", btnNormal)}
           >
             <Heading2 className="w-4 h-4" />
           </button>
@@ -87,21 +145,21 @@ export default function EditorToolbar({
             type="button"
             title="Heading 3 (###)"
             onClick={() => onInsertText("### ", "", "หัวข้อระดับ 3")}
-            className={cn(btnBase, btnHover)}
+            className={cn(btnBase, "flex-shrink-0", btnNormal)}
           >
             <Heading3 className="w-4 h-4" />
           </button>
         </div>
 
-        <div className={`h-5 w-px ${dividerClass} mx-1 flex-shrink-0`} />
+        <div className="h-5 w-px bg-theme-border-subtle mx-1 flex-shrink-0" />
 
-        {/* Text Formats */}
-        <div className="flex items-center gap-1">
+        {/* Group 3: Formatting */}
+        <div className="flex items-center gap-1 flex-shrink-0">
           <button
             type="button"
             title="Bold (**text**) [⌘B]"
             onClick={() => onInsertText("**", "**", "ตัวหนา")}
-            className={cn(btnBase, btnHover)}
+            className={cn(btnBase, "flex-shrink-0", btnNormal)}
           >
             <Bold className="w-4 h-4" />
           </button>
@@ -109,7 +167,7 @@ export default function EditorToolbar({
             type="button"
             title="Italic (*text*) [⌘I]"
             onClick={() => onInsertText("*", "*", "ตัวเอียง")}
-            className={cn(btnBase, btnHover)}
+            className={cn(btnBase, "flex-shrink-0", btnNormal)}
           >
             <Italic className="w-4 h-4" />
           </button>
@@ -117,7 +175,7 @@ export default function EditorToolbar({
             type="button"
             title="Strikethrough (~~text~~)"
             onClick={() => onInsertText("~~", "~~", "ข้อความขีดฆ่า")}
-            className={cn(btnBase, btnHover)}
+            className={cn(btnBase, "flex-shrink-0", btnNormal)}
           >
             <Strikethrough className="w-4 h-4" />
           </button>
@@ -125,21 +183,21 @@ export default function EditorToolbar({
             type="button"
             title="Inline Code (`code`)"
             onClick={() => onInsertText("`", "`", "code")}
-            className={cn(btnBase, btnHover)}
+            className={cn(btnBase, "flex-shrink-0", btnNormal)}
           >
             <Code className="w-4 h-4" />
           </button>
         </div>
 
-        <div className={`h-5 w-px ${dividerClass} mx-1 flex-shrink-0`} />
+        <div className="h-5 w-px bg-theme-border-subtle mx-1 flex-shrink-0" />
 
-        {/* Lists & Quotes */}
-        <div className="flex items-center gap-1">
+        {/* Group 4: Lists & Quotes */}
+        <div className="flex items-center gap-1 flex-shrink-0">
           <button
             type="button"
             title="Quote (> text)"
             onClick={() => onInsertText("> ", "", "ข้อความอ้างอิง")}
-            className={cn(btnBase, btnHover)}
+            className={cn(btnBase, "flex-shrink-0", btnNormal)}
           >
             <Quote className="w-4 h-4" />
           </button>
@@ -147,7 +205,7 @@ export default function EditorToolbar({
             type="button"
             title="Bulleted List (- item)"
             onClick={() => onInsertText("- ", "", "รายการข้อ")}
-            className={cn(btnBase, btnHover)}
+            className={cn(btnBase, "flex-shrink-0", btnNormal)}
           >
             <List className="w-4 h-4" />
           </button>
@@ -155,96 +213,112 @@ export default function EditorToolbar({
             type="button"
             title="Task List (- [ ] item)"
             onClick={() => onInsertText("- [ ] ", "", "งานที่ต้องทำ")}
-            className={cn(btnBase, btnHover)}
+            className={cn(btnBase, "flex-shrink-0", btnNormal)}
           >
             <CheckSquare className="w-4 h-4" />
           </button>
         </div>
 
-        <div className={`h-5 w-px ${dividerClass} mx-1 flex-shrink-0`} />
+        <div className="h-5 w-px bg-theme-border-subtle mx-1 flex-shrink-0" />
 
-        {/* Structural Blocks */}
-        <div className="flex items-center gap-1.5">
+        {/* Group 5: Structural Blocks & Formatting */}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
           <button
             type="button"
-            title="Table Template"
+            title="สร้างตาราง Markdown"
             onClick={() =>
               onInsertText(
                 "\n| คอลัมน์ที่ 1 | คอลัมน์ที่ 2 | คอลัมน์ที่ 3 |\n| :--- | :--- | :--- |\n| ข้อมูล 1 | ข้อมูล 2 | ข้อมูล 3 |\n| ข้อมูล 4 | ข้อมูล 5 | ข้อมูล 6 |\n"
               )
             }
-            className="h-8 px-2.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors flex items-center gap-1.5 font-medium text-xs shadow-2xs cursor-pointer"
+            className="h-8 px-2.5 bg-theme-accent-light text-theme-accent-text hover:bg-theme-accent-hover hover:text-white border border-theme-accent rounded-retro transition-all flex items-center gap-1.5 font-medium text-xs shadow-retro-sm cursor-pointer active:translate-x-[0.5px] active:translate-y-[0.5px] whitespace-nowrap flex-shrink-0"
           >
-            <Table className="w-4 h-4 text-blue-600" />
-            <span className="hidden sm:inline">ตาราง</span>
+            <Table className="w-4 h-4 flex-shrink-0" />
+            <span className="hidden sm:inline whitespace-nowrap">ตาราง</span>
           </button>
+
+          {onPrettifyTables && (
+            <button
+              type="button"
+              title="จัดระเบียบตาราง Markdown ให้คอลัมน์ตรงแนวกันสวยงาม (Prettify Tables)"
+              onClick={onPrettifyTables}
+              className={cn(
+                btnBase,
+                btnNormal,
+                "border border-theme-border-subtle hover:border-theme-border whitespace-nowrap flex-shrink-0"
+              )}
+            >
+              <AlignJustify className="w-3.5 h-3.5 mr-1 text-theme-accent flex-shrink-0" />
+              <span className="hidden md:inline whitespace-nowrap">จัดแนวตาราง</span>
+            </button>
+          )}
 
           <button
             type="button"
-            title="Mermaid Flowchart Diagram"
+            title="แผนภาพ Mermaid Flowchart"
             onClick={() =>
               onInsertText(
                 "\n```mermaid\ngraph TD\n  Start[เริ่มต้น] --> Action[ดำเนินการ]\n  Action --> End[เสร็จสิ้น]\n```\n"
               )
             }
-            className="h-8 px-2.5 bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 rounded-lg transition-colors flex items-center gap-1.5 font-medium text-xs shadow-2xs cursor-pointer"
+            className="h-8 px-2.5 bg-theme-surface hover:bg-theme-surface-hover text-theme-text border border-theme-border rounded-retro transition-all flex items-center gap-1.5 font-medium text-xs shadow-retro-sm cursor-pointer active:translate-x-[0.5px] active:translate-y-[0.5px] whitespace-nowrap flex-shrink-0"
           >
-            <Workflow className="w-4 h-4 text-purple-600" />
-            <span>Mermaid</span>
+            <Workflow className="w-4 h-4 text-theme-primary flex-shrink-0" />
+            <span className="whitespace-nowrap">Mermaid</span>
           </button>
 
           <button
             type="button"
-            title="Requirement Confirmation Block"
+            title="บล็อกยืนยันความต้องการ Requirement Confirmation Block"
             onClick={() =>
               onInsertText(
                 "\n### 4.X REQ-POS-XXX — [ชื่อฟังก์ชัน]\n\n**Requirement จากการประชุม**  \nรายละเอียด...\n\n**พฤติกรรมที่คาดหวัง**\n1. เงื่อนไขแรก...\n\n**ผลการพิจารณา:**\n- [ ] ยืนยันตามข้อเสนอ\n- [ ] ขอแก้ไข\n- [ ] ไม่อยู่ในขอบเขต\n**หมายเหตุลูกค้า:** -\n\n---\n"
               )
             }
-            className="h-8 px-2.5 bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200 rounded-lg transition-colors flex items-center gap-1.5 font-medium text-xs shadow-2xs cursor-pointer hidden md:flex"
+            className="h-8 px-2.5 bg-theme-surface hover:bg-theme-surface-hover text-theme-text border border-theme-border rounded-retro transition-all flex items-center gap-1.5 font-medium text-xs shadow-retro-sm cursor-pointer hidden md:flex active:translate-x-[0.5px] active:translate-y-[0.5px] whitespace-nowrap flex-shrink-0"
           >
-            <FileCheck2 className="w-4 h-4 text-sky-600" />
-            <span>Req Block</span>
+            <FileCheck2 className="w-4 h-4 text-theme-accent flex-shrink-0" />
+            <span className="whitespace-nowrap">Req Block</span>
           </button>
 
           <button
             type="button"
             title="คลังแม่แบบบล็อกเนื้อหาสำเร็จรูป (Snippet Templates)"
             onClick={() => setIsSnippetModalOpen(true)}
-            className="h-8 px-3 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors flex items-center gap-1.5 font-semibold text-xs shadow-2xs cursor-pointer"
+            className="h-8 px-3 bg-theme-primary text-theme-primary-text hover:bg-theme-primary-hover border border-theme-border rounded-retro transition-all flex items-center gap-1.5 font-semibold text-xs shadow-retro-sm cursor-pointer active:translate-x-[0.5px] active:translate-y-[0.5px] whitespace-nowrap flex-shrink-0"
           >
-            <BookOpen className="w-4 h-4 text-indigo-600" />
-            <span>แม่แบบ</span>
-            <Puzzle className="w-3.5 h-3.5 text-indigo-500" />
+            <BookOpen className="w-4 h-4 flex-shrink-0" />
+            <span className="whitespace-nowrap">แม่แบบ</span>
+            <Puzzle className="w-3.5 h-3.5 opacity-80 flex-shrink-0" />
           </button>
 
           <button
             type="button"
             title="Page Break สำหรับการพิมพ์ PDF (<!-- pagebreak -->)"
             onClick={() => onInsertText("\n<!-- pagebreak -->\n")}
-            className="h-8 px-2.5 bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors flex items-center gap-1.5 font-medium text-xs shadow-2xs cursor-pointer hidden lg:flex"
+            className="h-8 px-2.5 bg-theme-surface-sunken hover:bg-theme-surface-hover text-theme-text border border-theme-border rounded-retro transition-all flex items-center gap-1.5 font-medium text-xs shadow-retro-sm cursor-pointer hidden lg:flex active:translate-x-[0.5px] active:translate-y-[0.5px] whitespace-nowrap flex-shrink-0"
           >
-            <Scissors className="w-4 h-4 text-amber-600" />
-            <span>PageBreak</span>
+            <Scissors className="w-4 h-4 text-theme-warning flex-shrink-0" />
+            <span className="whitespace-nowrap">PageBreak</span>
           </button>
 
           <button
             type="button"
-            title="Notice / Alert Callout"
+            title="กล่องข้อควรระวัง Notice / Alert Callout"
             onClick={() =>
               onInsertText(
                 "\n> **ข้อควรระวัง (Important):**  \n> รายละเอียดข้อควรระวัง...\n"
               )
             }
-            className={cn(btnBase, btnHover)}
+            className={cn(btnBase, "flex-shrink-0", btnNormal)}
           >
-            <AlertCircle className="w-4 h-4 text-rose-500" />
+            <AlertCircle className="w-4 h-4 text-theme-danger flex-shrink-0" />
           </button>
         </div>
 
-        <div className={`h-5 w-px ${dividerClass} mx-1 flex-shrink-0`} />
+        <div className="h-5 w-px bg-theme-border-subtle mx-1 flex-shrink-0" />
 
-        {/* Media: Image Upload */}
+        {/* Group 6: Media: Image Upload */}
         <input
           ref={fileInputRef}
           type="file"
@@ -254,27 +328,27 @@ export default function EditorToolbar({
         />
         <button
           type="button"
-          title="Upload or Paste Image (หรือกด Ctrl+V วางรูปได้เลย)"
+          title="อัปโหลดหรือวางรูปภาพ (หรือกด ⌘V วางรูปได้เลย)"
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading}
-          className="h-8 px-2.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors flex items-center gap-1.5 font-medium text-xs shadow-2xs cursor-pointer disabled:opacity-50"
+          className="h-8 px-2.5 bg-theme-success/10 text-theme-success hover:bg-theme-success/20 border border-theme-success/40 rounded-retro transition-all flex items-center gap-1.5 font-medium text-xs shadow-retro-sm cursor-pointer disabled:opacity-50 active:translate-x-[0.5px] active:translate-y-[0.5px] whitespace-nowrap flex-shrink-0"
         >
-          <ImageIcon className="w-4 h-4 text-emerald-600" />
-          <span>{isUploading ? "Uploading..." : "รูปภาพ"}</span>
+          <ImageIcon className="w-4 h-4 text-theme-success flex-shrink-0" />
+          <span className="whitespace-nowrap">{isUploading ? "Uploading..." : "รูปภาพ"}</span>
         </button>
       </div>
 
       {/* Right: Search & Snippet Modal */}
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1.5 flex-shrink-0">
         {onOpenSearch && (
           <button
             type="button"
             onClick={onOpenSearch}
-            className="h-8 px-2.5 rounded-lg border border-slate-200/80 bg-white hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors flex items-center gap-1.5 text-xs shadow-2xs cursor-pointer font-medium"
-            title="Find in document (⌘F)"
+            className="h-8 px-2.5 rounded-retro border border-theme-border bg-theme-surface hover:bg-theme-surface-hover text-theme-text transition-all flex items-center gap-1.5 text-xs shadow-retro-sm cursor-pointer font-medium active:translate-x-[0.5px] active:translate-y-[0.5px] whitespace-nowrap flex-shrink-0"
+            title="ค้นหาข้อความในเอกสาร (⌘F)"
           >
-            <Search className="w-3.5 h-3.5 text-slate-500" />
-            <span className="hidden sm:inline">ค้นหา</span>
+            <Search className="w-3.5 h-3.5 text-theme-text-muted flex-shrink-0" />
+            <span className="hidden sm:inline whitespace-nowrap font-mono">ค้นหา</span>
           </button>
         )}
       </div>

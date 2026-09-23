@@ -1,19 +1,28 @@
 "use client";
 
-import React, { useRef, useState, useCallback, useImperativeHandle, forwardRef } from "react";
+import React, {
+  useRef,
+  useState,
+  useCallback,
+  useImperativeHandle,
+  forwardRef,
+  useEffect,
+} from "react";
 import EditorToolbar from "./EditorToolbar";
 import EditorSearch from "./EditorSearch";
 import VisualEditor, { VisualEditorHandle } from "./VisualEditor";
 import { useStudioStore } from "@/lib/store/useStudioStore";
 import EditorModeSwitcher from "./editor/EditorModeSwitcher";
 import EditorStatusBar from "./editor/EditorStatusBar";
+import { useMarkdownHistory } from "@/hooks/useMarkdownHistory";
+import { formatMarkdownTables } from "@/lib/markdown-table-formatter";
+import { AlertTriangle } from "lucide-react";
 
 export interface MarkdownEditorHandle {
   jumpToLine: (lineNumber: number) => void;
   insertSnippet: (snippet: string) => void;
   scrollToPercentage?: (percentage: number) => void;
 }
-
 
 interface MarkdownEditorProps {
   content: string;
@@ -30,12 +39,16 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
     { content, onChange, onSave, slug, filename, onScroll, syncScroll },
     ref
   ) => {
-    const { inputMode, setInputMode } = useStudioStore();
+    const { inputMode, setInputMode, savedContent } = useStudioStore();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const lineGutterRef = useRef<HTMLDivElement>(null);
     const visualEditorRef = useRef<VisualEditorHandle>(null);
     const [editorTheme, setEditorTheme] = useState<"light" | "dark">("light");
     const [isUploading, setIsUploading] = useState(false);
     const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+
+    // Safety Confirmation Modal สำหรับการ Revert to Saved
+    const [isRevertModalOpen, setIsRevertModalOpen] = useState(false);
 
     // Search state
     const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -44,6 +57,17 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
 
     // Cursor position
     const [cursorPos, setCursorPos] = useState({ line: 1, col: 1 });
+
+    // History Manager (Undo / Redo with per-file cache and coalescing)
+    const history = useMarkdownHistory({
+      filename,
+      initialContent: content,
+      onChange: (newContent) => {
+        onChange(newContent);
+      },
+    });
+
+    const isDirty = content !== savedContent;
 
     // Expose jumpToLine and insertSnippet to parent components
     useImperativeHandle(ref, () => ({
@@ -61,10 +85,11 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
           textarea.focus();
           textarea.setSelectionRange(charIndex, charIndex);
 
-          // Approximate scroll to line smoothly
+          // Scroll to line smoothly
           const totalLines = Math.max(1, lines.length);
           const percentage = Math.max(0, (lineNumber - 2) / totalLines);
-          textarea.scrollTop = percentage * (textarea.scrollHeight - textarea.clientHeight);
+          textarea.scrollTop =
+            percentage * (textarea.scrollHeight - textarea.clientHeight);
 
           // Update cursor
           setCursorPos({ line: lineNumber, col: 1 });
@@ -90,7 +115,18 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
       },
     }));
 
-    // Helper to insert markdown text at current cursor selection
+    // Update cursor position
+    const handleSelectOrClick = useCallback(() => {
+      const textarea = textareaRef.current;
+      if (!textarea) return;
+      const textBefore = textarea.value.substring(0, textarea.selectionStart);
+      const lines = textBefore.split("\n");
+      const currentLine = lines.length;
+      const currentCol = lines[lines.length - 1].length + 1;
+      setCursorPos({ line: currentLine, col: currentCol });
+    }, []);
+
+    // Helper to insert markdown text at current cursor selection with immediate history snapshot
     const insertTextAtCursor = useCallback(
       (before: string, after: string = "", defaultText: string = "") => {
         const textarea = textareaRef.current;
@@ -107,17 +143,104 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
           replacement +
           textarea.value.substring(end);
 
+        const newCursorPosition = start + before.length + textToInsert.length;
+
+        // Push immediate snapshot to history
+        history.pushChange(
+          newContent,
+          { start: newCursorPosition, end: newCursorPosition },
+          true
+        );
+
         onChange(newContent);
 
         setTimeout(() => {
-          textarea.focus();
-          const cursorPosition = start + before.length + textToInsert.length;
-          textarea.setSelectionRange(cursorPosition, cursorPosition);
-          handleSelectOrClick();
+          if (textareaRef.current) {
+            textareaRef.current.focus();
+            textareaRef.current.setSelectionRange(
+              newCursorPosition,
+              newCursorPosition
+            );
+            handleSelectOrClick();
+          }
         }, 0);
       },
-      [onChange]
+      [history, onChange, handleSelectOrClick]
     );
+
+    // จัดแนวตาราง Markdown อัตโนมัติ (Prettify Tables)
+    const handlePrettifyTables = useCallback(() => {
+      const formatted = formatMarkdownTables(content);
+      if (formatted !== content) {
+        const textarea = textareaRef.current;
+        const start = textarea?.selectionStart || 0;
+        const end = textarea?.selectionEnd || 0;
+
+        history.pushChange(formatted, { start, end }, true);
+        onChange(formatted);
+      }
+    }, [content, history, onChange]);
+
+    // จัดการ Undo พร้อมคืนค่า Selection Range
+    const handleUndo = useCallback(() => {
+      const restored = history.undo();
+      if (restored) {
+        setTimeout(() => {
+          if (textareaRef.current) {
+            textareaRef.current.focus();
+            textareaRef.current.setSelectionRange(
+              restored.selectionStart,
+              restored.selectionEnd
+            );
+            handleSelectOrClick();
+          }
+        }, 0);
+      }
+    }, [history, handleSelectOrClick]);
+
+    // จัดการ Redo พร้อมคืนค่า Selection Range
+    const handleRedo = useCallback(() => {
+      const restored = history.redo();
+      if (restored) {
+        setTimeout(() => {
+          if (textareaRef.current) {
+            textareaRef.current.focus();
+            textareaRef.current.setSelectionRange(
+              restored.selectionStart,
+              restored.selectionEnd
+            );
+            handleSelectOrClick();
+          }
+        }, 0);
+      }
+    }, [history, handleSelectOrClick]);
+
+    // คืนค่าสู่เวอร์ชันที่บันทึกไว้ (Revert to Saved)
+    const handleConfirmRevert = useCallback(() => {
+      history.resetHistory(savedContent);
+      onChange(savedContent);
+      setIsRevertModalOpen(false);
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+          textareaRef.current.setSelectionRange(0, 0);
+          handleSelectOrClick();
+        }
+      }, 0);
+    }, [history, onChange, savedContent, handleSelectOrClick]);
+
+    // Textarea Content Change Listener พร้อม Debounced History Push
+    const handleTextareaChange = (
+      e: React.ChangeEvent<HTMLTextAreaElement>
+    ) => {
+      const newText = e.target.value;
+      const start = e.target.selectionStart;
+      const end = e.target.selectionEnd;
+
+      history.pushChange(newText, { start, end }, false);
+      onChange(newText);
+      handleSelectOrClick();
+    };
 
     // Image upload handler
     const handleUploadImage = async (file: File) => {
@@ -143,9 +266,11 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
         insertTextAtCursor(markdownImage);
         setUploadStatus("อัปโหลดรูปภาพสำเร็จ!");
         setTimeout(() => setUploadStatus(null), 3000);
-      } catch (err: any) {
-        console.error("Upload error:", err);
-        setUploadStatus(`อัปโหลดล้มเหลว: ${err.message}`);
+      } catch (err: unknown) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Upload failed";
+        console.error("Upload error:", errorMessage);
+        setUploadStatus(`อัปโหลดล้มเหลว: ${errorMessage}`);
         setTimeout(() => setUploadStatus(null), 4000);
       } finally {
         setIsUploading(false);
@@ -155,6 +280,23 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
     // Keyboard shortcut listener
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       const isCmdOrCtrl = e.metaKey || e.ctrlKey;
+
+      // Undo / Redo Shortcuts: Cmd+Z, Cmd+Shift+Z, Cmd+Y
+      if (isCmdOrCtrl && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        if (e.shiftKey) {
+          handleRedo();
+        } else {
+          handleUndo();
+        }
+        return;
+      }
+
+      if (isCmdOrCtrl && e.key.toLowerCase() === "y") {
+        e.preventDefault();
+        handleRedo();
+        return;
+      }
 
       // Save shortcut: Cmd+S or Ctrl+S
       if (isCmdOrCtrl && e.key.toLowerCase() === "s") {
@@ -200,9 +342,18 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
             const newContent =
               textarea.value.substring(0, start - 2) +
               textarea.value.substring(start);
+            history.pushChange(
+              newContent,
+              { start: start - 2, end: start - 2 },
+              true
+            );
             onChange(newContent);
             setTimeout(() => {
-              textarea.selectionStart = textarea.selectionEnd = start - 2;
+              if (textareaRef.current) {
+                textareaRef.current.selectionStart =
+                  textareaRef.current.selectionEnd = start - 2;
+                handleSelectOrClick();
+              }
             }, 0);
           }
         } else {
@@ -211,23 +362,21 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
             textarea.value.substring(0, start) +
             "  " +
             textarea.value.substring(end);
+          history.pushChange(
+            newContent,
+            { start: start + 2, end: start + 2 },
+            true
+          );
           onChange(newContent);
           setTimeout(() => {
-            textarea.selectionStart = textarea.selectionEnd = start + 2;
+            if (textareaRef.current) {
+              textareaRef.current.selectionStart =
+                textareaRef.current.selectionEnd = start + 2;
+              handleSelectOrClick();
+            }
           }, 0);
         }
       }
-    };
-
-    // Update cursor position
-    const handleSelectOrClick = () => {
-      const textarea = textareaRef.current;
-      if (!textarea) return;
-      const textBefore = textarea.value.substring(0, textarea.selectionStart);
-      const lines = textBefore.split("\n");
-      const currentLine = lines.length;
-      const currentCol = lines[lines.length - 1].length + 1;
-      setCursorPos({ line: currentLine, col: currentCol });
     };
 
     // Paste image handler (Ctrl+V / Cmd+V)
@@ -259,10 +408,15 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
       }
     };
 
-    // Synchronize scrolling with preview
+    // Synchronize scrolling with preview and line numbers gutter
     const handleScroll = () => {
       const textarea = textareaRef.current;
       if (!textarea) return;
+
+      // Sync gutter scroll
+      if (lineGutterRef.current) {
+        lineGutterRef.current.scrollTop = textarea.scrollTop;
+      }
 
       if (syncScroll && onScroll) {
         const maxScroll = textarea.scrollHeight - textarea.clientHeight;
@@ -344,6 +498,14 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
           textarea.value.substring(0, start) +
           replacement +
           textarea.value.substring(end);
+        history.pushChange(
+          newContent,
+          {
+            start: start + replacement.length,
+            end: start + replacement.length,
+          },
+          true
+        );
         onChange(newContent);
         setTimeout(() => {
           handleFindNext(query, matchCase);
@@ -363,21 +525,27 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
       const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       const regex = new RegExp(escapedQuery, flags);
       const newContent = content.replace(regex, replacement);
+      history.pushChange(newContent, { start: 0, end: 0 }, true);
       onChange(newContent);
       setSearchMatches([]);
     };
 
     // Calculate document statistics
     const lineCount = content ? content.split("\n").length : 1;
-    const words = content ? content.trim().split(/\s+/).filter(Boolean).length : 0;
+    const words = content
+      ? content.trim().split(/\s+/).filter(Boolean).length
+      : 0;
     const chars = content.length;
 
     const isLight = editorTheme === "light";
-    const editorBg = isLight ? "bg-white text-slate-800" : "bg-slate-900 text-slate-100";
-    const statusBg = isLight ? "bg-slate-50 border-slate-200 text-slate-600" : "bg-slate-950 border-slate-800 text-slate-400";
+    const editorBg = isLight
+      ? "bg-theme-surface text-theme-text"
+      : "bg-slate-900 text-slate-100";
 
     return (
-      <div className={`flex flex-col h-full ${editorBg} border-r border-slate-200 dark:border-slate-800 relative transition-colors`}>
+      <div
+        className={`flex flex-col h-full ${editorBg} border-r border-theme-border relative transition-colors`}
+      >
         {/* Editor Mode Header */}
         <EditorModeSwitcher inputMode={inputMode} onChange={setInputMode} />
 
@@ -407,6 +575,13 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
               onToggleTheme={() =>
                 setEditorTheme(editorTheme === "light" ? "dark" : "light")
               }
+              canUndo={history.canUndo}
+              canRedo={history.canRedo}
+              onUndo={handleUndo}
+              onRedo={handleRedo}
+              onPrettifyTables={handlePrettifyTables}
+              isDirty={isDirty}
+              onRevert={() => setIsRevertModalOpen(true)}
             />
 
             {/* In-Editor Search Overlay */}
@@ -423,17 +598,41 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
             />
 
             {uploadStatus && (
-              <div className="bg-blue-600/10 border-b border-blue-500/20 px-4 py-1 text-xs text-blue-600 dark:text-blue-300 flex items-center justify-between">
+              <div className="bg-theme-accent-light border-b border-theme-accent/40 px-4 py-1 text-xs text-theme-accent-text flex items-center justify-between">
                 <span>{uploadStatus}</span>
               </div>
             )}
 
-            {/* Main Editor Textarea (Clean, comfortable, perfectly readable) */}
-            <div className="relative flex-1 flex overflow-hidden">
+            {/* Main Editor Textarea with Synchronized Line Numbers Gutter */}
+            <div className="relative flex-1 flex overflow-hidden bg-theme-surface">
+              {/* Line Numbers Gutter */}
+              <div
+                ref={lineGutterRef}
+                className="w-11 sm:w-13 border-r border-theme-border-subtle bg-theme-surface-sunken/40 select-none py-6 sm:py-8 font-mono text-[12px] leading-relaxed text-right pr-2 text-theme-text-muted/60 overflow-hidden flex-shrink-0"
+              >
+                {Array.from({ length: lineCount }).map((_, i) => {
+                  const lineNum = i + 1;
+                  const isCurrent = lineNum === cursorPos.line;
+                  return (
+                    <div
+                      key={lineNum}
+                      className={
+                        isCurrent
+                          ? "text-theme-primary font-bold bg-theme-primary/10 -mr-2 pr-2"
+                          : ""
+                      }
+                    >
+                      {lineNum}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Textarea */}
               <textarea
                 ref={textareaRef}
                 value={content}
-                onChange={(e) => onChange(e.target.value)}
+                onChange={handleTextareaChange}
                 onKeyDown={handleKeyDown}
                 onKeyUp={handleSelectOrClick}
                 onClick={handleSelectOrClick}
@@ -441,7 +640,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
                 onPaste={handlePaste}
                 onDrop={handleDrop}
                 placeholder="เริ่มเขียนเอกสาร Markdown ที่นี่..."
-                className={`w-full h-full p-6 sm:p-8 font-mono text-[13.5px] leading-relaxed resize-none overflow-y-auto focus:outline-none selection:bg-blue-500 selection:text-white ${editorBg}`}
+                className="w-full h-full p-6 sm:p-8 font-mono text-[13.5px] leading-relaxed resize-none overflow-y-auto focus:outline-none selection:bg-theme-primary selection:text-white bg-theme-surface text-theme-text"
                 spellCheck={false}
               />
             </div>
@@ -457,7 +656,46 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
           words={words}
           chars={chars}
           isLight={isLight}
+          undoCount={history.undoCount}
+          redoCount={history.redoCount}
         />
+
+        {/* Safety Confirmation Modal: Revert to Saved */}
+        {isRevertModalOpen && (
+          <div className="fixed inset-0 z-50 bg-theme-text/40 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="w-full max-w-md bg-theme-surface border-2 border-theme-border shadow-retro p-6 rounded-retro">
+              <div className="flex items-center gap-3 text-theme-warning mb-3">
+                <AlertTriangle className="w-6 h-6 flex-shrink-0" />
+                <h3 className="font-bold text-base text-theme-text font-sans">
+                  ยืนยันการคืนค่าต้นฉบับ (Revert Changes)?
+                </h3>
+              </div>
+              <p className="text-sm text-theme-text-muted mb-6 leading-relaxed">
+                การกระทำนี้จะย้อนกลับเนื้อหาทั้งหมดของไฟล์{" "}
+                <span className="font-mono font-bold text-theme-text">
+                  {filename}
+                </span>{" "}
+                สู่เวอร์ชันล่าสุดที่เคยบันทึกไว้ การเปลี่ยนแปลงที่ยังไม่ได้บันทึกจะสูญหาย
+              </p>
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsRevertModalOpen(false)}
+                  className="px-4 py-2 bg-theme-surface hover:bg-theme-surface-hover text-theme-text border border-theme-border rounded-retro text-xs font-semibold shadow-retro-sm transition-all cursor-pointer active:translate-x-[0.5px] active:translate-y-[0.5px]"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmRevert}
+                  className="px-4 py-2 bg-theme-danger text-white hover:bg-theme-danger/90 border border-theme-border rounded-retro text-xs font-bold shadow-retro-sm transition-all cursor-pointer active:translate-x-[0.5px] active:translate-y-[0.5px]"
+                >
+                  ยืนยันคืนค่าเดิม
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

@@ -58,7 +58,7 @@ export default function VisualToolbar({
   const btnDisabled = "opacity-30 cursor-not-allowed hover:bg-transparent";
 
   return (
-    <div className="border-b border-theme-border bg-theme-surface px-3 py-1.5 flex flex-wrap items-center gap-1.5 text-theme-text text-xs select-none shadow-retro-sm">
+    <div className="border-b border-theme-border bg-theme-surface px-3 py-1.5 flex items-center gap-1.5 text-theme-text text-xs select-none shadow-retro-sm overflow-x-auto scrollbar-none flex-shrink-0">
       {/* Group 1: Undo / Redo */}
       <div className="flex items-center gap-1">
         <button
