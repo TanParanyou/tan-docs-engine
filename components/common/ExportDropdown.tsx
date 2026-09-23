@@ -270,7 +270,7 @@ export default function ExportDropdown({
           >
             {/* Main Document Formats */}
             <div className="py-1">
-              <div className="px-3 py-1 text-[10px] font-mono font-semibold uppercase tracking-wider text-theme-text-muted">
+              <div className="px-3 py-1 text-[10px] font-mono font-bold uppercase tracking-wider text-theme-text-muted">
                 ส่งออกเอกสารทั้งเล่ม (Complete Document)
               </div>
 
@@ -278,19 +278,19 @@ export default function ExportDropdown({
               <button
                 type="button"
                 onClick={() => handleExport("pdf")}
-                className="w-full text-left px-3 py-2 flex items-start gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors group cursor-pointer"
+                className="w-full text-left px-3 py-2 flex items-start gap-2.5 hover:bg-theme-surface-hover transition-colors group cursor-pointer"
               >
-                <div className="p-1.5 rounded-md bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 group-hover:scale-105 transition-transform mt-0.5">
+                <div className="p-1.5 rounded-md bg-rose-100 text-rose-700 border border-rose-300 group-hover:scale-105 transition-transform mt-0.5">
                   <FileText className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between">
+                  <div className="font-bold text-theme-text flex items-center justify-between">
                     <span>Export PDF</span>
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+                    <span className="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-theme-surface-sunken text-theme-text border border-theme-border/20">
                       .pdf
                     </span>
                   </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                  <div className="text-[11px] text-theme-text-muted mt-0.5 leading-snug">
                     เอกสารทางการทั้งเล่ม จัดหน้า A4 สวยงาม พร้อมสารบัญ
                   </div>
                 </div>
@@ -300,19 +300,19 @@ export default function ExportDropdown({
               <button
                 type="button"
                 onClick={() => handleExport("docx")}
-                className="w-full text-left px-3 py-2 flex items-start gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors group cursor-pointer"
+                className="w-full text-left px-3 py-2 flex items-start gap-2.5 hover:bg-theme-surface-hover transition-colors group cursor-pointer"
               >
-                <div className="p-1.5 rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 group-hover:scale-105 transition-transform mt-0.5">
+                <div className="p-1.5 rounded-md bg-blue-100 text-blue-700 border border-blue-300 group-hover:scale-105 transition-transform mt-0.5">
                   <FileCode className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between">
+                  <div className="font-bold text-theme-text flex items-center justify-between">
                     <span>Export Word (DOCX)</span>
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+                    <span className="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-theme-surface-sunken text-theme-text border border-theme-border/20">
                       .docx
                     </span>
                   </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                  <div className="text-[11px] text-theme-text-muted mt-0.5 leading-snug">
                     ไฟล์ Microsoft Word ทั้งเล่ม รองรับ Google Docs สมบูรณ์
                   </div>
                 </div>
@@ -322,19 +322,19 @@ export default function ExportDropdown({
               <button
                 type="button"
                 onClick={() => handleExport("excel")}
-                className="w-full text-left px-3 py-2 flex items-start gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors group cursor-pointer"
+                className="w-full text-left px-3 py-2 flex items-start gap-2.5 hover:bg-theme-surface-hover transition-colors group cursor-pointer"
               >
-                <div className="p-1.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform mt-0.5">
+                <div className="p-1.5 rounded-md bg-emerald-100 text-emerald-700 border border-emerald-300 group-hover:scale-105 transition-transform mt-0.5">
                   <FileSpreadsheet className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between">
+                  <div className="font-bold text-theme-text flex items-center justify-between">
                     <span>Export Excel (XLSX)</span>
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+                    <span className="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-theme-surface-sunken text-theme-text border border-theme-border/20">
                       .xlsx
                     </span>
                   </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                  <div className="text-[11px] text-theme-text-muted mt-0.5 leading-snug">
                     สมุดงานตารางข้อมูลและรายการข้อกำหนดทุกไฟล์
                   </div>
                 </div>
@@ -343,7 +343,7 @@ export default function ExportDropdown({
 
             {/* Markdown Section */}
             <div className="py-1">
-              <div className="px-3 py-1 text-[10px] font-mono font-semibold uppercase tracking-wider text-theme-text-muted">
+              <div className="px-3 py-1 text-[10px] font-mono font-bold uppercase tracking-wider text-theme-text-muted">
                 ข้อมูลดิบ Markdown (Raw)
               </div>
 
@@ -351,19 +351,19 @@ export default function ExportDropdown({
               <button
                 type="button"
                 onClick={() => handleExport("md")}
-                className="w-full text-left px-3 py-2 flex items-start gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors group cursor-pointer"
+                className="w-full text-left px-3 py-2 flex items-start gap-2.5 hover:bg-theme-surface-hover transition-colors group cursor-pointer"
               >
-                <div className="p-1.5 rounded-md bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 group-hover:scale-105 transition-transform mt-0.5">
+                <div className="p-1.5 rounded-md bg-purple-100 text-purple-700 border border-purple-300 group-hover:scale-105 transition-transform mt-0.5">
                   <File className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between">
+                  <div className="font-bold text-theme-text flex items-center justify-between">
                     <span>Markdown รวมทั้งเล่ม</span>
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+                    <span className="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-theme-surface-sunken text-theme-text border border-theme-border/20">
                       .md
                     </span>
                   </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                  <div className="text-[11px] text-theme-text-muted mt-0.5 leading-snug">
                     รวมเนื้อหาทุกไฟล์พร้อม Frontmatter และข้อมูลโครงการ
                   </div>
                 </div>
@@ -374,20 +374,20 @@ export default function ExportDropdown({
                 <button
                   type="button"
                   onClick={() => handleExport("current-md")}
-                  className="w-full text-left px-3 py-2 flex items-start gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors group cursor-pointer"
+                  className="w-full text-left px-3 py-2 flex items-start gap-2.5 hover:bg-theme-surface-hover transition-colors group cursor-pointer"
                 >
-                  <div className="p-1.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 group-hover:scale-105 transition-transform mt-0.5">
+                  <div className="p-1.5 rounded-md bg-amber-100 text-amber-700 border border-amber-300 group-hover:scale-105 transition-transform mt-0.5">
                     <FileText className="w-4 h-4" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between">
+                    <div className="font-bold text-theme-text flex items-center justify-between">
                       <span>เฉพาะไฟล์ปัจจุบัน</span>
-                      <span className="text-[9px] font-mono px-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 truncate max-w-[80px]" title={currentFilename}>
+                      <span className="text-[9px] font-mono font-semibold px-1 py-0.5 rounded bg-theme-surface-sunken text-theme-text border border-theme-border/20 truncate max-w-[90px]" title={currentFilename}>
                         {currentFilename}
                       </span>
                     </div>
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
-                      ดาวน์โหลดเฉพาะไฟล์ <code className="text-[10px] bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">{currentFilename}</code> ที่กำลังแก้ไข
+                    <div className="text-[11px] text-theme-text-muted mt-0.5 leading-snug">
+                      ดาวน์โหลดเฉพาะไฟล์ <code className="text-[10px] font-mono font-semibold bg-theme-surface-sunken text-theme-text px-1 py-0.5 rounded border border-theme-border/20">{currentFilename}</code> ที่กำลังแก้ไข
                     </div>
                   </div>
                 </button>
