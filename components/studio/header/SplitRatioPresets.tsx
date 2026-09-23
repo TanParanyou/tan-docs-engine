@@ -19,7 +19,7 @@ export default function SplitRatioPresets({
   ];
 
   return (
-    <div className="flex items-center bg-slate-100 border border-slate-200/90 rounded-lg p-1 gap-1 text-xs font-mono select-none">
+    <div className="flex items-center bg-theme-surface-sunken border border-theme-border rounded-retro p-0.5 sm:p-1 gap-1 text-xs font-mono select-none shadow-retro-sm">
       {presets.map((p) => {
         const isActive = currentRatio === p.ratio;
         return (
@@ -29,10 +29,10 @@ export default function SplitRatioPresets({
             onClick={() => onSelectRatio(p.ratio)}
             title={p.title}
             className={cn(
-              "px-2.5 py-1 rounded-md transition-all cursor-pointer font-semibold",
+              "px-2.5 py-1 rounded-retro transition-all cursor-pointer font-semibold",
               isActive
-                ? "bg-white text-blue-600 shadow-xs border border-slate-200/60"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                ? "bg-theme-surface text-theme-primary font-bold border border-theme-border shadow-retro-sm"
+                : "text-theme-text-muted hover:text-theme-text hover:bg-theme-surface-hover"
             )}
           >
             {p.label}

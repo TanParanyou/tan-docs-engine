@@ -55,7 +55,7 @@ const VisualEditor = forwardRef<VisualEditorHandle, VisualEditorProps>(
       editorProps: {
         attributes: {
           class:
-            "focus:outline-none min-h-[600px] p-6 sm:p-10 font-sans text-slate-800 leading-relaxed max-w-none doc-visual-canvas",
+            "focus:outline-none min-h-[600px] px-8 sm:px-14 py-8 sm:py-12 font-sans text-theme-text leading-relaxed max-w-none doc-visual-canvas",
         },
         handleKeyDown: (view, event) => {
           if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
@@ -130,7 +130,7 @@ const VisualEditor = forwardRef<VisualEditorHandle, VisualEditorProps>(
     }));
 
     return (
-      <div className="flex flex-col h-full bg-white relative overflow-hidden select-text">
+      <div className="flex flex-col h-full bg-theme-surface relative overflow-hidden select-text">
         {/* Visual Formatting Toolbar */}
         <VisualToolbar
           editor={editor}
@@ -138,14 +138,14 @@ const VisualEditor = forwardRef<VisualEditorHandle, VisualEditorProps>(
           isUploading={isUploading}
         />
 
-        {/* Scrollable Canvas for ProseMirror - Smooth, unrestricted scrolling */}
+        {/* Scrollable Canvas for ProseMirror - Safe horizontal padding & retro chassis */}
         <div
           ref={scrollContainerRef}
           onScroll={handleScroll}
-          className="flex-1 overflow-y-auto overflow-x-hidden bg-slate-100/70 flex justify-center p-4 sm:p-8 select-text"
+          className="flex-1 overflow-y-auto overflow-x-hidden bg-theme-bg flex justify-center p-4 sm:p-8 select-text"
           style={{ WebkitOverflowScrolling: "touch" }}
         >
-          <div className="w-full max-w-4xl bg-white border border-slate-200/90 shadow-xs rounded-xl min-h-[calc(100vh-160px)] pb-48 transition-all">
+          <div className="w-full max-w-4xl bg-theme-surface border-2 border-theme-border shadow-retro rounded-retro min-h-[calc(100vh-160px)] pb-48 transition-all">
             <EditorContent editor={editor} />
           </div>
         </div>

@@ -41,9 +41,9 @@ export default function ActionButton({
   };
 
   const sizeStyles = {
-    sm: "px-2.5 py-1 text-xs gap-1 rounded-retro",
-    md: "px-3.5 py-1.5 text-xs gap-1.5 rounded-retro",
-    lg: "px-4 py-2 text-sm gap-2 rounded-retro",
+    sm: "px-2.5 py-1 text-xs gap-1.5 rounded-retro",
+    md: "px-3.5 py-1.5 text-xs gap-2 rounded-retro",
+    lg: "px-4 py-2 text-sm gap-2.5 rounded-retro",
   };
 
   return (
@@ -59,15 +59,23 @@ export default function ActionButton({
       {...props}
     >
       {isLoading ? (
-        <Loader2 className="w-3.5 h-3.5 animate-spin text-current" />
+        <>
+          <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" />
+          {loadingText && (
+            <span className={responsiveText ? "hidden sm:inline" : ""}>
+              {loadingText}
+            </span>
+          )}
+        </>
       ) : (
-        icon && <span className="flex-shrink-0">{icon}</span>
-      )}
-
-      {children && (
-        <span className={cn(responsiveText && "hidden sm:inline")}>
-          {isLoading && loadingText ? loadingText : children}
-        </span>
+        <>
+          {icon && <span className="flex-shrink-0">{icon}</span>}
+          {children && (
+            <span className={responsiveText ? "hidden sm:inline" : ""}>
+              {children}
+            </span>
+          )}
+        </>
       )}
     </button>
   );

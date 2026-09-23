@@ -166,12 +166,12 @@ export default function FileManagementDrawer({
   };
 
   return (
-    <div className="flex flex-col h-full bg-white border-r border-slate-200 text-slate-800">
+    <div className="flex flex-col h-full bg-theme-surface border-r-2 border-theme-border text-theme-text select-none">
       {/* Drawer Header */}
-      <div className="px-4 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+      <div className="px-4 py-3 border-b-2 border-theme-border bg-theme-surface flex items-center justify-between shadow-retro-sm">
         <div className="flex items-center space-x-2">
-          <Layers className="w-4 h-4 text-blue-600" />
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
+          <Layers className="w-4 h-4 text-theme-primary" />
+          <span className="text-xs font-bold uppercase tracking-wider text-theme-text font-mono">
             Document Sections ({files.length})
           </span>
         </div>
@@ -184,7 +184,7 @@ export default function FileManagementDrawer({
               handleStartCreate();
             }
           }}
-          className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+          className="h-8 w-8 flex items-center justify-center rounded-retro hover:bg-theme-surface-hover text-theme-text border border-theme-border shadow-retro-sm transition-colors cursor-pointer"
           title="Add new Markdown file"
         >
           <Plus className="w-4 h-4" />
@@ -304,10 +304,10 @@ export default function FileManagementDrawer({
           return (
             <div
               key={file.filename}
-              className={`group rounded-lg transition-all text-xs border ${
+              className={`group rounded-retro transition-all text-xs border ${
                 isSelected
-                  ? "bg-blue-50/80 border-blue-200 text-blue-900 font-medium"
-                  : "border-transparent hover:bg-slate-50 text-slate-600 hover:text-slate-900"
+                  ? "bg-theme-accent-light border-theme-accent text-theme-accent-text font-bold shadow-retro-sm"
+                  : "border-transparent hover:bg-theme-surface-hover text-theme-text"
               }`}
             >
               {isEditing ? (
@@ -317,40 +317,40 @@ export default function FileManagementDrawer({
                     value={renameValue}
                     onChange={(e) => setRenameValue(e.target.value)}
                     autoFocus
-                    className="flex-1 px-2 py-1 bg-white border border-slate-300 rounded text-xs text-slate-900 focus:outline-none focus:border-blue-500 font-mono"
+                    className="flex-1 px-2 py-1 bg-theme-surface border border-theme-border rounded-retro text-xs text-theme-text focus:outline-none focus:border-theme-primary font-mono shadow-retro-sm"
                   />
                   <button
                     type="button"
                     onClick={() => handleRenameSubmit(file.filename)}
-                    className="p-1 text-emerald-600 hover:bg-emerald-50 rounded"
+                    className="p-1 text-theme-success hover:bg-theme-success-light rounded-retro border border-theme-border"
                   >
                     <Check className="w-3.5 h-3.5" />
                   </button>
                   <button
                     type="button"
                     onClick={() => setEditingFile(null)}
-                    className="p-1 text-slate-400 hover:bg-slate-100 rounded"
+                    className="p-1 text-theme-text-muted hover:bg-theme-surface-hover rounded-retro border border-theme-border"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
               ) : isDeleting ? (
-                <div className="p-2 bg-red-50 border border-red-200 rounded text-[11px] space-y-1.5">
-                  <span className="text-red-700 block font-medium">
+                <div className="p-2 bg-theme-danger-light border border-theme-danger rounded-retro text-[11px] space-y-1.5 shadow-retro-sm">
+                  <span className="text-theme-danger block font-medium">
                     ยืนยันลบไฟล์ {file.filename}?
                   </span>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => handleDeleteSubmit(file.filename)}
-                      className="px-2.5 py-0.5 bg-red-600 hover:bg-red-700 text-white rounded font-medium shadow-xs"
+                      className="px-2.5 py-0.5 bg-theme-danger hover:bg-theme-danger/90 text-white rounded-retro font-medium shadow-retro-sm border border-theme-border"
                     >
                       ลบ
                     </button>
                     <button
                       type="button"
                       onClick={() => setDeletingFile(null)}
-                      className="px-2.5 py-0.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded"
+                      className="px-2.5 py-0.5 bg-theme-surface hover:bg-theme-surface-hover text-theme-text rounded-retro border border-theme-border"
                     >
                       ยกเลิก
                     </button>
@@ -365,7 +365,7 @@ export default function FileManagementDrawer({
                   >
                     <FileText
                       className={`w-4 h-4 flex-shrink-0 ${
-                        isSelected ? "text-blue-600" : "text-slate-400"
+                        isSelected ? "text-theme-accent" : "text-theme-text-muted"
                       }`}
                     />
                     <div className="truncate">
@@ -373,7 +373,7 @@ export default function FileManagementDrawer({
                         {file.filename}
                       </span>
                       {file.title && file.title !== file.filename && (
-                        <span className="text-[11px] text-slate-400 truncate block">
+                        <span className="text-[11px] text-theme-text-muted truncate block">
                           {file.title}
                         </span>
                       )}
@@ -387,7 +387,7 @@ export default function FileManagementDrawer({
                       title="Move Up (เลื่อนขึ้น)"
                       disabled={idx === 0 || isLoading}
                       onClick={() => handleMove(idx, "up")}
-                      className="h-7 w-7 flex items-center justify-center hover:bg-slate-200 rounded-md text-slate-500 hover:text-slate-900 disabled:opacity-20 cursor-pointer"
+                      className="h-7 w-7 flex items-center justify-center hover:bg-theme-surface-sunken rounded-retro text-theme-text-muted hover:text-theme-text disabled:opacity-20 cursor-pointer border border-transparent hover:border-theme-border"
                     >
                       <ArrowUp className="w-3.5 h-3.5" />
                     </button>
@@ -396,7 +396,7 @@ export default function FileManagementDrawer({
                       title="Move Down (เลื่อนลง)"
                       disabled={idx === files.length - 1 || isLoading}
                       onClick={() => handleMove(idx, "down")}
-                      className="h-7 w-7 flex items-center justify-center hover:bg-slate-200 rounded-md text-slate-500 hover:text-slate-900 disabled:opacity-20 cursor-pointer"
+                      className="h-7 w-7 flex items-center justify-center hover:bg-theme-surface-sunken rounded-retro text-theme-text-muted hover:text-theme-text disabled:opacity-20 cursor-pointer border border-transparent hover:border-theme-border"
                     >
                       <ArrowDown className="w-3.5 h-3.5" />
                     </button>
@@ -407,7 +407,7 @@ export default function FileManagementDrawer({
                         setEditingFile(file.filename);
                         setRenameValue(file.filename);
                       }}
-                      className="h-7 w-7 flex items-center justify-center hover:bg-slate-200 rounded-md text-slate-500 hover:text-slate-900 cursor-pointer"
+                      className="h-7 w-7 flex items-center justify-center hover:bg-theme-surface-sunken rounded-retro text-theme-text-muted hover:text-theme-text cursor-pointer border border-transparent hover:border-theme-border"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                     </button>
@@ -416,7 +416,7 @@ export default function FileManagementDrawer({
                       title="Delete (ลบไฟล์)"
                       disabled={files.length <= 1}
                       onClick={() => setDeletingFile(file.filename)}
-                      className="h-7 w-7 flex items-center justify-center hover:bg-red-100 rounded-md text-slate-400 hover:text-red-600 disabled:opacity-20 cursor-pointer"
+                      className="h-7 w-7 flex items-center justify-center hover:bg-theme-danger-light rounded-retro text-theme-text-muted hover:text-theme-danger disabled:opacity-20 cursor-pointer border border-transparent hover:border-theme-border"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>

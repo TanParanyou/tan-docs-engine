@@ -112,7 +112,7 @@ export default function StudioDrawerHost({
 
   // Desktop / Tablet: Inline Side Panel
   return (
-    <aside className="w-72 sm:w-80 flex-shrink-0 z-10 transition-all border-r border-slate-200 bg-white overflow-hidden">
+    <aside className="w-72 sm:w-80 flex-shrink-0 z-10 transition-all border-r-2 border-theme-border bg-theme-surface overflow-hidden shadow-retro-sm">
       {content}
     </aside>
   );

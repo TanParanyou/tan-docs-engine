@@ -357,7 +357,7 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
 
   return (
     <div
-      className="h-screen flex flex-col bg-slate-100 text-slate-800 overflow-hidden font-sans"
+      className="h-screen flex flex-col bg-theme-bg text-theme-text overflow-hidden font-sans"
       style={
         {
           "--primary-color": primaryColor,
@@ -445,10 +445,10 @@ export default function StudioLayout({ initialWorkspace }: StudioLayoutProps) {
           {viewMode === "split" && !isMobile && (
             <div
               onMouseDown={handleMouseDownSplitter}
-              className="w-1.5 hover:w-2 bg-slate-200 hover:bg-blue-500 cursor-col-resize transition-all z-20 flex items-center justify-center relative group select-none"
+              className="w-2 hover:w-2.5 bg-theme-surface-sunken hover:bg-theme-primary cursor-col-resize transition-all z-20 flex items-center justify-center relative group select-none border-x border-theme-border"
               title="Drag to resize Editor and Preview"
             >
-              <div className="w-0.5 h-6 bg-slate-400 group-hover:bg-white rounded-full transition-colors" />
+              <div className="w-0.5 h-6 bg-theme-border group-hover:bg-theme-primary-text rounded-none transition-colors" />
             </div>
           )}
 

@@ -38,7 +38,7 @@ export default function StudioRail({
   ];
 
   return (
-    <aside className="w-15 bg-slate-50 border-r border-slate-200 flex flex-col items-center py-3.5 space-y-2 flex-shrink-0 z-20 select-none">
+    <aside className="w-15 bg-theme-surface-sunken border-r-2 border-theme-border flex flex-col items-center py-3.5 space-y-2 flex-shrink-0 z-20 select-none">
       {/* Top Tool Tabs */}
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
@@ -48,10 +48,10 @@ export default function StudioRail({
             type="button"
             onClick={() => onToggleTab(tab.id)}
             className={cn(
-              "h-10 w-10 flex items-center justify-center rounded-xl transition-all relative cursor-pointer",
+              "h-10 w-10 flex items-center justify-center rounded-retro transition-all relative cursor-pointer",
               isActive
-                ? "bg-blue-600 text-white shadow-xs"
-                : "text-slate-500 hover:text-slate-900 hover:bg-slate-200/70"
+                ? "bg-theme-primary text-theme-primary-text border border-theme-border shadow-retro-sm"
+                : "text-theme-text-muted hover:text-theme-text hover:bg-theme-surface active:translate-x-[0.5px] active:translate-y-[0.5px]"
             )}
             title={tab.title}
           >
@@ -60,17 +60,17 @@ export default function StudioRail({
         );
       })}
 
-      <div className="w-8 h-px bg-slate-200 my-1.5" />
+      <div className="w-8 h-px bg-theme-border-subtle my-1.5" />
 
       {/* Settings Tab */}
       <button
         type="button"
         onClick={() => onToggleTab("settings")}
         className={cn(
-          "h-10 w-10 flex items-center justify-center rounded-xl transition-all relative cursor-pointer",
+          "h-10 w-10 flex items-center justify-center rounded-retro transition-all relative cursor-pointer",
           activeTab === "settings"
-            ? "bg-blue-600 text-white shadow-xs"
-            : "text-slate-500 hover:text-slate-900 hover:bg-slate-200/70"
+            ? "bg-theme-primary text-theme-primary-text border border-theme-border shadow-retro-sm"
+            : "text-theme-text-muted hover:text-theme-text hover:bg-theme-surface active:translate-x-[0.5px] active:translate-y-[0.5px]"
         )}
         title="Workspace Settings / การตั้งค่า (docs.config.json)"
       >
@@ -84,7 +84,7 @@ export default function StudioRail({
         <button
           type="button"
           onClick={onCollapse}
-          className="h-9 w-9 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-200/70 rounded-lg transition-colors cursor-pointer"
+          className="h-9 w-9 flex items-center justify-center text-theme-text-muted hover:text-theme-text hover:bg-theme-surface rounded-retro border border-transparent hover:border-theme-border transition-colors cursor-pointer"
           title="ปิดแถบด้านข้าง (Collapse)"
         >
           <ChevronLeft className="w-4 h-4" />

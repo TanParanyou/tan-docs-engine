@@ -2,6 +2,7 @@
 
 **Project:** `tan-docs-engine`  
 **System Type:** Multi-Tenant Technical Documentation Engine & Web Authoring Studio  
+**Design Aesthetic:** Retro Industrial Workstation (Sharp Brutalist / 0px Border Radius)  
 **Primary Tech Stack:** Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS, TipTap 3, Markdown-it, Puppeteer, Zustand  
 
 ---
@@ -12,13 +13,82 @@
 
 ### Core Objectives
 1. **Multi-Tenant Workspace Isolation:** จัดการเอกสารแต่ละชุดแยกอิสระในโฟลเดอร์ `workspaces/<slug>` โดยมี `docs.config.json` เป็น Single Source of Truth
-2. **Dual-Mode Authoring Studio:** เครื่องมือเขียนเอกสารบนเว็บที่สลับไปมาระหว่าง **Visual WYSIWYG** (สำหรับ Business/Product Owner) และ **Raw Markdown** (สำหรับ Developer/Architect) ได้แบบไร้รอยต่อ โดยไม่สูญเสียข้อมูล
-3. **Deterministic PDF Engine:** ระบบคอมไพล์เอกสารผ่าน Headless Chromium (Puppeteer) ควบคุมระยะขอบ เลย์เอาต์ A4, หน้าปก (Cover Page), หัวกระดาษ/ท้ายกระดาษ (Header/Footer), เลขหน้าอัตโนมัติ และแผนภาพ Mermaid อย่างแม่นยำ
-4. **Instant Asset Management:** อัปโหลดและแทรกรูปภาพด้วยการ Copy/Paste (`Cmd+V`) หรือ Drag & Drop ลงใน Editor โดยบันทึกไฟล์เข้า asset directory ของ workspace อัตโนมัติ
+2. **Centralized Theme Tokens & Sharp Retro Aesthetics:** ระบบควบคุมธีมแบบศูนย์กลาง (Single Source of Truth) ปรับเปลี่ยนที่จุดเดียวเปลี่ยนทั้งระบบ พร้อมรูปลักษณ์แบบ **Retro Industrial Workstation** เหลี่ยมคมกริบ (`0px` Border Radius) ขอบเส้นหมึกคมเข้ม และเงาตกกระทบแบบ Hard Tactile Shadow
+3. **Dual-Mode Authoring Studio:** เครื่องมือเขียนเอกสารบนเว็บที่สลับไปมาระหว่าง **Visual WYSIWYG** (สำหรับ Business/Product Owner) และ **Raw Markdown** (สำหรับ Developer/Architect) ได้แบบไร้รอยต่อ โดยไม่สูญเสียข้อมูล
+4. **Deterministic PDF Engine:** ระบบคอมไพล์เอกสารผ่าน Headless Chromium (Puppeteer) ควบคุมระยะขอบ เลย์เอาต์ A4, หน้าปก (Cover Page), หัวกระดาษ/ท้ายกระดาษ (Header/Footer), เลขหน้าอัตโนมัติ และแผนภาพ Mermaid อย่างแม่นยำ
+5. **Instant Asset Management:** อัปโหลดและแทรกรูปภาพด้วยการ Copy/Paste (`Cmd+V`) หรือ Drag & Drop ลงใน Editor โดยบันทึกไฟล์เข้า asset directory ของ workspace อัตโนมัติ
 
 ---
 
-## 2. System Architecture & Tech Stack
+## 2. Centralized Theme System & Retro Sharp Aesthetics
+
+ระบบดีไซน์ของ `tan-docs-engine` ถูกออกแบบตามหลัก **Single Source of Truth** กำหนดที่จุดเดียวเปลี่ยนทั้งแอปพลิเคชัน (Dashboard, Studio, Viewer, Modals, Buttons, Badges)
+
+```
+                                +----------------------------------------------------+
+                                |            lib/theme.ts (TypeScript Model)         |
+                                +----------------------------------------------------+
+                                                          |
+                                                          v
+                                +----------------------------------------------------+
+                                |           app/globals.css (:root Variables)        |
+                                +----------------------------------------------------+
+                                                          |
+                                                          v
+                                +----------------------------------------------------+
+                                |          tailwind.config.ts (Semantic Mapping)     |
+                                +----------------------------------------------------+
+                                                          |
+                                 +------------------------+-------------------------+
+                                 |                                                  |
+                                 v                                                  v
+                      [ Web App UI & Studio ]                            [ Document Reader & Modals ]
+                   - bg-theme-bg (Retro Paper)                        - Sharp Rectangular Modals
+                   - bg-theme-surface (Cards)                         - Retro Badges & File Tags
+                   - border-2 border-theme-border                     - Inky Structural Dividers
+                   - shadow-retro (3px 3px 0px)                       - Hard Tactile Click Feedback
+                   - rounded-retro (0px Sharp)                        - Vintage CRT Terminal Console
+```
+
+### 2.1 Design Tokens Palette
+| Token Variable | Tailwind Utility | Hex / Value | Semantic Role |
+| :--- | :--- | :--- | :--- |
+| `--theme-bg` | `bg-theme-bg` | `#f5efe6` | พื้นหลังแอปพลิเคชัน ผิวสัมผัสกระดาษวินเทจ / แชสซีส์เครื่องจักร |
+| `--theme-bg-subtle` | `bg-theme-bg-subtle` | `#ebe3d5` | พื้นหลังส่วนรองและแถบเครื่องมือ |
+| `--theme-surface` | `bg-theme-surface` | `#fdfbf7` | พื้นผิวการ์ด, ป๊อปอัปโมดอล, แผงควบคุม |
+| `--theme-surface-hover` | `bg-theme-surface-hover` | `#f7f1e4` | พื้นผิวเมื่อนำเมาส์ไปชี้ (Hover) |
+| `--theme-surface-sunken`| `bg-theme-surface-sunken`| `#e5ded0` | พื้นผิวกล่องอินพุต, ช่องกรอก, แถบสถานะ |
+| `--theme-text` | `text-theme-text` | `#23201b` | ตัวอักษรหลัก สีหมึกพิมพ์ดีดโบราณ (Deep Vintage Ink) |
+| `--theme-text-muted` | `text-theme-text-muted` | `#6b6357` | ตัวอักษรรอง, ป้ายคำอธิบาย, หัวข้อเมตาดาตา |
+| `--theme-text-faint` | `text-theme-text-faint` | `#9c9182` | ตัวอักษรสีจาง, ตัวคั่น, Placeholder |
+| `--theme-border` | `border-theme-border` | `#2e2a24` | เส้นขอบโครงสร้างสีหมึกเข้มคมชัด (Inky Structural Line) |
+| `--theme-border-subtle`| `border-theme-border-subtle`| `#d6ccbc`| เส้นแบ่งส่วนบาง (Hairline Divider) |
+| `--theme-primary` | `bg-theme-primary` | `#c2541a` | สีหลักปุ่มแอกชัน Burnt Amber / Retro Rust Orange |
+| `--theme-accent` | `bg-theme-accent` | `#2a6d63` | สีไฮไลต์รอง Vintage Workstation Teal |
+| `--theme-accent-light` | `bg-theme-accent-light` | `#e0ece8` | สีพื้นหลังอ่อนของแท็ก, ไฟล์, และหมวดหมู่ |
+| `--theme-warning` | `bg-theme-warning` | `#b87a14` | สีสถานะเตือน Warm Ochre Mustard |
+| `--theme-success` | `bg-theme-success` | `#29784b` | สีสถานะสำเร็จ Retro Forest Green |
+| `--theme-danger` | `bg-theme-danger` | `#b53228` | สีสถานะผิดพลาด Retro Brick Red |
+
+### 2.2 Sharp Brutalist & Retro Physical Signatures
+1. **0px Border Radius (เหลี่ยมคมกริบ):**
+   - กำหนด `--theme-radius: 0px;` ที่ระดับ Global
+   - โอเวอร์ไรด์คลาสความมนทั้งหมด (`rounded-retro`, `rounded-sm` จนถึง `rounded-3xl`) ให้มีค่า `border-radius: 0px !important;`
+   - กล่องการ์ด, ป๊อปอัปโมดอล, ปุ่มกด, ช่องค้นหา, Dropdown, และป้าย Tag ทุกชิ้นมีมุมฉากเหลี่ยมเป๊ะ 100%
+2. **Hard Offset Drop Shadow:**
+   - ใช้เงาตกกระทบทึบแบบไม่เบลอ (Zero Blur Hard Offset):
+     - `shadow-retro-sm`: `2px 2px 0px var(--theme-border)`
+     - `shadow-retro`: `3px 3px 0px var(--theme-border)`
+     - `shadow-retro-lg`: `5px 5px 0px var(--theme-border)`
+3. **Physical Tactile Click Feedback:**
+   - ปุ่มกดทุกชิ้นเมื่อถูกคลิกจะยุบตัวลงตามทิศทางเงาจริง (`active:translate-x-[1px] active:translate-y-[1px] active:shadow-none`)
+4. **Retro Visual Textures:**
+   - ลวดลายจุด Micro Dot Grid (`bg-retro-dots`) เพิ่มบรรยากาศพิมพ์เขียวทางวิศวกรรม
+   - หน้าจอ Terminal Console สไตล์ CRT Monitor ยุค 80s พร้อมไฟสถานะ 3 สี และตัวอักษร Phosphor Green / Amber
+
+---
+
+## 3. System Architecture & Tech Stack
 
 ```
                                   +--------------------------------------------------+
@@ -36,6 +106,7 @@
   | - Print View (/[slug]/print)  |                                                      | - Gojo Enrich Preprocessor    |
   | - Dual-Mode Editor (TipTap)   |                                                      | - HTML Template Combiner      |
   | - Zustand State Store         |                                                      | - Puppeteer PDF Exporter      |
+  | - Central Theme System (Retro)|                                                      | - serverExternalPackages Opt  |
   +-------------------------------+                                                      +-------------------------------+
                  |                                                                                     |
                  +------------------------------------------+------------------------------------------+
@@ -53,7 +124,7 @@
 ### Component Stack
 | Layer | Technologies | Responsibilities |
 | :--- | :--- | :--- |
-| **Theme & Design System** | CSS Custom Properties, Tailwind Extension | Centralized Theme Tokens (Single Source of Truth: `lib/theme.ts` & `app/globals.css`), Retro Technical Workstation aesthetic, hard tactile shadows |
+| **Theme & Aesthetics** | CSS Variables, Tailwind Extension, `lib/theme.ts` | Centralized Retro Workstation Design Tokens, Sharp 0px Geometry, Hard Shadows |
 | **Framework & UI** | Next.js 15, React 19, Tailwind CSS | App Router, SSR/CSR, Responsive Document UI |
 | **Rich-Text Engine** | `@tiptap/react`, `tiptap-markdown` | Visual WYSIWYG document editing, formatted tables, marks |
 | **Markdown Processing** | `markdown-it`, `highlight.js`, `task-lists` | Markdown parse, code block highlight, task checkboxes, Thai preprocessing |
@@ -63,7 +134,7 @@
 
 ---
 
-## 3. Multi-Tenant Workspace Model
+## 4. Multi-Tenant Workspace Model
 
 เอกสารทุกชุดจัดเก็บอยู่ใน `/workspaces/<slug>` ซึ่งถูกตัดขาดจากกัน (Tenant Isolation) ตามโครงสร้างดังนี้:
 
@@ -118,7 +189,7 @@ workspaces/
 
 ---
 
-## 4. Document Rendering & PDF Compilation Pipeline
+## 5. Document Rendering & PDF Compilation Pipeline
 
 ```mermaid
 flowchart TD
@@ -143,7 +214,7 @@ flowchart TD
 2. **Markdown to HTML Conversion:**
    - ใช้ `markdown-it` พร้อมปลั๊กอิน `markdown-it-task-lists`
    - แปลง Code Block ที่เป็น `mermaid` ให้อยู่ใน Container `<div class="mermaid">` เพื่อให้ Client Renderer หรือ Script จัดการวาดกราฟิก
-   - ไฮไลต์ Syntax ด้วย `highlight.js` รองรับภาษา TypeScript, C#, SQL, JSON, YAML, Bash ฯลฯ
+   - ไฮไลต์ Syntax ด้วย `highlight.js` (กำหนดใน `serverExternalPackages` เพื่อป้องกันปัญหา Webpack chunking)
 3. **Template Assembly (`generateWorkspaceHtml`):**
    - รวม `Cover Page` (หากเปิด `coverPage: true`) ที่มี Metadata, ชื่อเอกสาร, เวอร์ชัน, องค์กร, วันที่, และกรอบลงนาม
    - ผสาน CSS System: Print Stylesheet, Typography (`@tailwindcss/typography`), Table borders, Page number counters
@@ -156,27 +227,27 @@ flowchart TD
 
 ---
 
-## 5. Web Studio & Dual-Mode Authoring Design
+## 6. Web Studio & Dual-Mode Authoring Design
 
 หน้าจอ Studio (`/[workspace]/edit`) ออกแบบสำหรับการเขียนเอกสารอย่างมีประสิทธิภาพ:
 
-### 5.1 Dual-Mode Editor (Visual vs Markdown)
+### 6.1 Dual-Mode Editor (Visual vs Markdown)
 - **Visual Mode (WYSIWYG):** พัฒนาบน TipTap v3 พร้อม extensions สำหรับ Table, TableRow, TableHeader, TableCell, TaskList, TaskItem
   - เหมาะสำหรับ: การจัดตารางสเปก, แก้ไขคำ, จัด Formatting แบบไม่ต้องจำสัญลักษณ์ Markdown
 - **Markdown Mode (Raw Syntax):** Monospace Textarea ประสิทธิภาพสูง พร้อม Cursor position (`Ln X, Col Y`), Word/Character counter, Search & Replace overlay
   - เหมาะสำหรับ: การเขียน Mermaid diagram, แทรก Page Break, Paste code snippets
 - **Bi-directional Sync:** สถานะเนื้อหาใน Editor ถูกจัดการผ่าน `useStudioStore` การสลับโหมดจะแปลง Markdown เป็น TipTap Document และแปลง TipTap กลับเป็น Markdown โดยคงโครงสร้างเดิมและไม่ทำให้ข้อมูลสูญหาย
 
-### 5.2 Real-time Document Outline & Search
+### 6.2 Real-time Document Outline & Search
 - Auto-extract หัวข้อ H1, H2, H3 จากเนื้อหาแบบสดๆ
 - คลิกหัวข้อใน Document Outline เพื่อกระโดดไปยังจุดนั้นทันที
 - Search & Replace Overlay รองรับ Match Case, Whole Word, และ Regular Expression พร้อมปุ่ม Replace / Replace All
 
-### 5.3 Live Document Preview
+### 6.3 Live Document Preview
 - เรนเดอร์ HTML ฝั่งขวาพร้อม Styling ที่ตรงกับผลลัพธ์พิมพ์จริง 100%
 - Mermaid diagrams เรนเดอร์ผ่าน Client-side พร้อม Debounce 300ms และ Error Boundary ป้องกันหน้าจอค้างหาก syntax กราฟิกยังพิมพ์ไม่เสร็จ
 
-### 5.4 Instant Image Upload & Drag-and-Drop
+### 6.4 Instant Image Upload & Drag-and-Drop
 - ดักจับ Event `paste` (ภาพจาก Clipboard) และ `drop` (ลากไฟล์รูปภาพมาวางใน Editor)
 - ส่งคำขอ `POST /api/workspaces/[slug]/upload`
 - บันทึกไฟล์ไปยัง `workspaces/[slug]/src/assets/<timestamp>-<name>`
@@ -184,16 +255,16 @@ flowchart TD
 
 ---
 
-## 6. Backend API Architecture & Security
+## 7. Backend API Architecture & Security
 
 Route Handlers ทั้งหมดอยู่ภายใต้ `app/api/...`
 
-### 6.1 Path Traversal Guardrails
+### 7.1 Path Traversal Guardrails
 - **Slug Verification:** ตรวจสอบด้วย Regex `/^[a-zA-Z0-9_-]+$/`
 - **Filename Verification:** ตรวจสอบด้วย Regex `/^[a-zA-Z0-9_-]+\.md$/`
 - ห้ามมิให้มีพาธที่มี `..`, `/`, `\` หรืออักขระพิเศษ เพื่อป้องกัน Path Traversal ออกนอก `workspaces/`
 
-### 6.2 REST Endpoints Directory
+### 7.2 REST Endpoints Directory
 - `GET /api/workspaces` — ดึงรายชื่อ Workspace ทั้งหมด
 - `POST /api/workspaces` — สร้าง Workspace ใหม่จาก Template
 - `GET /api/workspaces/[slug]/config` — อ่าน `docs.config.json`
@@ -207,7 +278,7 @@ Route Handlers ทั้งหมดอยู่ภายใต้ `app/api/...`
 
 ---
 
-## 7. Print & A4 Layout Guidelines
+## 8. Print & A4 Layout Guidelines
 
 การจัดทำเอกสารเพื่อพิมพ์และแปลงเป็น PDF ต้องสอดคล้องกับมาตรฐาน Paged Media CSS:
 

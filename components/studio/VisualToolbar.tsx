@@ -17,9 +17,6 @@ import {
   Undo2,
   Redo2,
   Trash2,
-  Plus,
-  Minus,
-  Code,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -51,17 +48,17 @@ export default function VisualToolbar({
 
   const isTableActive = editor.isActive("table");
 
-  // Reusable button styles
+  // Retro Theme Button Styles
   const btnBase =
-    "h-8 min-w-[32px] px-2 flex items-center justify-center rounded-lg text-slate-700 transition-all cursor-pointer font-medium text-xs select-none";
+    "h-8 min-w-[32px] px-2 flex items-center justify-center rounded-retro text-theme-text transition-all cursor-pointer font-medium text-xs select-none";
   const btnNormal =
-    "hover:bg-slate-200/80 active:bg-slate-300 text-slate-700 hover:text-slate-900 border border-transparent";
+    "hover:bg-theme-surface-sunken text-theme-text hover:text-theme-text border border-transparent active:translate-x-[0.5px] active:translate-y-[0.5px]";
   const btnActive =
-    "bg-blue-600 text-white font-semibold shadow-xs hover:bg-blue-700 border border-blue-600";
+    "bg-theme-primary text-theme-primary-text font-bold shadow-retro-sm hover:bg-theme-primary-hover border border-theme-border";
   const btnDisabled = "opacity-30 cursor-not-allowed hover:bg-transparent";
 
   return (
-    <div className="border-b border-slate-200 bg-slate-50/90 px-3 py-2 flex flex-wrap items-center gap-1.5 text-slate-700 text-xs select-none">
+    <div className="border-b border-theme-border bg-theme-surface px-3 py-1.5 flex flex-wrap items-center gap-1.5 text-theme-text text-xs select-none shadow-retro-sm">
       {/* Group 1: Undo / Redo */}
       <div className="flex items-center gap-1">
         <button
@@ -90,7 +87,7 @@ export default function VisualToolbar({
         </button>
       </div>
 
-      <div className="h-5 w-px bg-slate-300 mx-1 flex-shrink-0" />
+      <div className="h-5 w-px bg-theme-border-subtle mx-1 flex-shrink-0" />
 
       {/* Group 2: Headings & Paragraph */}
       <div className="flex items-center gap-1">
@@ -141,7 +138,7 @@ export default function VisualToolbar({
         </button>
       </div>
 
-      <div className="h-5 w-px bg-slate-300 mx-1 flex-shrink-0" />
+      <div className="h-5 w-px bg-theme-border-subtle mx-1 flex-shrink-0" />
 
       {/* Group 3: Formatting */}
       <div className="flex items-center gap-1">
@@ -180,7 +177,7 @@ export default function VisualToolbar({
         </button>
       </div>
 
-      <div className="h-5 w-px bg-slate-300 mx-1 flex-shrink-0" />
+      <div className="h-5 w-px bg-theme-border-subtle mx-1 flex-shrink-0" />
 
       {/* Group 4: Lists & Quotes */}
       <div className="flex items-center gap-1">
@@ -219,7 +216,7 @@ export default function VisualToolbar({
         </button>
       </div>
 
-      <div className="h-5 w-px bg-slate-300 mx-1 flex-shrink-0" />
+      <div className="h-5 w-px bg-theme-border-subtle mx-1 flex-shrink-0" />
 
       {/* Group 5: Table & Media */}
       <div className="flex items-center gap-1.5">
@@ -233,22 +230,22 @@ export default function VisualToolbar({
                 .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
                 .run()
             }
-            className="h-8 px-3 flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 rounded-lg font-medium text-xs transition-all shadow-2xs cursor-pointer active:scale-95"
+            className="h-8 px-3 flex items-center gap-1.5 bg-theme-accent-light hover:bg-theme-accent-hover text-theme-accent-text hover:text-white border border-theme-accent rounded-retro font-medium text-xs transition-all shadow-retro-sm cursor-pointer active:translate-x-[0.5px] active:translate-y-[0.5px]"
             title="แทรกตารางใหม่ (3 แถว x 3 คอลัมน์)"
           >
-            <TableIcon className="w-4 h-4 text-emerald-600" />
+            <TableIcon className="w-4 h-4" />
             <span>สร้างตาราง</span>
           </button>
         ) : (
           /* Table Sub-Toolbar when Table is active */
-          <div className="flex items-center gap-1 bg-emerald-50/90 border border-emerald-300 rounded-lg p-1 text-emerald-900 shadow-2xs">
-            <span className="text-[11px] font-bold text-emerald-800 px-1 hidden sm:inline">
+          <div className="flex items-center gap-1 bg-theme-surface-sunken border border-theme-border rounded-retro p-0.5 text-theme-text shadow-retro-sm">
+            <span className="text-[11px] font-bold text-theme-text px-1 hidden sm:inline font-mono">
               ตาราง:
             </span>
             <button
               type="button"
               onClick={() => editor.chain().focus().addRowAfter().run()}
-              className="h-7 px-2 bg-white hover:bg-emerald-100 rounded text-xs text-emerald-800 font-medium border border-emerald-200 transition-colors"
+              className="h-7 px-2 bg-theme-surface hover:bg-theme-surface-hover text-theme-text rounded-retro text-xs font-medium border border-theme-border shadow-retro-sm transition-colors cursor-pointer"
               title="เพิ่มแถวด้านล่าง (+Row)"
             >
               + แถว
@@ -256,7 +253,7 @@ export default function VisualToolbar({
             <button
               type="button"
               onClick={() => editor.chain().focus().addColumnAfter().run()}
-              className="h-7 px-2 bg-white hover:bg-emerald-100 rounded text-xs text-emerald-800 font-medium border border-emerald-200 transition-colors"
+              className="h-7 px-2 bg-theme-surface hover:bg-theme-surface-hover text-theme-text rounded-retro text-xs font-medium border border-theme-border shadow-retro-sm transition-colors cursor-pointer"
               title="เพิ่มคอลัมน์ด้านขวา (+Col)"
             >
               + คอลัมน์
@@ -264,7 +261,7 @@ export default function VisualToolbar({
             <button
               type="button"
               onClick={() => editor.chain().focus().deleteRow().run()}
-              className="h-7 px-2 bg-white hover:bg-rose-50 rounded text-xs text-rose-700 font-medium border border-rose-200 transition-colors"
+              className="h-7 px-2 bg-theme-danger-light hover:bg-theme-danger/20 text-theme-danger rounded-retro text-xs font-medium border border-theme-danger/50 shadow-retro-sm transition-colors cursor-pointer"
               title="ลบแถวที่เลือก"
             >
               - แถว
@@ -272,7 +269,7 @@ export default function VisualToolbar({
             <button
               type="button"
               onClick={() => editor.chain().focus().deleteColumn().run()}
-              className="h-7 px-2 bg-white hover:bg-rose-50 rounded text-xs text-rose-700 font-medium border border-rose-200 transition-colors"
+              className="h-7 px-2 bg-theme-danger-light hover:bg-theme-danger/20 text-theme-danger rounded-retro text-xs font-medium border border-theme-danger/50 shadow-retro-sm transition-colors cursor-pointer"
               title="ลบคอลัมน์ที่เลือก"
             >
               - คอลัมน์
@@ -280,7 +277,7 @@ export default function VisualToolbar({
             <button
               type="button"
               onClick={() => editor.chain().focus().deleteTable().run()}
-              className="h-7 w-7 flex items-center justify-center bg-white hover:bg-rose-100 rounded text-rose-700 border border-rose-200 transition-colors"
+              className="h-7 w-7 flex items-center justify-center bg-theme-danger-light hover:bg-theme-danger/20 text-theme-danger border border-theme-danger/50 rounded-retro shadow-retro-sm transition-colors cursor-pointer"
               title="ลบตารางทั้งหมด"
             >
               <Trash2 className="w-3.5 h-3.5" />

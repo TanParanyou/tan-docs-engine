@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import {
   Download,
   ChevronDown,
@@ -23,6 +24,12 @@ interface ExportDropdownProps {
   onCustomExport?: (format: ExportFormat) => Promise<void> | void;
 }
 
+interface DropdownCoords {
+  top: number;
+  right: number;
+  openUpwards: boolean;
+}
+
 export default function ExportDropdown({
   workspaceSlug,
   currentFilename,
@@ -34,22 +41,79 @@ export default function ExportDropdown({
   const [isOpen, setIsOpen] = useState(false);
   const [activeLoading, setActiveLoading] = useState<ExportFormat | null>(null);
   const [lastSuccess, setLastSuccess] = useState<ExportFormat | null>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [isMounted, setIsMounted] = useState(false);
+  const [coords, setCoords] = useState<DropdownCoords | null>(null);
 
-  // Close on outside click
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Mark mounted for portal support
   useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Compute fixed position relative to viewport
+  const updatePosition = useCallback(() => {
+    if (!buttonRef.current) return;
+    const rect = buttonRef.current.getBoundingClientRect();
+    const menuHeightEstimate = 280;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const openUpwards = spaceBelow < menuHeightEstimate && rect.top > menuHeightEstimate;
+
+    setCoords({
+      top: openUpwards ? rect.top - 8 : rect.bottom + 8,
+      right: Math.max(8, window.innerWidth - rect.right),
+      openUpwards,
+    });
+  }, []);
+
+  // Recalculate on open, resize, or scroll
+  useEffect(() => {
+    if (!isOpen) return;
+
+    updatePosition();
+
+    const handleScrollOrResize = () => {
+      updatePosition();
+    };
+
+    window.addEventListener("scroll", handleScrollOrResize, true);
+    window.addEventListener("resize", handleScrollOrResize);
+
+    return () => {
+      window.removeEventListener("scroll", handleScrollOrResize, true);
+      window.removeEventListener("resize", handleScrollOrResize);
+    };
+  }, [isOpen, updatePosition]);
+
+  // Close on click outside
+  useEffect(() => {
+    if (!isOpen) return;
+
     const handleOutsideClick = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (
+        buttonRef.current &&
+        !buttonRef.current.contains(target) &&
+        menuRef.current &&
+        !menuRef.current.contains(target)
+      ) {
         setIsOpen(false);
       }
     };
-    if (isOpen) {
-      document.addEventListener("mousedown", handleOutsideClick);
-    }
+
+    document.addEventListener("mousedown", handleOutsideClick);
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
     };
   }, [isOpen]);
+
+  const toggleDropdown = () => {
+    if (!isOpen) {
+      updatePosition();
+    }
+    setIsOpen((prev) => !prev);
+  };
 
   const handleExport = async (format: ExportFormat) => {
     setActiveLoading(format);
@@ -144,12 +208,13 @@ export default function ExportDropdown({
   }
 
   return (
-    <div className={`relative inline-block text-left ${isOpen ? "z-[9999]" : "z-10"} ${className}`} ref={dropdownRef}>
+    <div className={`relative inline-block text-left ${className}`}>
       {/* Trigger Button */}
       <button
+        ref={buttonRef}
         type="button"
         disabled={activeLoading !== null}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={toggleDropdown}
         className={`inline-flex items-center justify-center rounded-retro transition-all select-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${sizeClasses} ${buttonStyle}`}
         title="เลือกรูปแบบการดาวน์โหลดเอกสาร (Export)"
       >
@@ -176,136 +241,151 @@ export default function ExportDropdown({
         )}
       </button>
 
-      {/* Dropdown Menu */}
-      {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 origin-top-right rounded-retro bg-theme-surface border-2 border-theme-border shadow-retro z-[9999] py-1.5 text-xs divide-y divide-theme-border-subtle animate-in fade-in zoom-in-95 duration-100">
-          {/* Main Document Formats */}
-          <div className="py-1">
-            <div className="px-3 py-1 text-[10px] font-mono font-semibold uppercase tracking-wider text-theme-text-muted">
-              รูปแบบเอกสารหลัก (Main Formats)
-            </div>
+      {/* Floating Dropdown Menu rendered via Portal at document.body */}
+      {isOpen &&
+        isMounted &&
+        createPortal(
+          <div
+            ref={menuRef}
+            style={{
+              position: "fixed",
+              top: coords?.openUpwards ? "auto" : `${coords?.top ?? 0}px`,
+              bottom: coords?.openUpwards
+                ? `${Math.max(8, window.innerHeight - (coords?.top ?? 0))}px`
+                : "auto",
+              right: `${coords?.right ?? 16}px`,
+              zIndex: 999999,
+            }}
+            className="w-64 rounded-retro bg-theme-surface border-2 border-theme-border shadow-retro-lg py-1.5 text-xs divide-y divide-theme-border-subtle animate-in fade-in zoom-in-95 duration-100 select-none"
+          >
+            {/* Main Document Formats */}
+            <div className="py-1">
+              <div className="px-3 py-1 text-[10px] font-mono font-semibold uppercase tracking-wider text-theme-text-muted">
+                รูปแบบเอกสารหลัก (Main Formats)
+              </div>
 
-            {/* PDF */}
-            <button
-              type="button"
-              onClick={() => handleExport("pdf")}
-              className="w-full text-left px-3 py-2 flex items-start gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors group"
-            >
-              <div className="p-1.5 rounded-md bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 group-hover:scale-105 transition-transform mt-0.5">
-                <FileText className="w-4 h-4" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between">
-                  <span>Export PDF</span>
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
-                    .pdf
-                  </span>
-                </div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
-                  เอกสารจัดหน้า A4 สวยงาม พร้อมสารบัญและแผนภาพ
-                </div>
-              </div>
-            </button>
-
-            {/* DOCX Word */}
-            <button
-              type="button"
-              onClick={() => handleExport("docx")}
-              className="w-full text-left px-3 py-2 flex items-start gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors group"
-            >
-              <div className="p-1.5 rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 group-hover:scale-105 transition-transform mt-0.5">
-                <FileCode className="w-4 h-4" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between">
-                  <span>Export Word (DOCX)</span>
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
-                    .docx
-                  </span>
-                </div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
-                  ไฟล์ Microsoft Word แก้ไขต่อได้ ฟอนต์สารบรรณ
-                </div>
-              </div>
-            </button>
-
-            {/* Excel XLSX */}
-            <button
-              type="button"
-              onClick={() => handleExport("excel")}
-              className="w-full text-left px-3 py-2 flex items-start gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors group"
-            >
-              <div className="p-1.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform mt-0.5">
-                <FileSpreadsheet className="w-4 h-4" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between">
-                  <span>Export Excel (XLSX)</span>
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
-                    .xlsx
-                  </span>
-                </div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
-                  สมุดงานตารางข้อมูล สเปก และเช็กลิสต์แยกชีต
-                </div>
-              </div>
-            </button>
-          </div>
-
-          {/* Markdown Section */}
-          <div className="py-1">
-            <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-              ข้อมูลดิบ Markdown (Raw)
-            </div>
-
-            {/* Full Markdown */}
-            <button
-              type="button"
-              onClick={() => handleExport("md")}
-              className="w-full text-left px-3 py-2 flex items-start gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors group"
-            >
-              <div className="p-1.5 rounded-md bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 group-hover:scale-105 transition-transform mt-0.5">
-                <File className="w-4 h-4" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between">
-                  <span>Export Markdown (รวม)</span>
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
-                    .md
-                  </span>
-                </div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
-                  รวมเนื้อหาทุกไฟล์พร้อม Frontmatter และ Metadata
-                </div>
-              </div>
-            </button>
-
-            {/* Current File (Only shown if currentFilename is passed) */}
-            {currentFilename && (
+              {/* PDF */}
               <button
                 type="button"
-                onClick={() => handleExport("current-md")}
-                className="w-full text-left px-3 py-2 flex items-start gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors group"
+                onClick={() => handleExport("pdf")}
+                className="w-full text-left px-3 py-2 flex items-start gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors group cursor-pointer"
               >
-                <div className="p-1.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 group-hover:scale-105 transition-transform mt-0.5">
+                <div className="p-1.5 rounded-md bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 group-hover:scale-105 transition-transform mt-0.5">
                   <FileText className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between">
-                    <span>เฉพาะไฟล์ปัจจุบัน</span>
-                    <span className="text-[9px] font-mono px-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 truncate max-w-[70px]">
-                      {currentFilename}
+                    <span>Export PDF</span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+                      .pdf
                     </span>
                   </div>
                   <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
-                    ดาวน์โหลดเฉพาะไฟล์ที่กำลังเปิดแก้ไขในขณะนี้
+                    เอกสารจัดหน้า A4 สวยงาม พร้อมสารบัญและแผนภาพ
                   </div>
                 </div>
               </button>
-            )}
-          </div>
-        </div>
-      )}
+
+              {/* DOCX Word */}
+              <button
+                type="button"
+                onClick={() => handleExport("docx")}
+                className="w-full text-left px-3 py-2 flex items-start gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors group cursor-pointer"
+              >
+                <div className="p-1.5 rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 group-hover:scale-105 transition-transform mt-0.5">
+                  <FileCode className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between">
+                    <span>Export Word (DOCX)</span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+                      .docx
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                    ไฟล์ Microsoft Word แก้ไขต่อได้ ฟอนต์สารบรรณ
+                  </div>
+                </div>
+              </button>
+
+              {/* Excel XLSX */}
+              <button
+                type="button"
+                onClick={() => handleExport("excel")}
+                className="w-full text-left px-3 py-2 flex items-start gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors group cursor-pointer"
+              >
+                <div className="p-1.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform mt-0.5">
+                  <FileSpreadsheet className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between">
+                    <span>Export Excel (XLSX)</span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+                      .xlsx
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                    สมุดงานตารางข้อมูล สเปก และเช็กลิสต์แยกชีต
+                  </div>
+                </div>
+              </button>
+            </div>
+
+            {/* Markdown Section */}
+            <div className="py-1">
+              <div className="px-3 py-1 text-[10px] font-mono font-semibold uppercase tracking-wider text-theme-text-muted">
+                ข้อมูลดิบ Markdown (Raw)
+              </div>
+
+              {/* Full Markdown */}
+              <button
+                type="button"
+                onClick={() => handleExport("md")}
+                className="w-full text-left px-3 py-2 flex items-start gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors group cursor-pointer"
+              >
+                <div className="p-1.5 rounded-md bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 group-hover:scale-105 transition-transform mt-0.5">
+                  <File className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between">
+                    <span>Export Markdown (รวม)</span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+                      .md
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                    รวมเนื้อหาทุกไฟล์พร้อม Frontmatter และ Metadata
+                  </div>
+                </div>
+              </button>
+
+              {/* Current File (Only shown if currentFilename is passed) */}
+              {currentFilename && (
+                <button
+                  type="button"
+                  onClick={() => handleExport("current-md")}
+                  className="w-full text-left px-3 py-2 flex items-start gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors group cursor-pointer"
+                >
+                  <div className="p-1.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 group-hover:scale-105 transition-transform mt-0.5">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between">
+                      <span>เฉพาะไฟล์ปัจจุบัน</span>
+                      <span className="text-[9px] font-mono px-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 truncate max-w-[70px]">
+                        {currentFilename}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                      ดาวน์โหลดเฉพาะไฟล์ที่กำลังเปิดแก้ไขในขณะนี้
+                    </div>
+                  </div>
+                </button>
+              )}
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

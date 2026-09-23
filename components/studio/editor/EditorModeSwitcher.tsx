@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Eye, Code, Sparkles } from "lucide-react";
+import { Eye, Code } from "lucide-react";
 import SegmentedControl, { SegmentOption } from "@/components/common/SegmentedControl";
 import { InputMode } from "@/lib/store/useStudioStore";
 
@@ -30,9 +30,9 @@ export default function EditorModeSwitcher({
   ];
 
   return (
-    <div className="h-12 bg-white border-b border-slate-200 px-3 sm:px-4 flex items-center justify-between flex-shrink-0 z-10 select-none shadow-2xs">
-      <div className="flex items-center gap-3">
-        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider hidden sm:inline">
+    <div className="h-11 bg-theme-surface border-b border-theme-border px-3 sm:px-4 flex items-center justify-between flex-shrink-0 z-10 select-none shadow-retro-sm">
+      <div className="flex items-center gap-2.5">
+        <span className="text-xs font-bold text-theme-text-muted uppercase tracking-wider hidden sm:inline font-mono">
           โหมดแก้ไข:
         </span>
         <SegmentedControl
@@ -43,16 +43,14 @@ export default function EditorModeSwitcher({
         />
       </div>
 
-      <div className="hidden md:flex items-center text-xs text-slate-500">
+      <div className="hidden md:flex items-center text-xs">
         {inputMode === "visual" ? (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-100 font-medium text-xs">
-            <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-            <span>โหมดเสมือนจริง จัดหน้าและพิมพ์ได้ทันที</span>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-retro bg-theme-accent-light text-theme-accent-text border border-theme-accent/50 font-medium text-xs">
+            ✨ โหมดเสมือนจริง จัดหน้าและพิมพ์ได้ทันที
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200 font-mono text-xs">
-            <Code className="w-3.5 h-3.5 text-slate-500" />
-            <span>โค้ดดิบ Markdown สำหรับใส่โค้ดและไดอะแกรม</span>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-retro bg-theme-surface-sunken text-theme-text border border-theme-border font-mono text-xs">
+            💻 โค้ดดิบ Markdown สำหรับใส่โค้ดและไดอะแกรม
           </span>
         )}
       </div>
